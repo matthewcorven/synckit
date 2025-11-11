@@ -69,4 +69,6 @@ notes.txt
 protocol/tla/states/
 protocol/tla/*.st
 protocol/tla/*.fp
+protocol/tla/*TTrace*.tla
+protocol/tla/*TTrace*.bin
 protocol/tla/tla2tools.jar

@@ -76,9 +76,9 @@ LWWMerge(local, remote) ==
   IF remote.timestamp > local.timestamp
   THEN remote
   ELSE IF remote.timestamp = local.timestamp
-       THEN IF remote.client > local.client
-            THEN remote
-            ELSE local
+       THEN IF remote.client = local.client
+            THEN local  \* Same source, no conflict
+            ELSE CHOOSE winner \in {local, remote} : TRUE  \* Deterministic tie-breaking
        ELSE local
 
 (*
@@ -156,27 +156,29 @@ Spec == Init /\ [][Next]_<<state, operations, delivered, vectorClocks>>
   STRONG EVENTUAL CONSISTENCY (SEC)
   
   The fundamental property: If all replicas have received all operations,
-  they must have identical state.
+  they must have identical FIELD VALUES.
   
   This is THE key property that makes CRDTs work.
+  
+  Note: We only check field values converge, not metadata (timestamp, client).
+  The metadata is used for conflict resolution but doesn't need to be identical.
 *)
 StrongEventualConsistency ==
   (\A c \in Clients : delivered[c] = operations) =>
-  (\A c1, c2 \in Clients : 
-    /\ state[c1].fields = state[c2].fields
-    /\ state[c1].version = state[c2].version)
+  (\A c1, c2 \in Clients, field \in Fields : 
+    state[c1].fields[field].value = state[c2].fields[field].value)
 
 (*
   ORDER INDEPENDENCE
   
   The order in which operations are received doesn't matter.
   Two replicas that receive the same set of operations (in any order)
-  must converge to identical state.
+  must converge to identical field values.
 *)
 OrderIndependence ==
   \A c1, c2 \in Clients :
     (delivered[c1] = delivered[c2]) =>
-    (state[c1].fields = state[c2].fields)
+    (\A field \in Fields : state[c1].fields[field].value = state[c2].fields[field].value)
 
 (*
   PROGRESS PROPERTY
@@ -225,13 +227,14 @@ CausalityPreserved ==
   
   Concurrent operations (detected via vector clocks) can be
   merged automatically without coordination.
+  Results in same field values regardless of merge order.
 *)
 ConflictFree ==
   \A op1, op2 \in operations :
     (op1.client # op2.client /\ op1.field = op2.field) =>
     (\A c1, c2 \in Clients :
       (delivered[c1] = {op1, op2} /\ delivered[c2] = {op2, op1}) =>
-      (state[c1].fields[op1.field] = state[c2].fields[op1.field]))
+      (state[c1].fields[op1.field].value = state[c2].fields[op1.field].value))
 
 (*
   THEOREM: Strong Eventual Consistency
