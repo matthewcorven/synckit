@@ -28,6 +28,9 @@ pub mod protocol;
 pub mod storage;
 pub mod error;
 
+#[cfg(feature = "wasm")]
+pub mod wasm;
+
 // Re-exports for convenience
 pub use document::Document;
 pub use sync::{VectorClock, Timestamp};
@@ -41,9 +44,6 @@ pub type DocumentID = String;
 
 /// Field path within a document
 pub type FieldPath = String;
-
-#[cfg(feature = "wasm")]
-pub mod wasm;
 
 #[cfg(test)]
 mod tests {

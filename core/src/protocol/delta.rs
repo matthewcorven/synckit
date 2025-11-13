@@ -10,7 +10,7 @@ use crate::error::{SyncError, Result};
 use std::collections::HashMap;
 
 /// Represents a change in a single field
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FieldChange {
     /// Path to the field (e.g., "user.name")
     pub path: String,
@@ -23,7 +23,7 @@ pub struct FieldChange {
 }
 
 /// A delta represents changes between two document states
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct DocumentDelta {
     /// Document ID
     pub document_id: String,

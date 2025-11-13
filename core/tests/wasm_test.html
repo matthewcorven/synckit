@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SyncKit WASM Browser Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { color: #2563eb; }
+        h2 { color: #059669; margin-top: 30px; }
+        .error { color: #dc2626; }
+        .success { color: #059669; }
+        pre { 
+            background: #f3f4f6; 
+            padding: 15px; 
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        #output { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 SyncKit WASM Browser Test</h1>
+    <p>Testing SyncKit WASM module in the browser...</p>
+    <div id="output"></div>
+    
+    <script type="module">
+        import init, { 
+            init_panic_hook, 
+            WasmDocument, 
+            WasmVectorClock, 
+            WasmDelta 
+        } from './synckit_core.js';
+
+        async function test() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Initialize WASM module
+                await init();
+                init_panic_hook();
+                
+                output.innerHTML += '<h2 class="success">✅ WASM Module Loaded</h2>';
+                
+                // Test Document
+                output.innerHTML += '<h2>Testing Document API</h2>';
+                const doc = new WasmDocument('test-doc-1');
+                output.innerHTML += `<p>✅ Created document: <code>${doc.getId()}</code></p>`;
+                
+                // Set fields
+                doc.setField('name', JSON.stringify('Alice'), 1n, 'client-1');
+                doc.setField('age', JSON.stringify(30), 2n, 'client-1');
+                output.innerHTML += `<p>✅ Set fields. Count: ${doc.fieldCount()}</p>`;
+                
+                // Get field
+                const name = doc.getField('name');
+                output.innerHTML += `<p>✅ Got field 'name': <code>${name}</code></p>`;
+                
+                // Test VectorClock
+                output.innerHTML += '<h2>Testing VectorClock</h2>';
+                const vc = new WasmVectorClock();
+                vc.tick('client-1');
+                vc.tick('client-1');
+                const clock = vc.get('client-1');
+                output.innerHTML += `<p>✅ VectorClock for client-1: <code>${clock}</code></p>`;
+                
+                // Test Delta
+                output.innerHTML += '<h2>Testing Delta Computation</h2>';
+                const doc2 = new WasmDocument('test-doc-1');
+                doc2.setField('name', JSON.stringify('Alice'), 1n, 'client-1');
+                doc2.setField('age', JSON.stringify(31), 3n, 'client-1');
+                doc2.setField('city', JSON.stringify('NYC'), 4n, 'client-1');
+                
+                const delta = WasmDelta.compute(doc, doc2);
+                output.innerHTML += `<p>✅ Computed delta with ${delta.changeCount()} changes</p>`;
+                
+                // Apply delta
+                delta.applyTo(doc, 'client-1');
+                output.innerHTML += `<p>✅ Applied delta. New field count: ${doc.fieldCount()}</p>`;
+                
+                // Export to JSON
+                const json = doc.toJSON();
+                output.innerHTML += `<h2>Document JSON</h2><pre>${json}</pre>`;
+                
+                output.innerHTML += '<h2 class="success">✅ All Tests Passed!</h2>';
+                
+            } catch (error) {
+                output.innerHTML += `<h2 class="error">❌ Error: ${error.message}</h2>`;
+                output.innerHTML += `<pre>${error.stack}</pre>`;
+                console.error(error);
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

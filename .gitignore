@@ -12,6 +12,7 @@ Cargo.lock
 
 # WASM
 pkg/
+pkg-nodejs/
 wasm-pack.log
 
 # Node/TypeScript
