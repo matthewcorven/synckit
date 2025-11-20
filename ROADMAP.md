@@ -725,13 +725,57 @@ fn merge(local: Field, remote: Field) -> Field {
 
 #### Files Created:
 ```
-tests/integration/sync.test.ts              # End-to-end sync tests
-tests/integration/offline.test.ts           # Offline scenarios
-tests/chaos/network-partition.test.ts       # Partition tests
-tests/chaos/packet-loss.test.ts             # Packet loss tests
-tests/performance/sync-latency.bench.ts     # Latency benchmarks
-tests/performance/memory.bench.ts           # Memory benchmarks
-scripts/run-chaos-tests.sh                  # Chaos test runner
+# Test Infrastructure
+tests/README.md                             # Test documentation
+tests/package.json                          # Test dependencies
+tests/tsconfig.json                         # TypeScript config
+tests/bunfig.toml                           # Bun configuration
+
+# Test Helpers
+tests/integration/helpers/test-server.ts    # Server lifecycle management
+tests/integration/helpers/test-client.ts    # Test client wrapper
+tests/integration/helpers/assertions.ts     # Custom assertions
+tests/integration/helpers/memory-storage.ts # In-memory storage adapter
+
+# Integration Tests - Sync (86 tests)
+tests/integration/sync/basic-crud.test.ts   # CRUD operations
+tests/integration/sync/two-client.test.ts   # Two-client sync
+tests/integration/sync/multi-client.test.ts # Multi-client sync
+tests/integration/sync/concurrent.test.ts   # Concurrent operations
+tests/integration/sync/deletes.test.ts      # Delete operations
+tests/integration/sync/vector-clock.test.ts # Vector clock tests
+
+# Integration Tests - Storage (55 tests)
+tests/integration/storage/persistence.test.ts  # Data persistence
+tests/integration/storage/recovery.test.ts     # Crash recovery
+tests/integration/storage/failover.test.ts     # Failover scenarios
+tests/integration/storage/migrations.test.ts   # Schema migrations
+tests/integration/storage/multi-server.test.ts # Multi-server sync
+
+# Integration Tests - Offline (103 tests)
+tests/integration/offline/basic-offline.test.ts    # Basic offline
+tests/integration/offline/reconnection.test.ts     # Reconnection
+tests/integration/offline/conflicts.test.ts        # Conflict resolution
+tests/integration/offline/delayed-sync.test.ts     # Delayed sync
+tests/integration/offline/network-partition.test.ts # Network partitions
+tests/integration/offline/server-restart.test.ts   # Server restarts
+
+# Load Tests (61 tests)
+tests/load/burst-traffic.test.ts            # Burst traffic handling
+tests/load/concurrent-clients.test.ts       # Concurrent clients
+tests/load/high-frequency.test.ts           # High-frequency ops
+tests/load/large-documents.test.ts          # Large documents
+tests/load/sustained-load.test.ts           # Sustained load
+tests/load/profiling.test.ts                # Performance profiling
+
+# Chaos Engineering (80 tests)
+tests/chaos/packet-loss.test.ts             # Packet loss injection
+tests/chaos/latency.test.ts                 # Latency injection
+tests/chaos/disconnections.test.ts          # Random disconnections
+tests/chaos/message-corruption.test.ts      # Message corruption
+tests/chaos/convergence.test.ts             # Convergence proofs
+tests/chaos/network-simulator.ts            # Network simulation utils
+tests/chaos/chaos-helpers.ts                # Chaos test utilities
 ```
 
 **Phase 8 Status:** ✅ COMPLETE (Nov 17-20, 2025) - **On schedule!**
