@@ -138,7 +138,7 @@ await todo.update({
 })
 
 // Get current value (one-time read)
-const currentTodo = await todo.get()
+const currentTodo = todo.get()
 
 // Delete field
 await todo.update({ dueDate: null })
@@ -156,12 +156,12 @@ class Document<T> {
   
   // Update document (partial update)
   update(changes: Partial<T>): Promise<void>
-  
-  // Set document (replace entire document)
-  set(data: T): Promise<void>
-  
-  // Get current value
-  get(): Promise<T>
+
+  // Set a single field
+  set<K extends keyof T>(field: K, value: T[K]): Promise<void>
+
+  // Get current value (synchronous)
+  get(): T
   
   // Delete document
   delete(): Promise<void>
@@ -202,9 +202,11 @@ todos.subscribe((results) => {
 
 ---
 
-## Tier 2: Text Sync (CRDT)
+## Tier 2: Text Sync (CRDT) *(Coming in v0.2.0)*
 
 **Use Cases:** Collaborative editors, note apps, documentation tools (15% of applications)
+
+**Note:** The Text CRDT API is planned for v0.2.0. The following is the proposed API design.
 
 ### Basic Usage
 
@@ -286,9 +288,11 @@ type TextStyle = {
 
 ---
 
-## Tier 3: Custom CRDTs
+## Tier 3: Custom CRDTs *(Coming in v0.2.0)*
 
 **Use Cases:** Counters, sets, lists, whiteboards (5% of applications)
+
+**Note:** Counter and Set APIs are planned for v0.2.0. The following is the proposed API design.
 
 ### Counter (PN-Counter)
 

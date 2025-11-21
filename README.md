@@ -110,29 +110,38 @@ Open source and self-hostable. No vendor lock-in, no surprise $2,000/month bills
 ### Installation
 
 ```bash
-npm install @synckit/sdk @synckit/react
+npm install @synckit/sdk
 ```
 
 ### Your First Synced App
 
 ```typescript
 import { SyncKit } from '@synckit/sdk'
-import { useDocument } from '@synckit/react'
+import { SyncProvider, useSyncDocument } from '@synckit/sdk/react'
 
 // Initialize (works offline-only, no server needed!)
 const sync = new SyncKit()
+await sync.init()
+
+function App() {
+  return (
+    <SyncProvider synckit={sync}>
+      <TodoApp />
+    </SyncProvider>
+  )
+}
 
 function TodoApp() {
-  const [todo, updateTodo] = useDocument<Todo>(sync, 'todo-1')
+  const [todo, { update }] = useSyncDocument<Todo>('todo-1')
 
-  if (!todo) return <div>Loading...</div>
+  if (!todo || !todo.text) return <div>Loading...</div>
 
   return (
     <div>
       <input
         type="checkbox"
         checked={todo.completed}
-        onChange={(e) => updateTodo({ completed: e.target.checked })}
+        onChange={(e) => update({ completed: e.target.checked })}
       />
       <span>{todo.text}</span>
     </div>
@@ -258,20 +267,22 @@ await doc.update({ status: 'completed' })
 // Conflicts resolved automatically with Last-Write-Wins
 ```
 
-### Tier 2: Collaborative Text Editing
+### Tier 2: Collaborative Text Editing *(Coming Soon)*
 **Perfect for:** Collaborative editors, documentation, notes
 
 ```typescript
+// Note: Text CRDT API is planned for v0.2.0
 const text = sync.text('document-456')
 await text.insert(0, 'Hello ')
 text.subscribe(content => editor.setValue(content))
 // Character-level sync, conflict-free convergence
 ```
 
-### Tier 3: Custom CRDTs
+### Tier 3: Custom CRDTs *(Coming Soon)*
 **Perfect for:** Whiteboards, design tools, specialized apps
 
 ```typescript
+// Note: Counter API is planned for v0.2.0
 const counter = sync.counter('likes-789')
 await counter.increment()
 // Conflict-free counter (additions never conflict)

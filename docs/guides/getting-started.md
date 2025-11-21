@@ -38,11 +38,7 @@ pnpm add @synckit/sdk
 bun add @synckit/sdk
 ```
 
-**For React projects**, also install the React adapter:
-
-```bash
-npm install @synckit/react
-```
+**For React projects**, the React hooks are included in the SDK package (no separate install needed).
 
 > **Note:** Vue and Svelte adapters are coming soon! For now, you can use the core SDK with any framework.
 
@@ -225,7 +221,8 @@ Using React? Here's the same example with hooks:
 
 ```tsx
 import React, { useEffect, useState } from 'react'
-import { SyncKit, SyncProvider, useSyncDocument } from '@synckit/sdk'
+import { SyncKit } from '@synckit/sdk'
+import { SyncProvider, useSyncDocument } from '@synckit/sdk/react'
 
 interface Todo {
   id: string
@@ -349,10 +346,7 @@ Explore the complete API:
 npm install @synckit/sdk
 ```
 
-If using React hooks, also install:
-```bash
-npm install @synckit/react
-```
+React hooks are included in the main SDK package.
 
 ---
 

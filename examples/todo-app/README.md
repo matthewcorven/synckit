@@ -65,18 +65,15 @@ npm run preview
 The app uses SyncKit's React hooks for seamless local-first functionality:
 
 ```tsx
-import { useSyncDocument } from '@synckit/sdk'
+import { useSyncDocument } from '@synckit/sdk/react'
 
 // Hook into a synced document
-const [document, setDocument] = useSyncDocument<TodoListDocument>(
-  'todo-list',
-  { todos: {}, lastUpdated: Date.now() }
-)
+const [document, { update }] = useSyncDocument<TodoListDocument>('todo-list')
 
 // Update is automatic and persisted
-setDocument({
-  ...document,
-  todos: { ...document.todos, [id]: newTodo }
+await update({
+  todos: { ...document.todos, [id]: newTodo },
+  lastUpdated: Date.now()
 })
 ```
 
