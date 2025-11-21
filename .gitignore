@@ -52,6 +52,8 @@ coverage/
 # Build artifacts
 *.wasm
 *.js.map
+*.tgz
+*.tar.gz
 
 # Exception: Track WASM distribution files in SDK
 !sdk/wasm/*.wasm
