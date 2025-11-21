@@ -30,7 +30,7 @@ SyncKit is a **local-first sync engine** designed for modern web and mobile appl
 **Key Differentiators:**
 - 🚀 **Performance**: <1ms local operations, <100ms sync (p95)
 - 🔄 **Three-Tier Architecture**: LWW (80%), Text CRDTs (15%), Custom CRDTs (5%)
-- 📦 **Tiny Bundle**: <20KB gzipped (WASM + SDK)
+- 📦 **Compact Bundle**: 49KB gzipped (44KB lite) - Competitive with Yjs, 7x smaller than Automerge
 - 🌐 **Universal**: Works everywhere (browser, Node.js, mobile, desktop)
 - 🔒 **Data Integrity**: Formally verified with TLA+ (zero data loss guarantee)
 
@@ -612,10 +612,12 @@ fn contains(&self, element: &T) -> bool {
 
 | Component | Size (gzipped) | Notes |
 |-----------|----------------|-------|
-| WASM Core | <15KB | Rust compiled |
-| TypeScript SDK | <5KB | Wrapper only |
-| React Adapter | <2KB | Hooks |
-| Total | <20KB | Critical threshold |
+| WASM Core (default) | 49KB | Full-featured with all CRDTs |
+| WASM Core (lite) | 44KB | Local-only, LWW + vector clocks |
+| TypeScript SDK | Included | Bundled in WASM measurements |
+| React Adapter | ~3KB | Hooks (separate package) |
+| Total (default) | 49KB | Production-ready |
+| Total (lite) | 44KB | Size-critical apps |
 
 ### Throughput Targets
 
