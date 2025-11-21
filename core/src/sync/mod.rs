@@ -6,13 +6,13 @@
 //! - LWW merge algorithm
 //! - Delta computation
 
-pub mod vector_clock;
-pub mod lww;
 pub mod delta;
+pub mod lww;
+pub mod vector_clock;
 
-pub use vector_clock::VectorClock;
+pub use delta::{apply_delta, compute_delta, merge_deltas, Delta};
 pub use lww::LWWField;
-pub use delta::{Delta, compute_delta, apply_delta, merge_deltas};
+pub use vector_clock::VectorClock;
 
 use crate::ClientID;
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 pub struct Timestamp {
     /// Logical clock value (higher = more recent)
     pub clock: u64,
-    
+
     /// Client ID for tie-breaking when clocks are equal
     pub client_id: ClientID,
 }

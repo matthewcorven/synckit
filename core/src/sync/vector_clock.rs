@@ -29,11 +29,13 @@ impl VectorClock {
             clocks: HashMap::new(),
         }
     }
-    
+
     /// Create a VectorClock from a Timestamp
     pub fn from_timestamp(timestamp: &crate::sync::Timestamp) -> Self {
         let mut clock = Self::new();
-        clock.clocks.insert(timestamp.client_id.clone(), timestamp.clock);
+        clock
+            .clocks
+            .insert(timestamp.client_id.clone(), timestamp.clock);
         clock
     }
 
@@ -47,19 +49,19 @@ impl VectorClock {
     pub fn get(&self, client_id: &ClientID) -> u64 {
         *self.clocks.get(client_id).unwrap_or(&0)
     }
-    
+
     /// Update the clock for a specific client to a specific value
     pub fn update(&mut self, client_id: &ClientID, value: u64) {
         self.clocks.insert(client_id.clone(), value);
     }
-    
+
     /// Get all client clocks
     pub fn clocks(&self) -> &HashMap<ClientID, u64> {
         &self.clocks
     }
 
     /// Merge with another vector clock (take max of each entry)
-    /// 
+    ///
     /// This operation is used when receiving remote operations.
     /// It ensures that all causal dependencies are tracked.
     pub fn merge(&mut self, other: &VectorClock) {
@@ -83,11 +85,8 @@ impl VectorClock {
         let mut greater = false;
 
         // Get all unique client IDs from both clocks
-        let all_clients: std::collections::HashSet<_> = self
-            .clocks
-            .keys()
-            .chain(other.clocks.keys())
-            .collect();
+        let all_clients: std::collections::HashSet<_> =
+            self.clocks.keys().chain(other.clocks.keys()).collect();
 
         for client_id in all_clients {
             let self_clock = self.get(client_id);
@@ -101,10 +100,10 @@ impl VectorClock {
         }
 
         match (less, greater) {
-            (true, false) => Ordering::Less,     // self < other (happened before)
-            (false, true) => Ordering::Greater,  // self > other (happened after)
-            (false, false) => Ordering::Equal,   // Identical clocks
-            (true, true) => Ordering::Equal,     // Concurrent (neither happened before)
+            (true, false) => Ordering::Less,    // self < other (happened before)
+            (false, true) => Ordering::Greater, // self > other (happened after)
+            (false, false) => Ordering::Equal,  // Identical clocks
+            (true, true) => Ordering::Equal,    // Concurrent (neither happened before)
         }
     }
 
@@ -113,11 +112,8 @@ impl VectorClock {
         let mut less = false;
         let mut greater = false;
 
-        let all_clients: std::collections::HashSet<_> = self
-            .clocks
-            .keys()
-            .chain(other.clocks.keys())
-            .collect();
+        let all_clients: std::collections::HashSet<_> =
+            self.clocks.keys().chain(other.clocks.keys()).collect();
 
         for client_id in all_clients {
             let self_clock = self.get(client_id);
@@ -166,12 +162,12 @@ mod tests {
     fn test_merge() {
         let mut clock1 = VectorClock::new();
         clock1.tick(&"c1".to_string());
-        clock1.tick(&"c1".to_string());  // c1: 2
+        clock1.tick(&"c1".to_string()); // c1: 2
 
         let mut clock2 = VectorClock::new();
         clock2.tick(&"c2".to_string());
         clock2.tick(&"c2".to_string());
-        clock2.tick(&"c2".to_string());  // c2: 3
+        clock2.tick(&"c2".to_string()); // c2: 3
 
         // Merge clock2 into clock1
         clock1.merge(&clock2);
@@ -184,11 +180,11 @@ mod tests {
     #[test]
     fn test_compare_happened_before() {
         let mut clock1 = VectorClock::new();
-        clock1.tick(&"c1".to_string());  // {c1: 1}
+        clock1.tick(&"c1".to_string()); // {c1: 1}
 
         let mut clock2 = VectorClock::new();
         clock2.tick(&"c1".to_string());
-        clock2.tick(&"c1".to_string());  // {c1: 2}
+        clock2.tick(&"c1".to_string()); // {c1: 2}
 
         // clock1 happened before clock2
         assert_eq!(clock1.compare(&clock2), Ordering::Less);
@@ -202,10 +198,10 @@ mod tests {
     #[test]
     fn test_concurrent() {
         let mut clock1 = VectorClock::new();
-        clock1.tick(&"c1".to_string());  // {c1: 1}
+        clock1.tick(&"c1".to_string()); // {c1: 1}
 
         let mut clock2 = VectorClock::new();
-        clock2.tick(&"c2".to_string());  // {c2: 1}
+        clock2.tick(&"c2".to_string()); // {c2: 1}
 
         // These are concurrent (neither happened before the other)
         assert!(clock1.is_concurrent(&clock2));
@@ -225,7 +221,7 @@ mod tests {
 
         // Identical clocks
         assert_eq!(clock1.compare(&clock2), Ordering::Equal);
-        assert!(!clock1.is_concurrent(&clock2));  // Not concurrent, just equal
+        assert!(!clock1.is_concurrent(&clock2)); // Not concurrent, just equal
     }
 
     #[test]

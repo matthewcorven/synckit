@@ -27,9 +27,9 @@
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 pub mod document;
-pub mod sync;
-pub mod storage;
 pub mod error;
+pub mod storage;
+pub mod sync;
 
 // Protocol module only included if prost feature is enabled
 #[cfg(feature = "prost")]
@@ -49,8 +49,8 @@ pub mod wasm;
 
 // Re-exports for convenience
 pub use document::Document;
-pub use sync::{VectorClock, Timestamp};
-pub use error::{SyncError, Result};
+pub use error::{Result, SyncError};
+pub use sync::{Timestamp, VectorClock};
 
 /// Client identifier type
 pub type ClientID = String;

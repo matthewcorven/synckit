@@ -44,7 +44,7 @@ impl SyncError {
     pub fn is_retryable(&self) -> bool {
         matches!(
             self,
-            SyncError::NetworkError(_) |  SyncError::StorageError(_) | SyncError::ConflictError(_)
+            SyncError::NetworkError(_) | SyncError::StorageError(_) | SyncError::ConflictError(_)
         )
     }
 

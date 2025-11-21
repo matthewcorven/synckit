@@ -16,7 +16,7 @@ use std::cmp::Ordering;
 pub struct ItemId {
     /// Client that created this item
     pub client: u64,
-    
+
     /// Lamport clock at creation time
     pub clock: u64,
 }
@@ -26,7 +26,7 @@ impl ItemId {
     pub fn new(client: u64, clock: u64) -> Self {
         Self { client, clock }
     }
-    
+
     /// Check if this is a root item (clock 0)
     pub fn is_root(&self) -> bool {
         self.clock == 0
@@ -61,45 +61,45 @@ impl std::fmt::Display for ItemId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_item_id_ordering() {
         let id1 = ItemId::new(1, 10);
         let id2 = ItemId::new(1, 20);
         let id3 = ItemId::new(2, 15);
-        
+
         // Same client: ordered by clock
         assert!(id1 < id2);
-        
+
         // Different clients: clock takes precedence
         assert!(id1 < id3);
         assert!(id3 < id2);
     }
-    
+
     #[test]
     fn test_item_id_equality() {
         let id1 = ItemId::new(1, 10);
         let id2 = ItemId::new(1, 10);
         let id3 = ItemId::new(2, 10);
-        
+
         assert_eq!(id1, id2);
         assert_ne!(id1, id3);
     }
-    
+
     #[test]
     fn test_item_id_deterministic_tiebreaking() {
         // When clocks are equal, use client ID
         let id1 = ItemId::new(1, 10);
         let id2 = ItemId::new(2, 10);
-        
+
         assert!(id1 < id2);
     }
-    
+
     #[test]
     fn test_root_item() {
         let root = ItemId::new(0, 0);
         let normal = ItemId::new(1, 5);
-        
+
         assert!(root.is_root());
         assert!(!normal.is_root());
     }

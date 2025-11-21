@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use serde_json::json;
 use synckit_core::document::Document;
 
@@ -7,7 +7,7 @@ fn bench_single_field_update(c: &mut Criterion) {
     c.bench_function("single_field_update", |b| {
         let mut doc = Document::new("test-doc".to_string());
         let mut clock = 1u64;
-        
+
         b.iter(|| {
             doc.set_field(
                 black_box("field1".to_string()),
@@ -23,8 +23,13 @@ fn bench_single_field_update(c: &mut Criterion) {
 /// Benchmark field retrieval
 fn bench_field_get(c: &mut Criterion) {
     let mut doc = Document::new("test-doc".to_string());
-    doc.set_field("field1".to_string(), json!("value"), 1, "client1".to_string());
-    
+    doc.set_field(
+        "field1".to_string(),
+        json!("value"),
+        1,
+        "client1".to_string(),
+    );
+
     c.bench_function("field_get", |b| {
         b.iter(|| {
             black_box(doc.get_field(&"field1".to_string()));
@@ -35,7 +40,7 @@ fn bench_field_get(c: &mut Criterion) {
 /// Benchmark merge operations with varying field counts
 fn bench_document_merge(c: &mut Criterion) {
     let mut group = c.benchmark_group("document_merge");
-    
+
     for field_count in [10, 50, 100, 500].iter() {
         group.bench_with_input(
             BenchmarkId::from_parameter(field_count),
@@ -44,7 +49,7 @@ fn bench_document_merge(c: &mut Criterion) {
                 // Create two documents with many fields
                 let mut doc1 = Document::new("doc1".to_string());
                 let mut doc2 = Document::new("doc2".to_string());
-                
+
                 // Populate doc1 with fields (older timestamps)
                 for i in 0..field_count {
                     doc1.set_field(
@@ -54,7 +59,7 @@ fn bench_document_merge(c: &mut Criterion) {
                         "client1".to_string(),
                     );
                 }
-                
+
                 // Populate doc2 with overlapping fields (newer timestamps)
                 for i in 0..field_count {
                     doc2.set_field(
@@ -64,7 +69,7 @@ fn bench_document_merge(c: &mut Criterion) {
                         "client2".to_string(),
                     );
                 }
-                
+
                 b.iter(|| {
                     let mut doc_copy = doc1.clone();
                     black_box(doc_copy.merge(&doc2));
@@ -78,14 +83,14 @@ fn bench_document_merge(c: &mut Criterion) {
 /// Benchmark batch updates
 fn bench_batch_updates(c: &mut Criterion) {
     let mut group = c.benchmark_group("batch_updates");
-    
+
     for batch_size in [10, 100, 1000].iter() {
         group.bench_with_input(
             BenchmarkId::from_parameter(batch_size),
             batch_size,
             |b, &batch_size| {
                 let mut doc = Document::new("test-doc".to_string());
-                
+
                 b.iter(|| {
                     for i in 0..batch_size {
                         doc.set_field(
@@ -106,8 +111,13 @@ fn bench_batch_updates(c: &mut Criterion) {
 fn bench_conflict_resolution(c: &mut Criterion) {
     c.bench_function("conflict_resolution", |b| {
         let mut doc = Document::new("test-doc".to_string());
-        doc.set_field("field1".to_string(), json!("value1"), 1, "client1".to_string());
-        
+        doc.set_field(
+            "field1".to_string(),
+            json!("value1"),
+            1,
+            "client1".to_string(),
+        );
+
         b.iter(|| {
             // Try to set with same timestamp but different client
             doc.set_field(
@@ -123,7 +133,7 @@ fn bench_conflict_resolution(c: &mut Criterion) {
 /// Benchmark JSON serialization
 fn bench_document_to_json(c: &mut Criterion) {
     let mut doc = Document::new("test-doc".to_string());
-    
+
     // Add 100 fields
     for i in 0..100 {
         doc.set_field(
@@ -133,7 +143,7 @@ fn bench_document_to_json(c: &mut Criterion) {
             "client1".to_string(),
         );
     }
-    
+
     c.bench_function("document_to_json", |b| {
         b.iter(|| {
             black_box(doc.to_json());

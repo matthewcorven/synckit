@@ -9,8 +9,8 @@
 //! - Idempotence: Applying operation twice has no effect
 //! - Commutativity: Order of merges doesn't matter
 
-use crate::{ClientID, DocumentID, FieldPath};
 use crate::sync::{Timestamp, VectorClock};
+use crate::{ClientID, DocumentID, FieldPath};
 // TODO: Will be used when implementing full error handling
 // use crate::error::{Result, SyncError};
 use serde::{Deserialize, Serialize};
@@ -22,10 +22,10 @@ use std::collections::HashMap;
 pub struct Document {
     /// Unique document identifier
     pub id: DocumentID,
-    
+
     /// Document fields with LWW metadata
     pub fields: HashMap<FieldPath, Field>,
-    
+
     /// Vector clock for causality tracking
     pub version: VectorClock,
 }
@@ -35,7 +35,7 @@ pub struct Document {
 pub struct Field {
     /// Field value (JSON-like)
     pub value: JsonValue,
-    
+
     /// Timestamp for LWW conflict resolution
     pub timestamp: Timestamp,
 }
@@ -51,7 +51,7 @@ impl Document {
     }
 
     /// Set a field value (creates new timestamp)
-    /// 
+    ///
     /// This method uses LWW merge logic, so if there's already a value
     /// with a newer timestamp, it won't be overwritten.
     pub fn set_field(
@@ -63,7 +63,7 @@ impl Document {
     ) {
         let timestamp = Timestamp::new(clock, client_id);
         let new_field = Field { value, timestamp };
-        
+
         // Use merge_field to respect LWW semantics
         self.merge_field(field_path, new_field);
     }
@@ -82,11 +82,7 @@ impl Document {
     /// 1. Higher timestamp wins
     /// 2. If timestamps equal, higher client_id wins
     /// 3. If both equal (duplicate), use value comparison for determinism
-    pub fn merge_field(
-        &mut self,
-        field_path: FieldPath,
-        remote_field: Field,
-    ) -> bool {
+    pub fn merge_field(&mut self, field_path: FieldPath, remote_field: Field) -> bool {
         match self.fields.get(&field_path) {
             Some(local_field) => {
                 // Compare timestamps for LWW
@@ -107,7 +103,7 @@ impl Document {
                         // we handle it for total ordering)
                         let local_json = serde_json::to_string(&local_field.value).unwrap();
                         let remote_json = serde_json::to_string(&remote_field.value).unwrap();
-                        
+
                         if remote_json > local_json {
                             self.fields.insert(field_path, remote_field);
                             true
@@ -149,11 +145,11 @@ impl Document {
     /// Convert document to JSON for serialization
     pub fn to_json(&self) -> JsonValue {
         let mut obj = serde_json::Map::new();
-        
+
         for (field_path, field) in &self.fields {
             obj.insert(field_path.clone(), field.value.clone());
         }
-        
+
         JsonValue::Object(obj)
     }
 
@@ -171,22 +167,22 @@ impl Document {
     pub fn field_count(&self) -> usize {
         self.fields.len()
     }
-    
+
     /// Get document ID
     pub fn id(&self) -> &DocumentID {
         &self.id
     }
-    
+
     /// Get document version (vector clock)
     pub fn version(&self) -> &VectorClock {
         &self.version
     }
-    
+
     /// Get all fields with metadata
     pub fn fields(&self) -> &HashMap<FieldPath, Field> {
         &self.fields
     }
-    
+
     /// Delete a field
     pub fn delete_field(&mut self, field_path: &FieldPath) {
         self.fields.remove(field_path);
@@ -208,7 +204,7 @@ mod tests {
     #[test]
     fn test_set_and_get_field() {
         let mut doc = Document::new("doc-123".to_string());
-        
+
         doc.set_field(
             "title".to_string(),
             json!("Hello World"),
@@ -216,14 +212,17 @@ mod tests {
             "client1".to_string(),
         );
 
-        assert_eq!(doc.get_field(&"title".to_string()), Some(&json!("Hello World")));
+        assert_eq!(
+            doc.get_field(&"title".to_string()),
+            Some(&json!("Hello World"))
+        );
         assert_eq!(doc.field_count(), 1);
     }
 
     #[test]
     fn test_lww_merge_remote_wins() {
         let mut doc = Document::new("doc-123".to_string());
-        
+
         // Local writes at timestamp 1
         doc.set_field(
             "title".to_string(),
@@ -241,13 +240,16 @@ mod tests {
         let updated = doc.merge_field("title".to_string(), remote_field);
 
         assert!(updated);
-        assert_eq!(doc.get_field(&"title".to_string()), Some(&json!("Remote Title")));
+        assert_eq!(
+            doc.get_field(&"title".to_string()),
+            Some(&json!("Remote Title"))
+        );
     }
 
     #[test]
     fn test_lww_merge_local_wins() {
         let mut doc = Document::new("doc-123".to_string());
-        
+
         // Local writes at timestamp 2
         doc.set_field(
             "title".to_string(),
@@ -265,13 +267,16 @@ mod tests {
         let updated = doc.merge_field("title".to_string(), remote_field);
 
         assert!(!updated);
-        assert_eq!(doc.get_field(&"title".to_string()), Some(&json!("Local Title")));
+        assert_eq!(
+            doc.get_field(&"title".to_string()),
+            Some(&json!("Local Title"))
+        );
     }
 
     #[test]
     fn test_lww_merge_tie_breaking() {
         let mut doc = Document::new("doc-123".to_string());
-        
+
         // Local writes at timestamp 1 with client1
         doc.set_field(
             "title".to_string(),
@@ -290,18 +295,41 @@ mod tests {
 
         // client2 > client1, so remote wins
         assert!(updated);
-        assert_eq!(doc.get_field(&"title".to_string()), Some(&json!("Remote Title")));
+        assert_eq!(
+            doc.get_field(&"title".to_string()),
+            Some(&json!("Remote Title"))
+        );
     }
 
     #[test]
     fn test_merge_entire_document() {
         let mut doc1 = Document::new("doc-123".to_string());
-        doc1.set_field("field1".to_string(), json!("value1"), 1, "client1".to_string());
-        doc1.set_field("field2".to_string(), json!("value2"), 1, "client1".to_string());
+        doc1.set_field(
+            "field1".to_string(),
+            json!("value1"),
+            1,
+            "client1".to_string(),
+        );
+        doc1.set_field(
+            "field2".to_string(),
+            json!("value2"),
+            1,
+            "client1".to_string(),
+        );
 
         let mut doc2 = Document::new("doc-123".to_string());
-        doc2.set_field("field1".to_string(), json!("new_value1"), 2, "client2".to_string());
-        doc2.set_field("field3".to_string(), json!("value3"), 1, "client2".to_string());
+        doc2.set_field(
+            "field1".to_string(),
+            json!("new_value1"),
+            2,
+            "client2".to_string(),
+        );
+        doc2.set_field(
+            "field3".to_string(),
+            json!("value3"),
+            1,
+            "client2".to_string(),
+        );
 
         // Merge doc2 into doc1
         let updated_count = doc1.merge(&doc2);
@@ -310,15 +338,29 @@ mod tests {
         // field3 should be added (new field)
         // field2 should remain unchanged
         assert_eq!(updated_count, 2);
-        assert_eq!(doc1.get_field(&"field1".to_string()), Some(&json!("new_value1")));
-        assert_eq!(doc1.get_field(&"field2".to_string()), Some(&json!("value2")));
-        assert_eq!(doc1.get_field(&"field3".to_string()), Some(&json!("value3")));
+        assert_eq!(
+            doc1.get_field(&"field1".to_string()),
+            Some(&json!("new_value1"))
+        );
+        assert_eq!(
+            doc1.get_field(&"field2".to_string()),
+            Some(&json!("value2"))
+        );
+        assert_eq!(
+            doc1.get_field(&"field3".to_string()),
+            Some(&json!("value3"))
+        );
     }
 
     #[test]
     fn test_document_to_json() {
         let mut doc = Document::new("doc-123".to_string());
-        doc.set_field("title".to_string(), json!("Hello"), 1, "client1".to_string());
+        doc.set_field(
+            "title".to_string(),
+            json!("Hello"),
+            1,
+            "client1".to_string(),
+        );
         doc.set_field("count".to_string(), json!(42), 1, "client1".to_string());
 
         let json = doc.to_json();
@@ -329,7 +371,7 @@ mod tests {
     #[test]
     fn test_convergence_property() {
         // Test convergence: two replicas merging in different orders reach same state
-        
+
         let mut replica1 = Document::new("doc-123".to_string());
         let mut replica2 = Document::new("doc-123".to_string());
 
@@ -380,7 +422,7 @@ mod tests {
             replica1.get_field(&"field1".to_string()),
             replica2.get_field(&"field1".to_string())
         );
-        
+
         // Should be client2's value (timestamp 2 > timestamp 1)
         assert_eq!(replica1.get_field(&"field1".to_string()), Some(&json!("B")));
         assert_eq!(replica2.get_field(&"field1".to_string()), Some(&json!("B")));
