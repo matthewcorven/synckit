@@ -448,7 +448,7 @@ pub fn merge_documents(local: &Document, remote: &Document) -> Document {
 
 ### Documentation Style
 
-```markdown
+````markdown
 <!-- ✅ Good -->
 ## Quick Start
 
@@ -473,7 +473,7 @@ npm install @synckit/sdk
 
 then use it
 const sync = new SyncKit()
-```
+````
 
 **Rules:**
 - Use proper markdown formatting
