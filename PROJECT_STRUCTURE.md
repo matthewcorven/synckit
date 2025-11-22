@@ -14,8 +14,11 @@ synckit/
 ├── protocol/       # Protocol definitions and formal specs
 ├── examples/       # Example applications and demos
 ├── docs/           # Documentation (guides, API, architecture)
-├── tests/          # Cross-cutting tests (integration, chaos, perf)
-└── scripts/        # Build, deployment, and utility scripts
+├── tests/          # Cross-cutting tests (integration, chaos, load)
+├── scripts/        # Build and utility scripts
+├── analysis/       # Performance analysis and benchmarks
+├── pkg-default/    # Build artifact: Default variant package
+└── pkg-lite/       # Build artifact: Lite variant package
 ```
 
 ---
@@ -59,14 +62,17 @@ core/
 │   │   └── bindings.rs         # JavaScript bindings (wasm-bindgen)
 │   └── document.rs             # Document structure and operations
 ├── tests/                      # Rust unit and integration tests
-│   ├── lww_tests.rs            # LWW algorithm tests
-│   ├── crdt_tests.rs           # CRDT convergence tests
-│   └── protocol_tests.rs       # Protocol encoding/decoding tests
-├── benches/                    # Performance benchmarks
+│   ├── property_tests.rs       # Property-based tests (PropTest)
+│   ├── wasm_test.html          # WASM browser tests
+│   └── wasm_test.mjs           # WASM module tests
+├── benches/                    # Performance benchmarks (Criterion)
 │   ├── lww_bench.rs            # LWW performance benchmarks
-│   ├── crdt_bench.rs           # CRDT operation benchmarks
-│   └── protocol_bench.rs       # Serialization benchmarks
-└── Cargo.toml                  # Rust workspace configuration
+│   ├── vector_clock_bench.rs   # Vector clock benchmarks
+│   └── delta_bench.rs          # Delta computation benchmarks
+├── scripts/                    # Build scripts
+│   ├── build-wasm.sh           # Build WASM (Linux/Mac)
+│   └── build-wasm.ps1          # Build WASM (Windows)
+└── Cargo.toml                  # Rust package configuration
 ```
 
 **Key Responsibilities:**
@@ -85,43 +91,37 @@ Developer-facing API. Wraps the Rust core and provides framework integrations.
 ```
 sdk/
 ├── src/
-│   ├── index.ts                # Main SDK entry point
+│   ├── index.ts                # Main SDK entry point (default variant)
+│   ├── index-lite.ts           # Lite variant entry point
 │   ├── synckit.ts              # Core SyncKit class
-│   ├── document.ts             # Document API (Tier 1: LWW)
-│   ├── text.ts                 # Text API (Tier 2: CRDT text)
-│   ├── counter.ts              # Counter API (Tier 3: PN-Counter)
-│   ├── set.ts                  # Set API (Tier 3: OR-Set)
-│   ├── offline-queue.ts        # Offline operation queue
+│   ├── synckit-lite.ts         # Lite variant SyncKit class
+│   ├── document.ts             # Document API (LWW sync)
+│   ├── wasm-loader.ts          # WASM module loading (default)
+│   ├── wasm-loader-lite.ts     # WASM module loading (lite)
+│   ├── types.ts                # TypeScript type definitions
 │   ├── adapters/               # Framework-specific adapters
-│   │   ├── react.ts            # React hooks (useSyncDocument, etc.)
-│   │   ├── vue.ts              # Vue 3 composables
-│   │   └── svelte.ts           # Svelte stores
+│   │   └── react.tsx           # React hooks (useDocument, etc.)
 │   ├── hooks/                  # Shared hook logic
-│   │   ├── useSubscription.ts  # Generic subscription hook
-│   │   └── useOffline.ts       # Offline state management
+│   │   └── (internal hooks)    # Hook utilities
 │   ├── storage/                # Storage adapters
-│   │   ├── adapter.ts          # Storage adapter interface
+│   │   ├── index.ts            # Storage exports
 │   │   ├── indexeddb.ts        # IndexedDB implementation
-│   │   ├── opfs.ts             # OPFS implementation (web performance)
-│   │   ├── sqlite.ts           # SQLite implementation (Node/Tauri)
-│   │   └── localstorage.ts     # LocalStorage fallback
+│   │   └── memory.ts           # In-memory storage (testing)
 │   └── utils/                  # Utility functions
-│       ├── wasm-loader.ts      # WASM module loading
-│       ├── retry.ts            # Exponential backoff retry
-│       └── validation.ts       # Input validation
-├── tests/                      # TypeScript tests
-│   ├── sdk.test.ts             # SDK integration tests
-│   ├── offline.test.ts         # Offline queue tests
-│   └── storage.test.ts         # Storage adapter tests
+│       └── (internal utils)    # Utility functions
+├── tests/                      # TypeScript tests (Vitest)
+│   └── (SDK tests)             # SDK integration tests
 └── package.json                # NPM package configuration
 ```
 
 **Key Responsibilities:**
-- ✅ Simple, intuitive API (`sync.document()`, `sync.text()`)
-- ✅ Framework integrations (React, Vue, Svelte)
-- ✅ Offline queue and retry logic
-- ✅ Storage adapter auto-detection
+- ✅ Simple, intuitive API (`sync.document()`)
+- ✅ React integration (hooks: `useDocument`)
+- ✅ Two optimized variants (default ~53KB, lite ~48KB gzipped)
+- ✅ Storage adapters (IndexedDB, Memory)
 - ✅ WASM module loading and management
+- 🚧 Vue/Svelte adapters (v0.3.0+)
+- 🚧 Text/Counter/Set CRDTs (future releases)
 
 ---
 
@@ -213,27 +213,27 @@ Real-world examples demonstrating different tiers of SyncKit.
 
 ```
 examples/
-├── todo-app/                   # Tier 1: Simple LWW sync
+├── todo-app/                   # Complete CRUD example
 │   ├── src/
 │   │   ├── App.tsx             # React app
-│   │   ├── useTodos.ts         # Custom hook using SyncKit
 │   │   └── components/         # UI components
 │   ├── README.md               # Setup and usage
 │   └── package.json
-├── collaborative-editor/       # Tier 2: Text CRDT
+├── collaborative-editor/       # Real-time text editing (skeleton)
 │   ├── src/
 │   │   ├── App.tsx             # React app
-│   │   ├── Editor.tsx          # Text editor component
-│   │   └── useCollabText.ts    # Collaborative text hook
+│   │   └── components/         # Editor components
 │   ├── README.md
 │   └── package.json
-└── real-world/                 # Tier 1+2+3: Production example
-    ├── src/
-    │   ├── App.tsx             # Main application
-    │   ├── features/           # Feature modules
-    │   └── sync/               # SyncKit integration layer
-    ├── README.md
-    └── package.json
+├── project-management/         # Production-grade example (skeleton)
+│   ├── src/
+│   │   ├── App.tsx             # Main application
+│   │   ├── features/           # Feature modules
+│   │   └── components/         # UI components (shadcn/ui)
+│   ├── README.md
+│   └── package.json
+└── real-world/                 # Future: Full-featured app
+    └── (planned for future release)
 ```
 
 **Key Responsibilities:**
@@ -250,27 +250,21 @@ Comprehensive documentation for developers and users.
 
 ```
 docs/
+├── README.md                   # Documentation index
 ├── api/                        # API reference documentation
-│   ├── sync-document.md        # Document API (Tier 1)
-│   ├── sync-text.md            # Text API (Tier 2)
-│   ├── sync-counter.md         # Counter API
-│   ├── sync-set.md             # Set API
-│   └── react-hooks.md          # React hooks reference
+│   └── SDK_API.md              # Complete SDK API reference
 ├── architecture/               # System design documentation
-│   ├── SYSTEM_DESIGN.md        # High-level architecture
-│   ├── PROTOCOL.md             # Wire protocol details
-│   ├── CRDTS.md                # CRDT algorithms explained
-│   ├── PERFORMANCE.md          # Performance characteristics
-│   └── SECURITY.md             # Security model
-└── guides/                     # User guides
+│   └── ARCHITECTURE.md         # System architecture and design
+└── guides/                     # User guides (8 comprehensive guides)
     ├── getting-started.md      # 5-minute quick start
-    ├── installation.md         # Installation instructions
+    ├── choosing-variant.md     # Default vs Lite variant guide
     ├── offline-first.md        # Offline-first patterns
     ├── conflict-resolution.md  # Handling conflicts
-    ├── deployment.md           # Server deployment
+    ├── performance.md          # Performance optimization
+    ├── testing.md              # Testing guide
     ├── migration-from-firebase.md     # Firebase migration
     ├── migration-from-supabase.md     # Supabase migration
-    └── migration-from-yjs.md          # Yjs migration
+    └── migration-from-yjs.md          # Yjs/Automerge migration
 ```
 
 **Key Responsibilities:**
@@ -287,21 +281,22 @@ Tests that span multiple components (client + server).
 
 ```
 tests/
-├── integration/                # End-to-end integration tests
-│   ├── sync.test.ts            # Basic sync flow
-│   ├── offline.test.ts         # Offline → online transitions
-│   ├── multi-client.test.ts    # Multiple clients syncing
-│   └── conflict.test.ts        # Conflict resolution
-├── chaos/                      # Chaos engineering tests
-│   ├── network-partition.test.ts    # Split-brain scenarios
-│   ├── packet-loss.test.ts          # Packet loss simulation
-│   ├── latency.test.ts              # High latency simulation
-│   └── disconnect.test.ts           # Random disconnections
-└── performance/                # Performance benchmarks
-    ├── sync-latency.bench.ts   # Sync latency measurements
-    ├── memory.bench.ts         # Memory usage profiling
-    ├── throughput.bench.ts     # Operations per second
-    └── bundle-size.bench.ts    # Bundle size verification
+├── integration/                # End-to-end integration tests (244 tests)
+│   ├── protocol.test.ts        # Protocol sync tests
+│   ├── storage.test.ts         # Storage adapter tests
+│   ├── offline.test.ts         # Offline scenarios
+│   └── (more test files)       # Additional integration tests
+├── chaos/                      # Chaos engineering tests (80 tests)
+│   ├── network-failures.test.ts     # Network failure scenarios
+│   ├── convergence.test.ts          # Convergence verification
+│   ├── partitions.test.ts           # Network partition handling
+│   └── (more chaos tests)           # Additional chaos tests
+├── load/                       # Load and performance tests (61 tests)
+│   ├── concurrency.test.ts     # Concurrent operations
+│   ├── sustained-load.test.ts  # Sustained load testing
+│   ├── burst-traffic.test.ts   # Burst traffic handling
+│   └── (more load tests)       # Additional performance tests
+└── package.json                # Test suite configuration (Bun)
 ```
 
 **Key Responsibilities:**
@@ -314,26 +309,24 @@ tests/
 
 ## 🛠️ `scripts/` - Build and Utility Scripts
 
-Automation scripts for building, testing, and deploying.
+Automation scripts for building WASM variants.
 
 ```
 scripts/
-├── build-wasm.sh               # Build Rust → WASM
-├── build-sdk.sh                # Build TypeScript SDK
-├── build-server.sh             # Build server (all languages)
-├── run-tests.sh                # Run all tests
-├── run-chaos-tests.sh          # Run chaos engineering tests
-├── run-benchmarks.sh           # Run performance benchmarks
-├── publish.sh                  # Publish packages to NPM/Crates.io
-├── deploy-server.sh            # Deploy server to Fly.io/Railway
-└── setup-dev.sh                # Setup development environment
+├── build-wasm.sh               # Build WASM (both variants)
+└── build-all-variants.sh       # Build default + lite variants
 ```
 
+**Additional Build Scripts:**
+- `core/scripts/build-wasm.sh` - Core WASM build (Linux/Mac)
+- `core/scripts/build-wasm.ps1` - Core WASM build (Windows)
+- `npm run build` - Build SDK
+- `npm test` - Run all tests (SDK + core + server)
+
 **Key Responsibilities:**
-- ✅ Automate repetitive tasks
-- ✅ Ensure consistent builds
-- ✅ Simplify deployment
-- ✅ Developer onboarding automation
+- ✅ Automate WASM builds
+- ✅ Build both default and lite variants
+- ✅ Consistent cross-platform builds
 
 ---
 
@@ -375,15 +368,25 @@ After building, you'll have:
 
 ```
 synckit/
-├── core/pkg/                   # WASM build output
-│   ├── synckit_core_bg.wasm    # WASM binary (<15KB)
+├── core/pkg/                   # WASM build output (default variant)
+│   ├── synckit_core_bg.wasm    # WASM binary (~49KB gzipped)
+│   ├── synckit_core_bg.wasm.gz # Gzipped WASM
 │   ├── synckit_core.js         # JS bindings
 │   └── synckit_core.d.ts       # TypeScript types
+├── pkg-default/                # SDK with default WASM (~53KB total)
+│   └── (WASM variant: full features)
+├── pkg-lite/                   # SDK with lite WASM (~48KB total)
+│   └── (WASM variant: local-only)
 ├── sdk/dist/                   # SDK build output
-│   ├── index.js                # Main entry
-│   ├── index.d.ts              # TypeScript types
+│   ├── index.js                # Main entry (default)
+│   ├── index.mjs               # ES module (default)
+│   ├── index.d.ts              # TypeScript types (default)
+│   ├── index-lite.js           # Main entry (lite)
+│   ├── index-lite.mjs          # ES module (lite)
+│   ├── index-lite.d.ts         # TypeScript types (lite)
 │   └── adapters/               # Framework adapters
-└── server/*/dist/              # Server build outputs
+│       └── react.js/mjs/d.ts   # React hooks
+└── server/typescript/dist/     # Server build output
 ```
 
 ---
@@ -393,21 +396,28 @@ synckit/
 To start developing:
 
 ```bash
-# Setup development environment
-./scripts/setup-dev.sh
+# 1. Install dependencies
+npm install
 
-# Build Rust core to WASM
-./scripts/build-wasm.sh
+# 2. Install server dependencies (not a workspace)
+cd server/typescript && bun install && cd ../..
 
-# Build TypeScript SDK
-./scripts/build-sdk.sh
+# 3. Build WASM (optional - pre-built WASM included)
+# Only needed if modifying Rust code
+cd core && bash scripts/build-wasm.sh && cd ..
+# Windows: cd core && .\scripts\build-wasm.ps1 && cd ..
 
-# Run tests
-./scripts/run-tests.sh
+# 4. Build SDK
+npm run build
 
-# Start development server
+# 5. Run all tests
+npm test
+
+# 6. Start development server
 cd server/typescript && bun run dev
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
 
 ---
 
