@@ -15,10 +15,7 @@ synckit/
 ├── examples/       # Example applications and demos
 ├── docs/           # Documentation (guides, API, architecture)
 ├── tests/          # Cross-cutting tests (integration, chaos, load)
-├── scripts/        # Build and utility scripts
-├── analysis/       # Performance analysis and benchmarks
-├── pkg-default/    # Build artifact: Default variant package
-└── pkg-lite/       # Build artifact: Lite variant package
+└── scripts/        # Build and utility scripts
 ```
 
 ---
@@ -31,44 +28,41 @@ The heart of SyncKit. Written in Rust for performance, compiled to WASM for web 
 core/
 ├── src/
 │   ├── lib.rs                  # Main library entry point
+│   ├── document.rs             # Document structure and operations
+│   ├── error.rs                # Error types
 │   ├── sync/                   # Synchronization algorithms
-│   │   ├── mod.rs              # Sync module exports
-│   │   ├── vector_clock.rs     # Vector clock implementation
-│   │   ├── lww.rs              # Last-Write-Wins merge algorithm
-│   │   ├── delta.rs            # Delta computation
-│   │   └── conflict.rs         # Conflict resolution strategies
+│   │   ├── mod.rs
+│   │   ├── vector_clock.rs     # Vector clock for causality tracking
+│   │   ├── lww.rs              # Last-Write-Wins merge
+│   │   └── delta.rs            # Delta computation and sync
 │   ├── crdt/                   # CRDT data structures
-│   │   ├── mod.rs              # CRDT module exports
+│   │   ├── mod.rs
 │   │   ├── or_set.rs           # Observed-Remove Set
 │   │   ├── pn_counter.rs       # Positive-Negative Counter
-│   │   ├── fractional_index.rs # Fractional indexing for lists
+│   │   ├── fractional_index.rs # Fractional indexing
 │   │   └── text/               # Text CRDT (YATA-based)
-│   │       ├── mod.rs          # Text CRDT exports
-│   │       ├── block.rs        # Block structure
-│   │       ├── operations.rs   # Text operations
-│   │       └── peritext.rs     # Rich text formatting (Peritext)
-│   ├── protocol/               # Wire protocol implementation
-│   │   ├── mod.rs              # Protocol module exports
-│   │   ├── encoder.rs          # Binary encoding (Protobuf)
-│   │   ├── decoder.rs          # Binary decoding
-│   │   ├── websocket.rs        # WebSocket protocol handler
-│   │   └── compression.rs      # Compression (gzip/Brotli)
+│   │       ├── mod.rs
+│   │       ├── text.rs         # Main text CRDT implementation
+│   │       ├── item.rs         # Text item structure
+│   │       └── id.rs           # Unique identifiers
+│   ├── protocol/               # Wire protocol (Protobuf)
+│   │   ├── mod.rs
+│   │   ├── delta.rs            # Delta protocol messages
+│   │   ├── serialize.rs        # Serialization logic
+│   │   ├── sync.rs             # Sync protocol
+│   │   └── gen/                # Generated Protobuf code
 │   ├── storage/                # Storage abstraction
-│   │   ├── mod.rs              # Storage module exports
-│   │   ├── traits.rs           # Storage trait definitions
-│   │   └── memory.rs           # In-memory storage (testing)
-│   ├── wasm/                   # WASM bindings
-│   │   ├── mod.rs              # WASM module entry
-│   │   └── bindings.rs         # JavaScript bindings (wasm-bindgen)
-│   └── document.rs             # Document structure and operations
-├── tests/                      # Rust unit and integration tests
-│   ├── property_tests.rs       # Property-based tests (PropTest)
-│   ├── wasm_test.html          # WASM browser tests
-│   └── wasm_test.mjs           # WASM module tests
+│   │   └── mod.rs              # Storage interface
+│   └── wasm/                   # WASM bindings
+│       ├── mod.rs
+│       ├── bindings.rs         # JavaScript bindings (wasm-bindgen)
+│       └── utils.rs            # WASM utilities
+├── tests/                      # Rust tests
+│   └── property_tests.rs       # Property-based tests (PropTest)
 ├── benches/                    # Performance benchmarks (Criterion)
-│   ├── lww_bench.rs            # LWW performance benchmarks
-│   ├── vector_clock_bench.rs   # Vector clock benchmarks
-│   └── delta_bench.rs          # Delta computation benchmarks
+│   ├── lww_bench.rs
+│   ├── vector_clock_bench.rs
+│   └── delta_bench.rs
 ├── scripts/                    # Build scripts
 │   ├── build-wasm.sh           # Build WASM (Linux/Mac)
 │   └── build-wasm.ps1          # Build WASM (Windows)
@@ -93,24 +87,20 @@ sdk/
 ├── src/
 │   ├── index.ts                # Main SDK entry point (default variant)
 │   ├── index-lite.ts           # Lite variant entry point
-│   ├── synckit.ts              # Core SyncKit class
-│   ├── synckit-lite.ts         # Lite variant SyncKit class
+│   ├── synckit.ts              # Core SyncKit class (default)
+│   ├── synckit-lite.ts         # Core SyncKit class (lite)
 │   ├── document.ts             # Document API (LWW sync)
 │   ├── wasm-loader.ts          # WASM module loading (default)
 │   ├── wasm-loader-lite.ts     # WASM module loading (lite)
 │   ├── types.ts                # TypeScript type definitions
-│   ├── adapters/               # Framework-specific adapters
-│   │   └── react.tsx           # React hooks (useDocument, etc.)
-│   ├── hooks/                  # Shared hook logic
-│   │   └── (internal hooks)    # Hook utilities
-│   ├── storage/                # Storage adapters
-│   │   ├── index.ts            # Storage exports
-│   │   ├── indexeddb.ts        # IndexedDB implementation
-│   │   └── memory.ts           # In-memory storage (testing)
-│   └── utils/                  # Utility functions
-│       └── (internal utils)    # Utility functions
-├── tests/                      # TypeScript tests (Vitest)
-│   └── (SDK tests)             # SDK integration tests
+│   ├── adapters/               # Framework adapters
+│   │   └── react.tsx           # React hooks (useDocument)
+│   └── storage/                # Storage adapters
+│       ├── index.ts            # Storage exports
+│       ├── indexeddb.ts        # IndexedDB implementation
+│       └── memory.ts           # In-memory storage
+├── wasm/                       # WASM distribution files
+│   └── (WASM files copied here during build)
 └── package.json                # NPM package configuration
 ```
 
@@ -131,45 +121,24 @@ Reference server implementations in multiple languages. All implement the same P
 
 ```
 server/
-├── typescript/                 # TypeScript reference (v0.1.0 primary)
-│   ├── src/
-│   │   ├── index.ts            # Server entry point
-│   │   ├── websocket.ts        # WebSocket connection handler
-│   │   ├── routes/             # HTTP endpoints
-│   │   │   ├── sync.ts         # Sync endpoints
-│   │   │   ├── auth.ts         # Authentication endpoints
-│   │   │   └── health.ts       # Health check
-│   │   ├── middleware/         # Express/Hono middleware
-│   │   │   ├── auth.ts         # JWT authentication
-│   │   │   ├── cors.ts         # CORS configuration
-│   │   │   └── error.ts        # Error handling
-│   │   ├── services/           # Business logic
-│   │   │   ├── sync-coordinator.ts  # Sync orchestration
-│   │   │   ├── storage.ts      # Database abstraction
-│   │   │   └── auth.ts         # Auth service
-│   │   └── config.ts           # Configuration management
-│   ├── Dockerfile              # Docker container
-│   ├── fly.toml                # Fly.io deployment config
-│   └── package.json            # Dependencies
-├── python/                     # Python reference (v0.2.0+)
-│   ├── src/
-│   │   ├── main.py             # FastAPI app entry
-│   │   ├── websocket.py        # WebSocket handler
-│   │   ├── sync.py             # Sync coordinator
-│   │   └── storage.py          # Database layer
-│   └── requirements.txt        # Python dependencies
-├── go/                         # Go reference (v0.2.0+)
-│   ├── src/
-│   │   ├── main.go             # Server entry
-│   │   ├── websocket.go        # WebSocket handler
-│   │   └── sync.go             # Sync coordinator
-│   └── go.mod                  # Go module
-└── rust/                       # Rust reference (v0.3.0+)
+└── typescript/                 # TypeScript server (v0.1.0)
     ├── src/
-    │   ├── main.rs             # Server entry
-    │   ├── websocket.rs        # WebSocket handler
-    │   └── sync.rs             # Sync coordinator
-    └── Cargo.toml              # Rust dependencies
+    │   ├── index.ts            # Server entry point
+    │   ├── config.ts           # Configuration
+    │   ├── auth/               # Authentication
+    │   ├── middleware/         # Hono middleware
+    │   ├── routes/             # HTTP routes
+    │   ├── services/           # Business logic
+    │   ├── storage/            # Database layer (PostgreSQL)
+    │   ├── sync/               # Sync coordination
+    │   └── websocket/          # WebSocket handlers
+    ├── tests/                  # Server tests (Bun)
+    │   ├── unit/               # Unit tests
+    │   ├── integration/        # Integration tests
+    │   └── benchmarks/         # Performance benchmarks
+    └── package.json            # Bun package config
+
+Note: Python, Go, and Rust server implementations planned for future releases.
 ```
 
 **Key Responsibilities:**
@@ -188,14 +157,18 @@ Protocol specifications and formal verification.
 ```
 protocol/
 ├── specs/                      # Protobuf specifications
-│   ├── sync.proto              # Core sync protocol
+│   ├── types.proto             # Shared types (VectorClock, etc.)
 │   ├── messages.proto          # Message formats
+│   ├── sync.proto              # Core sync protocol
 │   ├── auth.proto              # Authentication messages
-│   └── types.proto             # Shared types (VectorClock, etc.)
+│   └── README.md               # Protocol documentation
 └── tla/                        # TLA+ formal specifications
     ├── lww_merge.tla           # LWW merge algorithm
+    ├── lww_merge.cfg           # TLA+ config
     ├── vector_clock.tla        # Vector clock properties
+    ├── vector_clock.cfg        # TLA+ config
     ├── convergence.tla         # Convergence proof
+    ├── convergence.cfg         # TLA+ config
     └── README.md               # How to run TLA+ model checking
 ```
 
@@ -213,27 +186,33 @@ Real-world examples demonstrating different tiers of SyncKit.
 
 ```
 examples/
-├── todo-app/                   # Complete CRUD example
+├── todo-app/                   # Complete CRUD example with offline support
 │   ├── src/
-│   │   ├── App.tsx             # React app
-│   │   └── components/         # UI components
-│   ├── README.md               # Setup and usage
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   ├── types.ts
+│   │   └── components/
 │   └── package.json
 ├── collaborative-editor/       # Real-time text editing (skeleton)
 │   ├── src/
-│   │   ├── App.tsx             # React app
-│   │   └── components/         # Editor components
-│   ├── README.md
+│   │   ├── App.tsx
+│   │   ├── store.ts
+│   │   ├── types.ts
+│   │   └── components/
 │   └── package.json
-├── project-management/         # Production-grade example (skeleton)
+├── project-management/         # Production-grade example with shadcn/ui (skeleton)
 │   ├── src/
-│   │   ├── App.tsx             # Main application
-│   │   ├── features/           # Feature modules
-│   │   └── components/         # UI components (shadcn/ui)
-│   ├── README.md
+│   │   ├── App.tsx
+│   │   ├── store.ts
+│   │   ├── types.ts
+│   │   ├── components/         # shadcn/ui components
+│   │   ├── hooks/              # Custom hooks
+│   │   └── lib/                # Utilities
 │   └── package.json
-└── real-world/                 # Future: Full-featured app
-    └── (planned for future release)
+└── real-world/                 # Future full-featured application
+    └── src/
+        ├── features/
+        └── sync/
 ```
 
 **Key Responsibilities:**
@@ -282,20 +261,28 @@ Tests that span multiple components (client + server).
 ```
 tests/
 ├── integration/                # End-to-end integration tests (244 tests)
-│   ├── protocol.test.ts        # Protocol sync tests
-│   ├── storage.test.ts         # Storage adapter tests
-│   ├── offline.test.ts         # Offline scenarios
-│   └── (more test files)       # Additional integration tests
+│   ├── config.ts               # Test configuration
+│   ├── setup.ts                # Test setup
+│   ├── framework.test.ts       # Framework tests
+│   ├── helpers/                # Test helpers
+│   ├── offline/                # Offline scenario tests
+│   ├── storage/                # Storage tests
+│   └── sync/                   # Sync protocol tests
 ├── chaos/                      # Chaos engineering tests (80 tests)
-│   ├── network-failures.test.ts     # Network failure scenarios
-│   ├── convergence.test.ts          # Convergence verification
-│   ├── partitions.test.ts           # Network partition handling
-│   └── (more chaos tests)           # Additional chaos tests
+│   ├── chaos-helpers.ts        # Chaos testing utilities
+│   ├── network-simulator.ts    # Network simulation
+│   ├── convergence.test.ts     # Convergence verification
+│   ├── disconnections.test.ts  # Disconnection scenarios
+│   ├── latency.test.ts         # High latency simulation
+│   ├── message-corruption.test.ts  # Message corruption
+│   └── packet-loss.test.ts     # Packet loss simulation
 ├── load/                       # Load and performance tests (61 tests)
-│   ├── concurrency.test.ts     # Concurrent operations
-│   ├── sustained-load.test.ts  # Sustained load testing
 │   ├── burst-traffic.test.ts   # Burst traffic handling
-│   └── (more load tests)       # Additional performance tests
+│   ├── concurrent-clients.test.ts  # Concurrent operations
+│   ├── high-frequency.test.ts  # High-frequency updates
+│   ├── large-documents.test.ts # Large document handling
+│   ├── profiling.test.ts       # Performance profiling
+│   └── sustained-load.test.ts  # Sustained load testing
 └── package.json                # Test suite configuration (Bun)
 ```
 
@@ -367,26 +354,24 @@ scripts/
 After building, you'll have:
 
 ```
-synckit/
-├── core/pkg/                   # WASM build output (default variant)
-│   ├── synckit_core_bg.wasm    # WASM binary (~49KB gzipped)
-│   ├── synckit_core_bg.wasm.gz # Gzipped WASM
-│   ├── synckit_core.js         # JS bindings
-│   └── synckit_core.d.ts       # TypeScript types
-├── pkg-default/                # SDK with default WASM (~53KB total)
-│   └── (WASM variant: full features)
-├── pkg-lite/                   # SDK with lite WASM (~48KB total)
-│   └── (WASM variant: local-only)
-├── sdk/dist/                   # SDK build output
-│   ├── index.js                # Main entry (default)
-│   ├── index.mjs               # ES module (default)
-│   ├── index.d.ts              # TypeScript types (default)
-│   ├── index-lite.js           # Main entry (lite)
-│   ├── index-lite.mjs          # ES module (lite)
-│   ├── index-lite.d.ts         # TypeScript types (lite)
-│   └── adapters/               # Framework adapters
-│       └── react.js/mjs/d.ts   # React hooks
-└── server/typescript/dist/     # Server build output
+# Build outputs are .gitignored, but after building you'll have:
+
+core/pkg/                       # WASM build output
+├── synckit_core_bg.wasm        # WASM binary (~49KB gzipped)
+├── synckit_core_bg.wasm.gz     # Gzipped WASM
+├── synckit_core.js             # JS bindings
+└── synckit_core.d.ts           # TypeScript types
+
+sdk/dist/                       # SDK build output
+├── index.js/mjs/d.ts           # Main entry (default variant)
+├── index-lite.js/mjs/d.ts      # Main entry (lite variant)
+└── adapters/
+    └── react.js/mjs/d.ts       # React hooks
+
+sdk/wasm/                       # WASM files copied during build
+└── (WASM distribution files)
+
+Note: Build artifacts (pkg-*, dist/, target/) are not tracked in git.
 ```
 
 ---
