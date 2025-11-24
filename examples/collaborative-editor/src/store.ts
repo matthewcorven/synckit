@@ -43,7 +43,6 @@ export const useStore = create<AppState>((set) => ({
   participants: new Map(),
   currentUser,
 
-  connectionStatus: 'disconnected',
   sidebarOpen: true,
 
   // Document actions
@@ -120,12 +119,6 @@ export const useStore = create<AppState>((set) => ({
       newParticipants.set(id, { ...participant, cursor, lastSeen: Date.now() })
       return { participants: newParticipants }
     }),
-
-  // Connection actions
-  setConnectionStatus: (status) =>
-    set(() => ({
-      connectionStatus: status,
-    })),
 
   // UI actions
   toggleSidebar: () =>

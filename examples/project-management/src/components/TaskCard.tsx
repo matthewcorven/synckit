@@ -5,7 +5,7 @@ import { useStore } from '../store'
 import { Card } from './ui/card'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
-import { MoreVertical, Calendar, User } from 'lucide-react'
+import { MoreVertical, Calendar } from 'lucide-react'
 import { getPriorityColor, getInitials, formatRelativeTime } from '../lib/utils'
 
 interface TaskCardProps {

@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand'
-import type { AppState, Project, Task, TaskStatus, TeamMember } from './types'
+import type { AppState, Project, Task, TeamMember } from './types'
 import { generateColor } from './lib/utils'
 
 // Generate current user
@@ -123,7 +123,6 @@ export const useStore = create<AppState>((set) => ({
   currentUser,
 
   activeProjectId: 'project-default',
-  connectionStatus: 'disconnected',
   sidebarOpen: true,
   taskModalOpen: false,
   selectedTaskId: null,
@@ -224,11 +223,6 @@ export const useStore = create<AppState>((set) => ({
     }),
 
   // UI actions
-  setConnectionStatus: (status) =>
-    set(() => ({
-      connectionStatus: status,
-    })),
-
   toggleSidebar: () =>
     set((state) => ({
       sidebarOpen: !state.sidebarOpen,

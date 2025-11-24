@@ -95,15 +95,15 @@ const awareness = provider.awareness
 
 **Size comparison (gzipped):**
 - Yjs: **~19KB** (pure JavaScript)
-- SyncKit Lite: **~44KB** (WASM + JS)
-- SyncKit Default: **~49KB** (WASM + JS)
+- SyncKit Lite: **~45KB** (WASM + JS)
+- SyncKit Default: **~58KB** (WASM + JS)
 - Automerge: **~60-78KB** (WASM + JS)
 
 **Impact:**
 - Bundle size similar to SyncKit
 - Different trade-offs: Automerge = rich CRDTs, SyncKit = structured data sync
 
-**SyncKit solution:** ~49KB total, competitive size, simpler API for most use cases.
+**SyncKit solution:** ~58KB total, competitive size, simpler API for most use cases.
 
 #### 2. Alpha/Beta Status
 
@@ -156,7 +156,7 @@ doc = change(doc, doc => {
 
 | Feature | Yjs | SyncKit | Winner |
 |---------|-----|---------|--------|
-| **Bundle Size (gzipped)** | **~19KB** | ~49KB (~44KB lite) | 🏆 Yjs (2.6x smaller) |
+| **Bundle Size (gzipped)** | **~19KB** | ~58KB (~45KB lite) | 🏆 Yjs (2.6x smaller) |
 | **Learning Curve** | ⚠️ Steep (CRDT internals) | ✅ Simple (document API) | 🏆 SyncKit |
 | **Setup Complexity** | ⚠️ Manual providers | ✅ Zero config | 🏆 SyncKit |
 | **TypeScript Support** | ⚠️ Issues (#460, #425) | ✅ Native TS | 🏆 SyncKit |
@@ -183,7 +183,7 @@ doc = change(doc, doc => {
 
 | Feature | Automerge | SyncKit | Winner |
 |---------|-----------|---------|--------|
-| **Bundle Size (gzipped)** | ~60-78KB | ~49KB (~44KB lite) | 🏆 SyncKit (slightly smaller) |
+| **Bundle Size (gzipped)** | ~60-78KB | ~58KB (~45KB lite) | 🏆 SyncKit (slightly smaller) |
 | **Stability** | ⚠️ Alpha/Beta | ✅ Production-ready | 🏆 SyncKit |
 | **Performance** | ⚠️ Slower for text ops | ✅ <1ms LWW operations | 🏆 SyncKit (for structured data) |
 | **Memory Usage** | ⚠️ Higher for large docs | ✅ Optimized for LWW | 🏆 SyncKit (for structured data) |
@@ -744,7 +744,7 @@ test('both should handle conflicts gracefully', async () => {
 
 | Metric | Yjs → SyncKit | Automerge → SyncKit |
 |--------|---------------|---------------------|
-| **Bundle size** | +158% (~19KB → ~49KB) | Smaller (~60-78KB → ~49KB) |
+| **Bundle size** | +158% (~19KB → ~58KB) | Smaller (~60-78KB → ~58KB) |
 | **Setup complexity** | -80% (no providers) | -70% (simpler API) |
 | **Learning curve** | Much easier | Much easier |
 | **TypeScript support** | Better | Similar |

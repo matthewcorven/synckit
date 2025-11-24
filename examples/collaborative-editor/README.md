@@ -3,7 +3,7 @@
 A production-ready collaborative Markdown and code editor built with SyncKit, React, and CodeMirror 6. This example demonstrates SyncKit's offline-first capabilities, real-time sync, and conflict-free collaboration.
 
 ![Bundle Size](https://img.shields.io/badge/bundle-~330KB%20uncompressed%20|%20~123KB%20gzipped-success)
-![SyncKit](https://img.shields.io/badge/synckit-~53KB-brightgreen)
+![SyncKit](https://img.shields.io/badge/synckit-~58KB%20gzipped-brightgreen)
 ![React](https://img.shields.io/badge/react-18.2-blue)
 ![TypeScript](https://img.shields.io/badge/typescript-5.0-blue)
 
@@ -23,7 +23,7 @@ A production-ready collaborative Markdown and code editor built with SyncKit, Re
 ### Technical Highlights
 
 - **Optimized Bundle**: ~123KB gzipped (CodeMirror 6 + React + SyncKit)
-- **Full-Featured**: Uses SyncKit default (~53 KB total) - includes text CRDT + all features
+- **Full-Featured**: Uses SyncKit default (~45 KB ESM) - includes network sync + offline queue
 - **Type-Safe**: Full TypeScript support throughout
 - **Modern Stack**: React 18, Vite, CodeMirror 6, Zustand
 - **Production-Ready**: Comprehensive error handling, accessibility, and UX polish
@@ -74,7 +74,7 @@ const useStore = create<AppState>((set) => ({
   openDocuments: [...],
   activeDocumentId: 'welcome',
   participants: new Map(),
-  connectionStatus: 'disconnected',
+  sidebarOpen: true,
   // Actions
   addDocument: (doc) => set((state) => ({ ... })),
   openDocument: (id) => set((state) => ({ ... })),
@@ -96,47 +96,79 @@ The editor uses SyncKit's React hooks for seamless sync:
 import { useSyncDocument } from '@synckit/sdk/react'
 
 function Editor({ documentId }) {
-  const [doc, { update }] = useSyncDocument<{ content: string }>(documentId)
+  // Returns [data, setters, document]
+  const [data, { update }] = useSyncDocument<{ content: string }>(documentId)
 
   // Update document on editor change
   const handleChange = (newContent: string) => {
-    setDoc({ content: newContent })
+    update({ content: newContent })
   }
 
-  // doc.content automatically updates when remote changes arrive
-  return <CodeMirrorEditor value={doc?.content} onChange={handleChange} />
+  // data.content automatically updates when remote changes arrive
+  return <CodeMirrorEditor value={data?.content} onChange={handleChange} />
 }
 ```
 
 #### Key Integration Points
 
-1. **Document Creation** (`Sidebar.tsx:18-34`)
+1. **Document Creation** (`Sidebar.tsx:23-40`)
    ```typescript
-   const handleCreateDocument = () => {
+   const handleCreateDocument = async () => {
      const id = `doc-${Date.now()}`
+     const newDoc: DocumentMetadata = {
+       id,
+       title: 'Untitled.md',
+       createdAt: Date.now(),
+       updatedAt: Date.now(),
+       language: 'markdown',
+     }
+
+     // Create document in SyncKit
      const doc = sync.document<{ content: string }>(id)
-     doc.update({ content: '# New Document\n\nStart typing...' })
-     addDocument({ id, title: 'Untitled.md', ... })
+     await doc.init() // Wait for document to initialize
+     await doc.update({ content: '# New Document\n\nStart typing...' })
+
+     addDocument(newDoc)
+     openDocument(id)
    }
    ```
 
-2. **Real-time Sync** (`Editor.tsx:46-54`)
+2. **Real-time Sync** (`Editor.tsx:43-48`)
    ```typescript
-   EditorView.updateListener.of((update) => {
-     if (update.docChanged) {
-       setDoc({ content: update.state.doc.toString() })
+   EditorView.updateListener.of((updateEvent) => {
+     if (updateEvent.docChanged) {
+       const content = updateEvent.state.doc.toString()
+       update({ content })
      }
    })
    ```
 
-3. **Connection Monitoring** (`App.tsx:25-31`)
+3. **Network Status Monitoring** (`Header.tsx:12-41`)
    ```typescript
-   useEffect(() => {
-     const unsubscribe = sync.onStatusChange((status) => {
-       setConnectionStatus(status)
-     })
-     return unsubscribe
-   }, [])
+   import { useNetworkStatus } from '@synckit/sdk/react'
+
+   const networkStatus = useNetworkStatus()
+
+   const getStatusText = () => {
+     if (!networkStatus) return 'Offline Mode'
+
+     if (networkStatus.queueSize > 0) {
+       return `Syncing (${networkStatus.queueSize} pending)`
+     }
+
+     switch (networkStatus.connectionState) {
+       case 'connected':
+         return 'All changes saved'
+       case 'connecting':
+         return 'Connecting...'
+       case 'reconnecting':
+         return 'Reconnecting...'
+       case 'failed':
+         return 'Connection failed'
+       default:
+         return 'Offline'
+     }
+   }
    ```
 
 ## Configuration
@@ -153,12 +185,12 @@ const sync = new SyncKit({
 
 ### Server Sync Mode
 
-To enable real-time collaboration across devices, uncomment the server URL:
+To enable real-time collaboration across devices, add the server URL:
 
 ```typescript
 const sync = new SyncKit({
   storage: 'indexeddb',
-  url: 'ws://localhost:8080', // SyncKit sync server
+  serverUrl: 'ws://localhost:8080', // SyncKit sync server
 })
 ```
 
@@ -181,10 +213,9 @@ const sync = new SyncKit({ storage: 'indexeddb' })
 
 // Memory (for testing, data lost on refresh)
 const sync = new SyncKit({ storage: 'memory' })
-
-// OPFS (Origin Private File System, Chrome 86+)
-const sync = new SyncKit({ storage: 'opfs' })
 ```
+
+> **Note**: OPFS (Origin Private File System) storage is planned for a future release.
 
 ## How It Works
 
@@ -198,7 +229,7 @@ const sync = new SyncKit({ storage: 'opfs' })
 2. **Background Sync**
    - When online, SyncKit syncs changes in the background
    - Delta sync minimizes bandwidth usage
-   - Binary Protobuf protocol for efficiency
+   - Binary message protocol for efficiency
 
 3. **Conflict Resolution**
    - Uses Last-Write-Wins (LWW) strategy
@@ -227,12 +258,12 @@ Other clients merge changes conflict-free
 
 ### Why SyncKit?
 
-This collaborative editor needs **real-time text editing** with multiple users typing simultaneously. SyncKit provides:
-- ✅ Text CRDT (character-level collaboration)
-- ✅ Conflict-free convergence (no lost edits)
+This collaborative editor needs **offline-first document sync** with real-time updates. SyncKit provides:
 - ✅ Offline-first architecture
+- ✅ Conflict-free convergence (no lost edits)
 - ✅ Real-time collaboration
-- ✅ All features in ~53 KB total
+- ✅ Network sync in ~45 KB (ESM)
+- ✅ Offline-only in just 5.1 KB (ESM)
 
 **Full-featured collaborative editing** in a lightweight package.
 
@@ -243,7 +274,7 @@ Component                    Uncompressed    Gzipped
 ────────────────────────────────────────────────────
 CodeMirror 6                     410 KB      124 KB
 React 18 + ReactDOM              142 KB       45 KB
-SyncKit (WASM + SDK)              97 KB       53 KB
+SyncKit (WASM + SDK)              97 KB       45 KB
 Zustand                            9 KB        3 KB
 Application Code                  22 KB        8 KB
 ────────────────────────────────────────────────────
@@ -252,18 +283,18 @@ Total                           ~330 KB     ~123 KB
 
 ### Size-Critical Apps?
 
-**Need smaller bundle?** Use SyncKit Lite (~48 KB):
+**Need smaller bundle?** Use SyncKit Lite (~5.1 KB ESM / ~22 KB CJS):
 ```typescript
-import { SyncKit } from '@synckit/sdk/lite'  // Local-only, ~48 KB
+import { SyncKit } from '@synckit/sdk/lite'  // Local-only, no network
 ```
 
-**Trade-off:** No server sync. For collaborative editors, the default variant (~53 KB) is recommended.
+**Trade-off:** No server sync. For collaborative editors, the default variant (~45 KB ESM) is recommended.
 
 ### Why These Choices?
 
 - **CodeMirror 6** (~124KB) vs Monaco (2MB+): 94% smaller, same functionality
 - **Zustand** (~3KB) vs Redux (20KB+): 85% smaller, simpler API
-- **SyncKit** (~53KB): Document-level sync with WASM portability
+- **SyncKit** (~58KB gzipped): Document-level sync with full network capabilities
 
 ## Extending This Example
 
@@ -314,8 +345,8 @@ const remoteCursors = EditorView.decorations.of(
 
 ```typescript
 const handleExport = async () => {
-  const doc = sync.document<{ content: string }>(documentId)
-  const blob = new Blob([doc.get().content], { type: 'text/markdown' })
+  const [data] = useSyncDocument<{ content: string }>(documentId)
+  const blob = new Blob([data.content], { type: 'text/markdown' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -372,7 +403,7 @@ VITE_SYNCKIT_SERVER=wss://sync.yourdomain.com
 ```typescript
 const sync = new SyncKit({
   storage: 'indexeddb',
-  url: import.meta.env.VITE_SYNCKIT_SERVER,
+  serverUrl: import.meta.env.VITE_SYNCKIT_SERVER,
 })
 ```
 
@@ -381,11 +412,13 @@ const sync = new SyncKit({
 ### Editor Content Not Syncing
 
 **Check connection status**: Look at the status indicator in the header
-- Green dot = Connected and syncing
-- Yellow dot = Connecting
-- Red dot = Offline (local-only mode)
+- **Offline Mode** = No sync server configured (local-only)
+- **All changes saved** = Connected with green dot
+- **Syncing (X pending)** = Blue pulsing dot with queue count
+- **Connecting...** = Yellow pulsing dot
+- **Connection failed** = Red dot
 
-**Verify server configuration**: Ensure `url` is set in SyncKit initialization
+**Verify server configuration**: Ensure `serverUrl` is set in SyncKit initialization
 
 ### Document Not Persisting
 
@@ -414,7 +447,7 @@ const extensions = [
 - **SyncKit Documentation**: `../../docs/README.md`
 - **Getting Started Guide**: `../../docs/guides/getting-started.md`
 - **Offline-First Guide**: `../../docs/guides/offline-first.md`
-- **API Reference**: `../../docs/api/sdk.md`
+- **API Reference**: `../../docs/api/SDK_API.md`
 
 ## License
 

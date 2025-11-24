@@ -1,46 +1,56 @@
 import { useStore } from '../store'
-import type { SyncKit } from '@synckit/sdk'
+import { useNetworkStatus } from '@synckit/sdk/react'
 import { Button } from './ui/button'
 import { Menu, Plus } from 'lucide-react'
 
-interface HeaderProps {
-  sync: SyncKit
-}
-
-export default function Header({ sync }: HeaderProps) {
+export default function Header() {
   const {
     projects,
     activeProjectId,
     toggleSidebar,
-    connectionStatus,
     openTaskModal,
   } = useStore()
+
+  // Use network status hook from SDK
+  const networkStatus = useNetworkStatus()
 
   const activeProject = projects.find((p) => p.id === activeProjectId)
 
   const getStatusText = () => {
-    switch (connectionStatus) {
+    if (!networkStatus) return 'Offline Mode'
+
+    if (networkStatus.queueSize > 0) {
+      return `Syncing (${networkStatus.queueSize} pending)`
+    }
+
+    switch (networkStatus.connectionState) {
       case 'connected':
-        return 'Connected'
+        return 'All changes saved'
       case 'connecting':
         return 'Connecting...'
       case 'reconnecting':
         return 'Reconnecting...'
-      case 'disconnected':
-        return 'Offline'
+      case 'failed':
+        return 'Connection failed'
       default:
         return 'Offline'
     }
   }
 
   const getStatusColor = () => {
-    switch (connectionStatus) {
+    if (!networkStatus) return 'bg-gray-500'
+
+    if (networkStatus.queueSize > 0) {
+      return 'bg-blue-500 animate-pulse'
+    }
+
+    switch (networkStatus.connectionState) {
       case 'connected':
         return 'bg-green-500'
       case 'connecting':
       case 'reconnecting':
         return 'bg-yellow-500 animate-pulse'
-      case 'disconnected':
+      case 'failed':
         return 'bg-red-500'
       default:
         return 'bg-gray-500'

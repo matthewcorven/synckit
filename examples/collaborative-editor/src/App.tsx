@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-// Default variant (49 KB) - includes all features (text CRDT, counters, sets)
+// Default variant (45 KB ESM) - includes network sync + offline queue
 import { SyncKit } from '@synckit/sdk'
 import { SyncProvider } from '@synckit/sdk/react'
 import { useStore } from './store'
@@ -20,7 +20,6 @@ function App() {
     activeDocumentId,
     documents,
     sidebarOpen,
-    setConnectionStatus,
   } = useStore()
 
   const [initialized, setInitialized] = useState(false)
@@ -29,12 +28,10 @@ function App() {
   useEffect(() => {
     sync.init().then(() => {
       setInitialized(true)
-      setConnectionStatus('connected')
     }).catch((error) => {
       console.error('Failed to initialize SyncKit:', error)
-      setConnectionStatus('disconnected')
     })
-  }, [setConnectionStatus])
+  }, [])
 
   if (!initialized) {
     return <div className="app-loading">Initializing...</div>

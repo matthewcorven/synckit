@@ -30,7 +30,7 @@ SyncKit is designed for **"fast enough for real-world use, easy to optimize"** r
 | **Local operation** | <1ms | ~371ns (single field) |
 | **Merge operation** | <5ms | ~74µs (document merge) |
 | **Sync latency** | <100ms | N/A (network sync not in v0.1.0) |
-| **Bundle size** | <100KB | 44-49KB (tiered variants) |
+| **Bundle size** | <100KB | 45-58KB (tiered variants) |
 | **Memory** | <10MB | ~3MB (10K documents) |
 | **Initial load** | <3s | ~1.2s (cached WASM) |
 

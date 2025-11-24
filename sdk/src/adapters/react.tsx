@@ -6,6 +6,7 @@
 import { useEffect, useState, useCallback, useRef, createContext, useContext } from 'react'
 import type { SyncKit } from '../synckit'
 import type { SyncDocument } from '../document'
+import type { NetworkStatus, DocumentSyncState } from '../types'
 
 // ====================
 // Context
@@ -153,12 +154,122 @@ export function useSyncField<T extends Record<string, unknown>, K extends keyof 
 export function useSyncDocumentList(): string[] {
   const synckit = useSyncKit()
   const [ids, setIds] = useState<string[]>([])
-  
+
   useEffect(() => {
     synckit.listDocuments()
       .then(setIds)
       .catch(console.error)
   }, [synckit])
-  
+
   return ids
+}
+
+// ====================
+// Network Status Hook
+// ====================
+
+/**
+ * Hook for monitoring network status
+ * Returns null if network layer is not initialized (offline-only mode)
+ */
+export function useNetworkStatus(): NetworkStatus | null {
+  const synckit = useSyncKit()
+  const [status, setStatus] = useState<NetworkStatus | null>(() =>
+    synckit.getNetworkStatus()
+  )
+
+  useEffect(() => {
+    // If no network layer, return early
+    const initialStatus = synckit.getNetworkStatus()
+    if (!initialStatus) {
+      setStatus(null)
+      return
+    }
+
+    // Set initial status
+    setStatus(initialStatus)
+
+    // Subscribe to changes
+    const unsubscribe = synckit.onNetworkStatusChange((newStatus) => {
+      setStatus(newStatus)
+    })
+
+    return unsubscribe || undefined
+  }, [synckit])
+
+  return status
+}
+
+// ====================
+// Sync State Hook
+// ====================
+
+/**
+ * Hook for monitoring document sync state
+ * Returns null if network layer is not initialized (offline-only mode)
+ */
+export function useSyncState(documentId: string): DocumentSyncState | null {
+  const synckit = useSyncKit()
+  const [syncState, setSyncState] = useState<DocumentSyncState | null>(() =>
+    synckit.getSyncState(documentId)
+  )
+
+  useEffect(() => {
+    // If no network layer, return early
+    const initialState = synckit.getSyncState(documentId)
+    if (!initialState) {
+      setSyncState(null)
+      return
+    }
+
+    // Set initial state
+    setSyncState(initialState)
+
+    // Subscribe to changes
+    const unsubscribe = synckit.onSyncStateChange(documentId, (newState) => {
+      setSyncState(newState)
+    })
+
+    return unsubscribe || undefined
+  }, [synckit, documentId])
+
+  return syncState
+}
+
+// ====================
+// Enhanced Document Hook with Sync State
+// ====================
+
+export interface UseSyncDocumentResult<T extends Record<string, unknown>> {
+  /** Document data */
+  data: T
+  /** Document setters */
+  setters: {
+    set: <K extends keyof T>(field: K, value: T[K]) => Promise<void>
+    update: (updates: Partial<T>) => Promise<void>
+    delete: <K extends keyof T>(field: K) => Promise<void>
+  }
+  /** Document instance */
+  document: SyncDocument<T>
+  /** Sync state (null if network layer not initialized) */
+  syncState: DocumentSyncState | null
+}
+
+/**
+ * Enhanced hook for syncing a document with sync state
+ * Returns an object with data, setters, document, and syncState
+ */
+export function useSyncDocumentWithState<T extends Record<string, unknown>>(
+  id: string,
+  options: UseSyncDocumentOptions = {}
+): UseSyncDocumentResult<T> {
+  const [data, setters, document] = useSyncDocument<T>(id, options)
+  const syncState = useSyncState(id)
+
+  return {
+    data,
+    setters,
+    document,
+    syncState,
+  }
 }

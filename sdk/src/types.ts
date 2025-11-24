@@ -10,15 +10,50 @@
 export interface SyncKitConfig {
   /** Storage adapter to use */
   storage?: 'indexeddb' | 'memory' | StorageAdapter
-  
+
   /** Application name (used for storage namespacing) */
   name?: string
-  
+
   /** Server URL for remote sync (optional for offline-only) */
   serverUrl?: string
-  
+
   /** Client ID (auto-generated if not provided) */
   clientId?: string
+
+  /** Network configuration (optional) */
+  network?: NetworkConfig
+}
+
+export interface NetworkConfig {
+  /** WebSocket reconnection options */
+  reconnect?: {
+    /** Initial delay in ms (default: 1000) */
+    initialDelay?: number
+    /** Maximum delay in ms (default: 30000) */
+    maxDelay?: number
+    /** Backoff multiplier (default: 1.5) */
+    multiplier?: number
+  }
+
+  /** Heartbeat/ping options */
+  heartbeat?: {
+    /** Ping interval in ms (default: 30000) */
+    interval?: number
+    /** Timeout in ms (default: 5000) */
+    timeout?: number
+  }
+
+  /** Offline queue options */
+  queue?: {
+    /** Maximum queue size (default: 1000) */
+    maxSize?: number
+    /** Maximum retry attempts (default: 5) */
+    maxRetries?: number
+    /** Initial retry delay in ms (default: 1000) */
+    retryDelay?: number
+    /** Retry backoff multiplier (default: 2.0) */
+    retryBackoff?: number
+  }
 }
 
 // ====================
@@ -128,4 +163,52 @@ export class DocumentError extends SyncKitError {
     super(message, 'DOCUMENT_ERROR')
     this.name = 'DocumentError'
   }
+}
+
+export class NetworkError extends SyncKitError {
+  constructor(message: string) {
+    super(message, 'NETWORK_ERROR')
+    this.name = 'NetworkError'
+  }
+}
+
+// ====================
+// Network Types
+// ====================
+
+export type NetworkState = 'online' | 'offline' | 'unknown'
+
+export type ConnectionState =
+  | 'disconnected'
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting'
+  | 'failed'
+
+export type SyncState =
+  | 'idle'
+  | 'syncing'
+  | 'synced'
+  | 'error'
+  | 'offline'
+
+export interface DocumentSyncState {
+  documentId: string
+  state: SyncState
+  lastSyncedAt: number | null
+  error: string | null
+  pendingOperations: number
+}
+
+export interface NetworkStatus {
+  /** Network connectivity state */
+  networkState: NetworkState
+  /** WebSocket connection state */
+  connectionState: ConnectionState
+  /** Number of pending operations in queue */
+  queueSize: number
+  /** Number of failed operations */
+  failedOperations: number
+  /** Timestamp of oldest queued operation */
+  oldestOperation: number | null
 }

@@ -20,12 +20,18 @@ export type { StorageAdapter, StoredDocument } from './storage'
 // Types
 export type {
   SyncKitConfig,
+  NetworkConfig,
   DocumentData,
   FieldPath,
   SubscriptionCallback,
   Unsubscribe,
   QueuedOperation,
-  QueueConfig
+  QueueConfig,
+  NetworkState,
+  ConnectionState,
+  SyncState,
+  DocumentSyncState,
+  NetworkStatus,
 } from './types'
 
 // Errors
@@ -33,7 +39,8 @@ export {
   SyncKitError,
   StorageError,
   WASMError,
-  DocumentError
+  DocumentError,
+  NetworkError,
 } from './types'
 
 // React hooks (optional, requires React)
@@ -42,9 +49,12 @@ export {
   useSyncKit,
   useSyncDocument,
   useSyncField,
-  useSyncDocumentList
+  useSyncDocumentList,
+  useNetworkStatus,
+  useSyncState,
+  useSyncDocumentWithState,
 } from './adapters/react'
-export type { SyncProviderProps } from './adapters/react'
+export type { SyncProviderProps, UseSyncDocumentResult } from './adapters/react'
 
 // Version
 export const VERSION = '0.1.0-alpha.1'

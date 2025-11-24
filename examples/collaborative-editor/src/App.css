@@ -224,6 +224,11 @@ body {
   background-color: var(--color-success);
 }
 
+.status-dot.syncing {
+  background-color: var(--color-primary);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .status-dot.connecting {
   background-color: var(--color-warning);
   animation: pulse 1.5s ease-in-out infinite;

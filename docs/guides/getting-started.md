@@ -2,7 +2,7 @@
 
 **Build offline-first apps in 5 minutes.**
 
-SyncKit is a production-ready sync engine that makes building local-first applications trivial. No vendor lock-in, true offline support, and automatic conflict resolution—all in a ~49KB bundle.
+SyncKit is a production-ready sync engine that makes building local-first applications trivial. No vendor lock-in, true offline support, and automatic conflict resolution—all in a ~58KB gzipped bundle.
 
 > **What you'll build:** A todo app that works offline, persists data locally, and is ready for real-time sync (coming soon)—in just 5 minutes.
 >
@@ -443,7 +443,7 @@ Need assistance?
 |---------|:-------:|:--------:|:--------:|:---:|:---------:|
 | **True Offline-First** | ✅ Native | ⚠️ Cache only | ❌ None | ✅ Full | ✅ Full |
 | **Works Without Server** | ✅ Yes | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
-| **Bundle Size** | **~49KB** (~44KB lite) | ~150KB | ~45KB | ~19KB | ~60-78KB |
+| **Bundle Size** | **~58KB** (~45KB lite) | ~150KB | ~45KB | ~19KB | ~60-78KB |
 | **Automatic Conflicts** | ✅ LWW | ✅ LWW | ⚠️ Manual | ✅ CRDT | ✅ CRDT |
 | **Self-Hosted** | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
 | **Multi-Language Server** | ✅ Yes | ❌ No | ⚠️ Postgres | ❌ No | ❌ No |

@@ -3,7 +3,7 @@
 A production-ready project management application built with SyncKit, React, and shadcn/ui. This example demonstrates offline-first task management, real-time team collaboration, and conflict-free synchronization in a real-world application.
 
 ![Bundle Size](https://img.shields.io/badge/bundle-~210KB%20uncompressed%20|%20~73KB%20gzipped-success)
-![SyncKit](https://img.shields.io/badge/synckit-~53KB-brightgreen)
+![SyncKit](https://img.shields.io/badge/synckit-~58KB%20gzipped-brightgreen)
 ![React](https://img.shields.io/badge/react-18.2-blue)
 ![TypeScript](https://img.shields.io/badge/typescript-5.0-blue)
 ![Tailwind](https://img.shields.io/badge/tailwind-3.4-38bdf8)
@@ -28,7 +28,7 @@ A production-ready project management application built with SyncKit, React, and
 - **Type-Safe**: Full TypeScript coverage throughout the codebase
 - **Lightweight State**: Zustand (3KB) for UI state management
 - **Optimized Bundle**: ~73KB gzipped (including all dependencies)
-- **Full-Featured**: Uses SyncKit default (~53 KB total) - all features included
+- **Full-Featured**: Uses SyncKit default (~58 KB gzipped) - all features included
 - **Responsive Design**: Works seamlessly on desktop and mobile
 
 ## Quick Start
@@ -344,7 +344,7 @@ This project management app needs offline-first sync with real-time collaboratio
 - ✅ Conflict resolution
 - ✅ Offline-first architecture
 - ✅ Real-time collaboration
-- ✅ All features in ~53 KB total
+- ✅ All features in ~58 KB gzipped
 
 **Full-featured and lightweight** - best of both worlds.
 
@@ -355,7 +355,7 @@ Component                    Uncompressed    Gzipped
 ────────────────────────────────────────────────────
 React 18 + ReactDOM              142 KB       45 KB
 @dnd-kit/*                        80 KB       28 KB
-SyncKit (WASM + SDK)              97 KB       53 KB
+SyncKit (WASM + SDK)             138 KB       58 KB
 shadcn/ui components              35 KB       12 KB
 Tailwind CSS                      25 KB       10 KB
 Zustand                            9 KB        3 KB
@@ -366,19 +366,19 @@ Total                           ~210 KB      ~73 KB
 
 ### Size-Critical Apps?
 
-**Need smaller bundle?** Use SyncKit Lite (~48 KB):
+**Need smaller bundle?** Use SyncKit Lite (~45 KB gzipped):
 ```typescript
-import { SyncKit } from '@synckit/sdk/lite'  // Local-only, ~48 KB
+import { SyncKit } from '@synckit/sdk/lite'  // Local-only, ~45 KB gzipped
 ```
 
-**Trade-off:** No server sync (local-only mode). For most apps, the 5 KB difference isn't worth losing server sync.
+**Trade-off:** No server sync (local-only mode). For most apps, the 13 KB difference isn't worth losing server sync.
 
 ### Why These Choices?
 
 - **@dnd-kit** (~28KB) vs react-beautiful-dnd (82KB): 66% smaller, better accessibility
 - **shadcn/ui** (~12KB): Copy-paste components, no runtime library overhead
 - **Zustand** (~3KB) vs Redux (20KB): 85% smaller, simpler API
-- **SyncKit** (~53KB): Full offline-first capabilities with WASM portability
+- **SyncKit** (~58KB gzipped): Full offline-first capabilities with WASM portability
 
 ## Advanced Features
 

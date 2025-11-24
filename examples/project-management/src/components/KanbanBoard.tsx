@@ -128,7 +128,7 @@ export default function KanbanBoard({ sync }: KanbanBoardProps) {
     setActiveTask(null)
   }
 
-  const handleCreateTask = (status: TaskStatus) => {
+  const handleCreateTask = (_status: TaskStatus) => {
     openTaskModal(null)
     // The modal will handle task creation with the current status
   }

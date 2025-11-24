@@ -95,12 +95,12 @@ export default function TaskModal({ sync }: TaskModalProps) {
     closeTaskModal()
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!existingTask) return
 
     if (confirm('Are you sure you want to delete this task?')) {
       // Delete from SyncKit
-      sync.document(existingTask.id).delete()
+      await sync.deleteDocument(existingTask.id)
       deleteTask(existingTask.id)
       closeTaskModal()
     }

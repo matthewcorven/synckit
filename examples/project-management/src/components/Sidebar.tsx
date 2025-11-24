@@ -5,7 +5,7 @@ import type { Project } from '../types'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Card } from './ui/card'
-import { Plus, FolderKanban } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { generateColor } from '../lib/utils'
 
 interface SidebarProps {

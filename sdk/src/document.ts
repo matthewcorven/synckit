@@ -13,17 +13,20 @@ import type {
 import { DocumentError } from './types'
 import type { WasmDocument } from './wasm-loader'
 import { initWASM } from './wasm-loader'
+import type { SyncManager, SyncableDocument, Operation, VectorClock } from './sync/manager'
 
-export class SyncDocument<T extends Record<string, unknown> = Record<string, unknown>> {
+export class SyncDocument<T extends Record<string, unknown> = Record<string, unknown>>
+  implements SyncableDocument {
   private wasmDoc: WasmDocument | null = null
   private subscribers = new Set<SubscriptionCallback<T>>()
   private data: T = {} as T
-  private clock = 0n
-  
+  private vectorClock: VectorClock = {}
+
   constructor(
     private readonly id: string,
     private readonly clientId: string,
-    private readonly storage?: StorageAdapter
+    private readonly storage?: StorageAdapter,
+    private readonly syncManager?: SyncManager
   ) {}
   
   /**
@@ -37,7 +40,7 @@ export class SyncDocument<T extends Record<string, unknown> = Record<string, unk
 
     const wasm = await initWASM()
     this.wasmDoc = new wasm.WasmDocument(this.id)
-    
+
     // Load from storage if available
     if (this.storage) {
       const stored = await this.storage.get(this.id)
@@ -45,8 +48,13 @@ export class SyncDocument<T extends Record<string, unknown> = Record<string, unk
         this.loadFromStored(stored)
       }
     }
-    
+
     this.updateLocalState()
+
+    // Register with sync manager if available
+    if (this.syncManager) {
+      this.syncManager.registerDocument(this)
+    }
   }
   
   /**
@@ -70,27 +78,43 @@ export class SyncDocument<T extends Record<string, unknown> = Record<string, unk
     if (!this.wasmDoc) {
       throw new DocumentError('Document not initialized')
     }
-    
-    // Increment clock
-    this.clock++
-    
+
+    // Increment vector clock for this client
+    const newCount = (this.vectorClock[this.clientId] || 0) + 1
+    this.vectorClock[this.clientId] = newCount
+    const clock = BigInt(newCount)
+
     // Update WASM document
     const valueJson = JSON.stringify(value)
     this.wasmDoc.setField(
       String(field),
       valueJson,
-      this.clock,
+      clock,
       this.clientId
     )
-    
+
     // Update local state
     this.updateLocalState()
-    
+
     // Save to storage
     await this.persist()
-    
+
     // Notify subscribers
     this.notifySubscribers()
+
+    // Push to sync manager if available
+    if (this.syncManager) {
+      const operation: Operation = {
+        type: 'set',
+        documentId: this.id,
+        field: String(field),
+        value,
+        clock: { ...this.vectorClock },
+        clientId: this.clientId,
+        timestamp: Date.now(),
+      }
+      await this.syncManager.pushOperation(operation)
+    }
   }
   
   /**
@@ -100,22 +124,47 @@ export class SyncDocument<T extends Record<string, unknown> = Record<string, unk
     if (!this.wasmDoc) {
       throw new DocumentError('Document not initialized')
     }
-    
+
     // Apply all updates
+    const operations: Operation[] = []
     for (const [field, value] of Object.entries(updates)) {
-      this.clock++
+      // Increment vector clock for this client
+      const newCount = (this.vectorClock[this.clientId] || 0) + 1
+      this.vectorClock[this.clientId] = newCount
+      const clock = BigInt(newCount)
+
       const valueJson = JSON.stringify(value)
-      this.wasmDoc.setField(field, valueJson, this.clock, this.clientId)
+      this.wasmDoc.setField(field, valueJson, clock, this.clientId)
+
+      // Prepare operation for sync
+      if (this.syncManager) {
+        operations.push({
+          type: 'set',
+          documentId: this.id,
+          field,
+          value,
+          clock: { ...this.vectorClock },
+          clientId: this.clientId,
+          timestamp: Date.now(),
+        })
+      }
     }
-    
+
     // Update local state
     this.updateLocalState()
-    
+
     // Save to storage
     await this.persist()
-    
+
     // Notify subscribers
     this.notifySubscribers()
+
+    // Push operations to sync manager
+    if (this.syncManager) {
+      for (const op of operations) {
+        await this.syncManager.pushOperation(op)
+      }
+    }
   }
   
   /**
@@ -209,27 +258,29 @@ export class SyncDocument<T extends Record<string, unknown> = Record<string, unk
   
   private async persist(): Promise<void> {
     if (!this.storage || !this.wasmDoc) return
-    
+
     const stored: StoredDocument = {
       id: this.id,
       data: this.data,
-      version: { [this.clientId]: Number(this.clock) },
+      version: this.vectorClock,
       updatedAt: Date.now()
     }
-    
+
     await this.storage.set(this.id, stored)
   }
-  
+
   private loadFromStored(stored: StoredDocument): void {
     if (!this.wasmDoc) return
-    
+
+    // Load vector clock
+    this.vectorClock = { ...stored.version }
+
     // Reconstruct document from stored data
     for (const [field, value] of Object.entries(stored.data)) {
       const clock = BigInt(stored.version[this.clientId] || 0)
       this.wasmDoc.setField(field, JSON.stringify(value), clock, this.clientId)
     }
-    
-    this.clock = BigInt(Math.max(...Object.values(stored.version), 0))
+
     this.updateLocalState()
   }
   
@@ -237,10 +288,69 @@ export class SyncDocument<T extends Record<string, unknown> = Record<string, unk
    * Cleanup (call when document is no longer needed)
    */
   dispose(): void {
+    // Unregister from sync manager
+    if (this.syncManager) {
+      this.syncManager.unregisterDocument(this.id)
+    }
+
     this.subscribers.clear()
     if (this.wasmDoc) {
       this.wasmDoc.free()
       this.wasmDoc = null
     }
+  }
+
+  // ====================
+  // SyncableDocument Interface
+  // ====================
+
+  /**
+   * Get vector clock (required by SyncableDocument)
+   */
+  getVectorClock(): VectorClock {
+    return { ...this.vectorClock }
+  }
+
+  /**
+   * Set vector clock (required by SyncableDocument)
+   */
+  setVectorClock(clock: VectorClock): void {
+    this.vectorClock = { ...clock }
+  }
+
+  /**
+   * Apply remote operation (required by SyncableDocument)
+   */
+  applyRemoteOperation(operation: Operation): void {
+    if (!this.wasmDoc) {
+      console.warn('Cannot apply remote operation: document not initialized')
+      return
+    }
+
+    // Merge vector clocks
+    for (const [clientId, count] of Object.entries(operation.clock)) {
+      this.vectorClock[clientId] = Math.max(
+        this.vectorClock[clientId] || 0,
+        count as number
+      )
+    }
+
+    // Apply the operation based on type
+    if (operation.type === 'set' && operation.field) {
+      const clock = BigInt(operation.clock[operation.clientId] || 0)
+      const valueJson = JSON.stringify(operation.value)
+      this.wasmDoc.setField(operation.field, valueJson, clock, operation.clientId)
+    }
+
+    // Update local state
+    this.updateLocalState()
+
+    // Persist changes
+    this.persist().catch(error => {
+      console.error('Failed to persist remote operation:', error)
+    })
+
+    // Notify subscribers
+    this.notifySubscribers()
   }
 }

@@ -126,8 +126,8 @@ Learn from working examples:
 ### Performance
 
 **Bundle Size (gzipped):**
-- **Default variant:** ~53KB (document sync with network protocol)
-- **Lite variant:** ~48KB (local-only, no network protocol)
+- **Default variant:** ~58KB (document sync with network protocol)
+- **Lite variant:** ~45KB (local-only, no network protocol)
 - **Competitive:** Larger than Yjs (~19KB), smaller than Automerge (~60-78KB), much smaller than Firebase (~150KB)
 
 **Operation Speed:**

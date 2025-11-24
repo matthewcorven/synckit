@@ -1,4 +1,5 @@
 import { useStore } from '../store'
+import { useNetworkStatus } from '@synckit/sdk/react'
 
 export default function Header() {
   const {
@@ -6,8 +7,10 @@ export default function Header() {
     documents,
     updateDocumentTitle,
     toggleSidebar,
-    connectionStatus,
   } = useStore()
+
+  // Use network status hook from SDK
+  const networkStatus = useNetworkStatus()
 
   const activeDocument = documents.find((d) => d.id === activeDocumentId)
 
@@ -17,18 +20,32 @@ export default function Header() {
   }
 
   const getStatusText = () => {
-    switch (connectionStatus) {
+    if (!networkStatus) return 'Offline Mode'
+
+    if (networkStatus.queueSize > 0) {
+      return `Syncing (${networkStatus.queueSize} pending)`
+    }
+
+    switch (networkStatus.connectionState) {
       case 'connected':
-        return 'Connected'
+        return 'All changes saved'
       case 'connecting':
         return 'Connecting...'
       case 'reconnecting':
         return 'Reconnecting...'
-      case 'disconnected':
-        return 'Offline'
+      case 'failed':
+        return 'Connection failed'
       default:
         return 'Offline'
     }
+  }
+
+  const getConnectionStatus = () => {
+    if (!networkStatus) return 'disconnected'
+    if (networkStatus.queueSize > 0) return 'syncing'
+    return networkStatus.connectionState === 'connected' ? 'connected' :
+           networkStatus.connectionState === 'connecting' || networkStatus.connectionState === 'reconnecting' ? 'connecting' :
+           'disconnected'
   }
 
   return (
@@ -69,7 +86,7 @@ export default function Header() {
       <div className="header-right">
         <div className="connection-status">
           <span
-            className={`status-dot ${connectionStatus === 'connected' ? 'connected' : connectionStatus === 'connecting' || connectionStatus === 'reconnecting' ? 'connecting' : 'disconnected'}`}
+            className={`status-dot ${getConnectionStatus()}`}
           ></span>
           <span>{getStatusText()}</span>
         </div>

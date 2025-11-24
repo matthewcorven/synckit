@@ -40,9 +40,6 @@ export interface AppState {
   participants: Map<string, Participant>
   currentUser: Participant
 
-  // Connection
-  connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'reconnecting'
-
   // UI State
   sidebarOpen: boolean
 
@@ -58,7 +55,6 @@ export interface AppState {
   removeParticipant: (id: string) => void
   updateParticipantCursor: (id: string, cursor: Participant['cursor']) => void
 
-  setConnectionStatus: (status: AppState['connectionStatus']) => void
   toggleSidebar: () => void
 }
 
@@ -68,5 +64,4 @@ export interface EditorProps {
   onContentChange?: (content: string) => void
 }
 
-export type ConnectionStatus = AppState['connectionStatus']
 export type Language = Document['language']

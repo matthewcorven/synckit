@@ -1,7 +1,7 @@
 export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 
-export interface Task {
+export interface Task extends Record<string, unknown> {
   id: string
   title: string
   description: string
@@ -16,7 +16,7 @@ export interface Task {
   order: number
 }
 
-export interface Project {
+export interface Project extends Record<string, unknown> {
   id: string
   name: string
   description: string
@@ -44,7 +44,6 @@ export interface AppState {
 
   // UI State
   activeProjectId: string | null
-  connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'reconnecting'
   sidebarOpen: boolean
   taskModalOpen: boolean
   selectedTaskId: string | null
@@ -67,7 +66,6 @@ export interface AppState {
   updateTeamMemberPresence: (id: string, lastSeen: number) => void
 
   // UI Actions
-  setConnectionStatus: (status: AppState['connectionStatus']) => void
   toggleSidebar: () => void
   openTaskModal: (taskId: string | null) => void
   closeTaskModal: () => void

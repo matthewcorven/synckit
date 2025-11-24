@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 // Default variant (49 KB) - full-featured, perfect for production apps
 import { SyncKit } from '@synckit/sdk'
+import { SyncProvider } from '@synckit/sdk/react'
 import { useStore } from './store'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
@@ -24,6 +25,7 @@ function App() {
       setSyncReady(true)
     }).catch((error) => {
       console.error('Failed to initialize SyncKit:', error)
+      setSyncReady(true) // Still render the app in offline-only mode
     })
   }, [])
 
@@ -38,22 +40,24 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {sidebarOpen && <Sidebar sync={sync} />}
+    <SyncProvider synckit={sync}>
+      <div className="flex h-screen overflow-hidden bg-background">
+        {sidebarOpen && <Sidebar sync={sync} />}
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header sync={sync} />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header />
 
-        <main className="flex-1 overflow-hidden p-6">
-          <div className="relative h-full">
-            <KanbanBoard sync={sync} />
-            <TeamPresence />
-          </div>
-        </main>
+          <main className="flex-1 overflow-hidden p-6">
+            <div className="relative h-full">
+              <KanbanBoard sync={sync} />
+              <TeamPresence />
+            </div>
+          </main>
+        </div>
+
+        {taskModalOpen && <TaskModal sync={sync} />}
       </div>
-
-      {taskModalOpen && <TaskModal sync={sync} />}
-    </div>
+    </SyncProvider>
   )
 }
 

@@ -125,7 +125,7 @@ const channel = supabase
 | **Database** | ✅ Postgres (managed) | ⚠️ Bring your own | 🏆 Supabase |
 | **Auth** | ✅ Built-in | ⚠️ JWT-based | 🏆 Supabase |
 | **Row-Level Security** | ✅ Postgres RLS | ⚠️ Server-side validation | 🏆 Supabase |
-| **Bundle Size** | ~45KB | **~49KB** (~44KB lite) | 🤝 Similar |
+| **Bundle Size** | ~45KB | **~58KB** (~45KB lite) | 🤝 Similar |
 | **Pricing** | $0-$25/mo | Self-hosted | 🏆 SyncKit |
 | **Mobile-Ready** | ⚠️ No offline | ✅ Full offline | 🏆 SyncKit |
 | **Ecosystem** | ✅ Full-stack (Storage, Edge, etc.) | ⚠️ Sync only | 🏆 Supabase |
@@ -678,7 +678,7 @@ const [todo, { update }] = useSyncDocument<Todo>(id)
 2. **Hybrid is best:** Keep Supabase Auth/Storage, add SyncKit for offline
 3. **Mobile-ready:** SyncKit makes Supabase viable for mobile apps
 4. **Minimal changes:** Add offline without rewriting existing code
-5. **Bundle size:** Similar sizes (~49KB SyncKit vs ~45KB Supabase)
+5. **Bundle size:** Similar sizes (~58KB SyncKit vs ~45KB Supabase)
 6. **v0.1.0 note:** SyncKit is currently local-only; network sync coming in future version
 
 **Migration Decision Matrix:**

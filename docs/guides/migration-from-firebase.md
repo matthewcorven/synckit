@@ -106,7 +106,7 @@ A comprehensive guide for migrating from Firebase/Firestore to SyncKit for true 
 | **Pricing** | 💰 Usage-based, unpredictable | ✅ Self-hosted, predictable | 🏆 SyncKit |
 | **Vendor Lock-in** | ❌ Deep Google integration | ✅ Open source, portable | 🏆 SyncKit |
 | **Query Capabilities** | ⚠️ Limited (single-field range) | ✅ Use any database (SQL, NoSQL) | 🏆 SyncKit |
-| **Bundle Size** | ~150KB gzipped | **~49KB** gzipped (~44KB lite) | 🏆 SyncKit (3x smaller) |
+| **Bundle Size** | ~150KB gzipped | **~58KB** gzipped (~45KB lite) | 🏆 SyncKit (3x smaller) |
 | **Cold Start** | ⚠️ 2-30s on slow networks | ✅ <100ms (local data) | 🏆 SyncKit |
 | **Managed Backend** | ✅ Fully managed | ⚠️ Self-hosted (or managed soon) | 🏆 Firebase |
 | **Auth Integration** | ✅ Built-in | ⚠️ Bring your own (JWT) | 🏆 Firebase |
@@ -713,7 +713,7 @@ aws s3 sync dist/ s3://my-bucket
 
 | Metric | Before (Firebase) | After (SyncKit) | Improvement |
 |--------|-------------------|-----------------|-------------|
-| **Bundle size** | ~150KB | **~49KB** (~44KB lite) | 67% smaller |
+| **Bundle size** | ~150KB | **~58KB** (~45KB lite) | 67% smaller |
 | **Offline storage** | 40MB (cache) | Unlimited (IndexedDB) | ∞ |
 | **Monthly cost** | $25-$2,000+ | $0 (self-hosted) | 100% savings |
 | **Initial load** | 2-30s | <100ms | 20-300x faster |
