@@ -1,13 +1,14 @@
 {
   "name": "@synckit/server",
   "version": "0.1.0",
-  "description": "SyncKit TypeScript Reference Server - Production-ready WebSocket sync server",
+  "description": "SyncKit WebSocket Server - Deploy as standalone service for real-time sync (Bun + Hono)",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "start": "bun dist/index.js",
+    "prepublishOnly": "npm run build && npm run test",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:unit": "bun test tests/unit",
@@ -18,9 +19,27 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "bun src/storage/migrate.ts"
   },
-  "keywords": ["synckit", "sync", "realtime", "websocket", "crdt", "local-first"],
-  "author": "SyncKit Team",
+  "keywords": ["synckit", "sync", "realtime", "websocket", "crdt", "local-first", "server", "backend"],
+  "author": "Daniel Bitengo",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dancode-188/synckit.git",
+    "directory": "server/typescript"
+  },
+  "homepage": "https://github.com/Dancode-188/synckit#readme",
+  "bugs": {
+    "url": "https://github.com/Dancode-188/synckit/issues"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE",
+    "DEPLOYMENT.md",
+    "Dockerfile",
+    "docker-compose.yml"
+  ],
   "dependencies": {
     "hono": "^4.0.0",
     "ws": "^8.16.0",

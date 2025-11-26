@@ -43,12 +43,16 @@
     "typescript",
     "wasm"
   ],
-  "author": "Daniel Ngugi",
+  "author": "Daniel Bitengo",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Dancode-188/synckit.git",
     "directory": "sdk"
+  },
+  "homepage": "https://github.com/Dancode-188/synckit#readme",
+  "bugs": {
+    "url": "https://github.com/Dancode-188/synckit/issues"
   },
   "files": [
     "dist",
