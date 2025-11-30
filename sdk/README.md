@@ -25,10 +25,7 @@ interface Todo {
   completed: boolean
 }
 
-const doc = sync.document<Todo>('todo-1')
-
-// Initialize document
-await doc.init()
+const doc = await sync.document<Todo>('todo-1')
 
 // Set fields
 await doc.set('title', 'Buy milk')
@@ -72,8 +69,7 @@ sync.onNetworkStatusChange((status) => {
 })
 
 // Create and sync document
-const doc = sync.document<Todo>('todo-1')
-await doc.init()  // Automatically subscribes to real-time server updates!
+const doc = await sync.document<Todo>('todo-1')  // Automatically subscribes to real-time server updates!
 await doc.update({ title: 'Buy milk', completed: false })
 
 // Changes sync instantly to server and other clients
@@ -452,8 +448,7 @@ interface User {
   age: number
 }
 
-const doc = sync.document<User>('user-1')
-await doc.init()
+const doc = await sync.document<User>('user-1')
 
 // ✅ Type-safe field access
 await doc.set('name', 'Alice')      // Valid
