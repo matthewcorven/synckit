@@ -26,7 +26,7 @@ if (typeof CloseEvent === 'undefined') {
 class MockWebSocket {
   static instances: MockWebSocket[] = []
 
-  readyState = WebSocket.CONNECTING
+  readyState: number = WebSocket.CONNECTING
   binaryType: BinaryType = 'arraybuffer'
   onopen: ((event: Event) => void) | null = null
   onclose: ((event: CloseEvent) => void) | null = null
@@ -106,7 +106,7 @@ class MockWebSocket {
     const payload = JSON.parse(payloadJson)
 
     return {
-      type: this.getTypeName(typeCode),
+      type: this.getTypeName(typeCode) as WebSocketMessage['type'],
       payload,
       timestamp,
     }

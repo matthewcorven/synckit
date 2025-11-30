@@ -11,7 +11,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { SyncKit } from '../../synckit'
 import { MemoryStorage } from '../../storage'
-import { WebSocketClient } from '../../websocket/client'
 import type { WebSocketMessage } from '../../websocket/client'
 import { OfflineQueue } from '../../sync/queue'
 
@@ -321,7 +320,7 @@ function decodeMessage(data: ArrayBuffer): WebSocketMessage {
   const payload = JSON.parse(payloadJson)
 
   return {
-    type: getTypeName(typeCode),
+    type: getTypeName(typeCode) as WebSocketMessage['type'],
     payload,
     timestamp,
   }
