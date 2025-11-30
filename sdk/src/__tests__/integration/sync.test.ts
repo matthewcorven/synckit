@@ -224,6 +224,11 @@ describe('Network Synchronization Integration', () => {
   })
 
   afterEach(() => {
+    // Close any open mock WebSocket connections to prevent message leakage
+    for (const ws of MockWebSocket.instances) {
+      ws.close()
+    }
+    MockWebSocket.instances = []
     synckit.dispose()
     global.WebSocket = originalWebSocket
   })
@@ -322,6 +327,7 @@ describe('Network Synchronization Integration', () => {
       await doc1.set('count', 1)
 
       // Simulate operations from multiple remote clients
+      // Each subsequent client has a higher clock value to ensure LWW ordering
       for (let i = 2; i <= 5; i++) {
         mockWs.simulateMessage({
           type: 'delta',
@@ -330,7 +336,8 @@ describe('Network Synchronization Integration', () => {
             documentId: 'shared-doc',
             field: 'count',
             value: i,
-            clock: { [`client-${i}`]: 1 },
+            // Use higher clock values to win against local (test-client: 1)
+            clock: { [`client-${i}`]: i },
             clientId: `client-${i}`,
             timestamp: Date.now() + i,
           },
@@ -341,7 +348,7 @@ describe('Network Synchronization Integration', () => {
       // Wait for all operations to process
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      // Last operation (client-5 with highest timestamp) should win
+      // Last operation (client-5 with highest clock value) should win
       expect(doc1.getField('count')).toBe(5)
     })
   })
