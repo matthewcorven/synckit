@@ -194,8 +194,7 @@ IndexedDB is a **full NoSQL database** in your browser, not just a key-value sto
 localStorage.setItem('todo', JSON.stringify(todo))
 
 // ✅ IndexedDB (unlimited, async, any type)
-const doc = sync.document('todo-1')
-await doc.init()
+const doc = await sync.document('todo-1')
 await doc.update(todo)
 ```
 
