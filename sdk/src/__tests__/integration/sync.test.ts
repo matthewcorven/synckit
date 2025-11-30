@@ -116,6 +116,11 @@ class MockWebSocket {
     const map: Record<string, number> = {
       auth: 0x01,
       auth_success: 0x02,
+      auth_error: 0x03,
+      subscribe: 0x10,
+      unsubscribe: 0x11,
+      sync_request: 0x12,
+      sync_response: 0x13,
       delta: 0x20,
       ack: 0x21,
       ping: 0x30,
@@ -129,6 +134,11 @@ class MockWebSocket {
     const map: Record<number, string> = {
       0x01: 'auth',
       0x02: 'auth_success',
+      0x03: 'auth_error',
+      0x10: 'subscribe',
+      0x11: 'unsubscribe',
+      0x12: 'sync_request',
+      0x13: 'sync_response',
       0x20: 'delta',
       0x21: 'ack',
       0x30: 'ping',
@@ -184,6 +194,21 @@ describe('Network Synchronization Integration', () => {
         timestamp: Date.now(),
       })
     })
+
+    // Auto-respond to document subscription requests with an empty state
+    mockWs.onMessageType('subscribe', (payload) => {
+      setTimeout(() => {
+        mockWs.simulateMessage({
+          type: 'sync_response',
+          payload: {
+            documentId: payload.documentId,
+            state: {},
+            clock: {},
+          },
+          timestamp: Date.now(),
+        })
+      }, 0)
+    })
   })
 
   afterEach(() => {
@@ -207,6 +232,7 @@ describe('Network Synchronization Integration', () => {
 
       // Create and modify document
       const doc = synckit.document<{ name: string; count: number }>('test-doc')
+      await doc.init()
       await doc.set('name', 'Alice')
       await doc.set('count', 42)
 
@@ -223,6 +249,7 @@ describe('Network Synchronization Integration', () => {
 
     it('should receive and apply remote changes', async () => {
       const doc = synckit.document<{ name: string }>('test-doc')
+      await doc.init()
 
       // Simulate remote change from server
       mockWs.simulateMessage({
@@ -245,11 +272,12 @@ describe('Network Synchronization Integration', () => {
       await new Promise((resolve) => setTimeout(resolve, 50))
 
       // Verify remote change was applied
-      expect(doc.get('name')).toBe('Bob')
+      expect(doc.getField('name')).toBe('Bob')
     })
 
     it('should resolve conflicts using vector clocks', async () => {
       const doc = synckit.document<{ name: string }>('test-doc')
+      await doc.init()
 
       // Local change
       await doc.set('name', 'Alice')
@@ -275,11 +303,12 @@ describe('Network Synchronization Integration', () => {
       await new Promise((resolve) => setTimeout(resolve, 50))
 
       // Local change should win (higher vector clock + later timestamp)
-      expect(doc.get('name')).toBe('Alice')
+      expect(doc.getField('name')).toBe('Alice')
     })
 
     it('should handle multiple concurrent clients', async () => {
       const doc1 = synckit.document<{ count: number }>('shared-doc')
+      await doc1.init()
       await doc1.set('count', 1)
 
       // Simulate operations from multiple remote clients
@@ -305,13 +334,14 @@ describe('Network Synchronization Integration', () => {
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       // Last operation (client-5 with highest timestamp) should win
-      expect(doc1.get('count')).toBe(5)
+      expect(doc1.getField('count')).toBe(5)
     })
   })
 
   describe('Offline Queue', () => {
     it('should queue operations when offline', async () => {
       const doc = synckit.document<{ name: string }>('test-doc')
+      await doc.init()
 
       // Go offline by closing WebSocket
       mockWs.close()
