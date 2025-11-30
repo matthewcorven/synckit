@@ -136,9 +136,9 @@ export class SyncKit {
    * Create or get a document
    * Documents are cached per ID
    */
-  document<T extends Record<string, unknown> = Record<string, unknown>>(
+  async document<T extends Record<string, unknown> = Record<string, unknown>>(
     id: string
-  ): SyncDocument<T> {
+  ): Promise<SyncDocument<T>> {
     if (!this.initialized) {
       throw new SyncKitError(
         'SyncKit not initialized. Call init() first.',
@@ -155,10 +155,8 @@ export class SyncKit {
     const doc = new SyncDocument<T>(id, this.clientId, this.storage, this.syncManager)
     this.documents.set(id, doc)
 
-    // Initialize document asynchronously
-    doc.init().catch(error => {
-      console.error(`Failed to initialize document ${id}:`, error)
-    })
+    // Initialize document and wait for it to be ready
+    await doc.init()
 
     return doc
   }
