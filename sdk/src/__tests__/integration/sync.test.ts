@@ -209,6 +209,18 @@ describe('Network Synchronization Integration', () => {
         })
       }, 0)
     })
+
+    // Auto-acknowledge delta operations to unblock pushOperation
+    mockWs.onMessageType('delta', (payload) => {
+      // Use setTimeout to allow waitForAck to register before ack is processed
+      setTimeout(() => {
+        mockWs.simulateMessage({
+          type: 'ack',
+          payload: { messageId: payload.messageId },
+          timestamp: Date.now(),
+        })
+      }, 0)
+    })
   })
 
   afterEach(() => {
@@ -222,12 +234,14 @@ describe('Network Synchronization Integration', () => {
 
       mockWs.onMessageType('delta', (payload) => {
         receivedDeltas.push(payload)
-        // Acknowledge the delta
-        mockWs.simulateMessage({
-          type: 'ack',
-          payload: { operationId: payload.operation.timestamp },
-          timestamp: Date.now(),
-        })
+        // Acknowledge the delta (async to allow waitForAck to register)
+        setTimeout(() => {
+          mockWs.simulateMessage({
+            type: 'ack',
+            payload: { messageId: payload.messageId },
+            timestamp: Date.now(),
+          })
+        }, 0)
       })
 
       // Create and modify document
@@ -241,10 +255,10 @@ describe('Network Synchronization Integration', () => {
 
       // Verify deltas were sent
       expect(receivedDeltas.length).toBeGreaterThanOrEqual(2)
-      const nameOp = receivedDeltas.find((d) => d.operation.field === 'name')
-      const countOp = receivedDeltas.find((d) => d.operation.field === 'count')
-      expect(nameOp.operation.value).toBe('Alice')
-      expect(countOp.operation.value).toBe(42)
+      const nameOp = receivedDeltas.find((d) => d.field === 'name')
+      const countOp = receivedDeltas.find((d) => d.field === 'count')
+      expect(nameOp.value).toBe('Alice')
+      expect(countOp.value).toBe(42)
     })
 
     it('should receive and apply remote changes', async () => {
@@ -255,15 +269,13 @@ describe('Network Synchronization Integration', () => {
       mockWs.simulateMessage({
         type: 'delta',
         payload: {
-          operation: {
-            type: 'set',
-            documentId: 'test-doc',
-            field: 'name',
-            value: 'Bob',
-            clock: { 'remote-client': 1 },
-            clientId: 'remote-client',
-            timestamp: Date.now(),
-          },
+          type: 'set',
+          documentId: 'test-doc',
+          field: 'name',
+          value: 'Bob',
+          clock: { 'remote-client': 1 },
+          clientId: 'remote-client',
+          timestamp: Date.now(),
         },
         timestamp: Date.now(),
       })
@@ -286,15 +298,13 @@ describe('Network Synchronization Integration', () => {
       mockWs.simulateMessage({
         type: 'delta',
         payload: {
-          operation: {
-            type: 'set',
-            documentId: 'test-doc',
-            field: 'name',
-            value: 'Bob',
-            clock: { 'remote-client': 1 },
-            clientId: 'remote-client',
-            timestamp: Date.now() - 1000, // Earlier timestamp
-          },
+          type: 'set',
+          documentId: 'test-doc',
+          field: 'name',
+          value: 'Bob',
+          clock: { 'remote-client': 1 },
+          clientId: 'remote-client',
+          timestamp: Date.now() - 1000, // Earlier timestamp
         },
         timestamp: Date.now(),
       })
@@ -316,15 +326,13 @@ describe('Network Synchronization Integration', () => {
         mockWs.simulateMessage({
           type: 'delta',
           payload: {
-            operation: {
-              type: 'set',
-              documentId: 'shared-doc',
-              field: 'count',
-              value: i,
-              clock: { [`client-${i}`]: 1 },
-              clientId: `client-${i}`,
-              timestamp: Date.now() + i,
-            },
+            type: 'set',
+            documentId: 'shared-doc',
+            field: 'count',
+            value: i,
+            clock: { [`client-${i}`]: 1 },
+            clientId: `client-${i}`,
+            timestamp: Date.now() + i,
           },
           timestamp: Date.now(),
         })
