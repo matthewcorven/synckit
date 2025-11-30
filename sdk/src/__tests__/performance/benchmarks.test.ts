@@ -11,8 +11,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { SyncKit } from '../../synckit'
 import { MemoryStorage } from '../../storage'
-import { WebSocketClient } from '../../websocket/client'
-import type { WebSocketMessage } from '../../websocket/client'
+import type { WebSocketMessage, MessageType } from '../../websocket/client'
 import { OfflineQueue } from '../../sync/queue'
 
 // Performance measurement utility
@@ -343,13 +342,13 @@ function getTypeCode(type: string): number {
   return map[type] || 0xff
 }
 
-function getTypeName(code: number): string {
-  const map: Record<number, string> = {
+function getTypeName(code: number): MessageType {
+  const map: Record<number, MessageType> = {
     0x01: 'auth',
     0x20: 'delta',
     0x21: 'ack',
     0x30: 'ping',
     0x31: 'pong',
   }
-  return map[code] || 'error'
+  return (map[code] as MessageType) || 'error'
 }

@@ -7,7 +7,7 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest'
 import { SyncKit } from '../../synckit'
 import { MemoryStorage } from '../../storage'
-import type { WebSocketMessage } from '../../websocket/client'
+import type { WebSocketMessage, MessageType } from '../../websocket/client'
 
 // Mock CloseEvent if not available
 if (typeof CloseEvent === 'undefined') {
@@ -25,8 +25,7 @@ if (typeof CloseEvent === 'undefined') {
 // Mock WebSocket for testing
 class MockWebSocket {
   static instances: MockWebSocket[] = []
-
-  readyState = WebSocket.CONNECTING
+  readyState: number = WebSocket.CONNECTING
   binaryType: BinaryType = 'arraybuffer'
   onopen: ((event: Event) => void) | null = null
   onclose: ((event: CloseEvent) => void) | null = null
@@ -75,8 +74,7 @@ class MockWebSocket {
       this.onmessage(new MessageEvent('message', { data: encoded }))
     }
   }
-
-  onMessageType(type: string, handler: (payload: any) => void): void {
+  onMessageType(type: MessageType, handler: (payload: any) => void): void {
     this.messageHandlers.set(type, handler)
   }
 
@@ -112,8 +110,8 @@ class MockWebSocket {
     }
   }
 
-  private getTypeCode(type: string): number {
-    const map: Record<string, number> = {
+  private getTypeCode(type: MessageType): number {
+    const map: Record<MessageType, number> = {
       auth: 0x01,
       auth_success: 0x02,
       auth_error: 0x03,
@@ -130,8 +128,8 @@ class MockWebSocket {
     return map[type] || 0xff
   }
 
-  private getTypeName(code: number): string {
-    const map: Record<number, string> = {
+  private getTypeName(code: number): MessageType {
+    const map: Record<number, MessageType> = {
       0x01: 'auth',
       0x02: 'auth_success',
       0x03: 'auth_error',
@@ -145,7 +143,7 @@ class MockWebSocket {
       0x31: 'pong',
       0xff: 'error',
     }
-    return map[code] || 'error'
+    return (map[code] as MessageType) || 'error'
   }
 }
 
