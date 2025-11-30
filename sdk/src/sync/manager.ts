@@ -176,6 +176,9 @@ export class SyncManager {
     this.updateSyncState(documentId, { state: 'syncing' })
 
     try {
+      // Set up response handler BEFORE sending message to avoid race condition
+      const responsePromise = this.waitForSyncResponse(documentId)
+
       // Send subscription message to server
       this.websocket.send({
         type: 'subscribe',
@@ -184,7 +187,7 @@ export class SyncManager {
       })
 
       // Wait for sync response
-      await this.waitForSyncResponse(documentId)
+      await responsePromise
 
       // Mark as subscribed
       this.subscriptions.add(documentId)
@@ -240,6 +243,9 @@ export class SyncManager {
         console.log(`[SyncManager] 📤 Sending operation ${forceSend ? '(FORCED)' : 'online'}:`, documentId, operation.field, operation.value)
         const messageId = this.generateMessageId()
 
+        // Set up ACK handler BEFORE sending message to avoid race condition
+        const ackPromise = this.waitForAck(messageId, operation)
+
         this.websocket.send({
           type: 'delta',
           payload: { ...operation, messageId },
@@ -247,7 +253,7 @@ export class SyncManager {
         })
 
         // Wait for ACK
-        await this.waitForAck(messageId, operation)
+        await ackPromise
 
         // Decrement pending count
         this.decrementPendingOperations(documentId)
@@ -317,13 +323,16 @@ export class SyncManager {
 
     this.updateSyncState(documentId, { state: 'syncing' })
 
+    // Set up response handler BEFORE sending message to avoid race condition
+    const responsePromise = this.waitForSyncResponse(documentId)
+
     this.websocket.send({
       type: 'sync_request',
       payload: { documentId },
       timestamp: Date.now(),
     })
 
-    await this.waitForSyncResponse(documentId)
+    await responsePromise
 
     this.updateSyncState(documentId, {
       state: 'synced',
