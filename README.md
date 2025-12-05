@@ -4,6 +4,7 @@
 
 **True offline-first sync for modern apps—without vendor lock-in**
 
+[![npm version](https://badge.fury.io/js/%40synckit-js%2Fsdk.svg)](https://www.npmjs.com/package/@synckit-js/sdk)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Dancode-188/synckit/ci.yml?branch=main)](https://github.com/Dancode-188/synckit/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Bundle Size](https://img.shields.io/badge/bundle%20size-~59KB%20(~45KB%20lite)-brightgreen)](https://bundlephobia.com)

@@ -986,16 +986,21 @@ Each phase is complete when:
 
 ## 🚀 Post-v0.1.0 Roadmap
 
-### v0.2.0 - Framework Expansion
-**Focus:** Expose advanced CRDTs and expand framework support
+### v0.2.0 - Collaborative Editing & Framework Expansion
+**Focus:** Advanced CRDTs, real-time collaboration, multi-framework support
 
 **Features:**
-- ✍️ **Text CRDT Exposure** - TypeScript bindings for YATA text CRDT (already in Rust core)
-- 🔢 **Custom CRDTs Exposure** - PN-Counter, OR-Set TypeScript APIs (already in Rust core)
-- 🌐 **BroadcastChannel Cross-Tab** - Direct client-to-client sync without server (offline multi-tab)
-- 🎨 **Vue Adapter** - `@synckit/vue` package with composables (separate package)
-- 🎨 **Svelte Adapter** - `@synckit/svelte` package with stores (separate package)
-- 📦 **Bundle Optimization** - Further reduce bundle size with tree-shaking and wasm-opt
+- ✍️ **Text CRDT (Fugue Algorithm)** - Mathematically proven minimal interleaving (superior to YATA)
+- 🎨 **Rich Text (Peritext)** - Style anchors for formatting, no control character bugs
+- 👥 **Awareness & Presence** - Real-time user presence with merge semantics
+- 🖱️ **Cursor Sharing** - Smooth cursor positions with spring animations
+- 🔢 **Custom CRDTs** - PN-Counter, OR-Set TypeScript APIs
+- ↩️ **Undo/Redo** - Collaborative undo with proper semantics
+- 🌐 **Cross-Tab Sync** - BroadcastChannel multi-tab support
+- 🎨 **Vue 3 Adapter** - `@synckit-js/sdk/vue` composables following VueUse patterns
+- 🎨 **Svelte Adapter** - `@synckit-js/sdk/svelte` stores with Svelte 5 runes support
+- 📦 **Bundle Optimization** - Target 70-80KB gzipped
+
 
 ### v0.3.0 - Multi-Language Servers
 **Focus:** Server implementations in different languages
