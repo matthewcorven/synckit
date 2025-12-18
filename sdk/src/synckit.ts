@@ -13,18 +13,29 @@ import type {
 } from './types'
 import { SyncKitError } from './types'
 import { SyncDocument } from './document'
+import { SyncCounter } from './counter'
+import { SyncSet } from './set'
+import { SyncText } from './text'
+import { RichText } from './crdt/richtext'
+import { Awareness } from './awareness'
 import { createStorage } from './storage'
 import { initWASM } from './wasm-loader'
 import { WebSocketClient } from './websocket/client'
 import { SyncManager } from './sync/manager'
 import { OfflineQueue } from './sync/queue'
 import { NetworkStateTracker } from './sync/network-state'
+import { CrossTabSync } from './sync/cross-tab'
 
 export class SyncKit {
   private storage: StorageAdapter
   private clientId: string
   private initialized = false
   private documents = new Map<string, SyncDocument<any>>()
+  private counters = new Map<string, SyncCounter>()
+  private sets = new Map<string, SyncSet<any>>()
+  private texts = new Map<string, SyncText>()
+  private richTexts = new Map<string, RichText>()
+  private awarenessInstances = new Map<string, Awareness>()
   private config: SyncKitConfig
 
   // Network components (initialized only if serverUrl provided)
@@ -69,6 +80,9 @@ export class SyncKit {
       if (this.config.serverUrl) {
         await this.initNetworkLayer()
       }
+
+      // Setup beforeunload handler to send leave updates
+      this.setupBeforeUnloadHandler()
 
       this.initialized = true
     } catch (error) {
@@ -120,7 +134,6 @@ export class SyncKit {
       websocket: this.websocket,
       storage: this.storage,
       offlineQueue: this.offlineQueue,
-      clientId: this.clientId,
     })
 
     // Connect to server
@@ -162,7 +175,169 @@ export class SyncKit {
 
     return doc
   }
-  
+
+  /**
+   * Create or get a counter CRDT
+   * Counters are cached per ID
+   */
+  counter(id: string): SyncCounter {
+    if (!this.initialized) {
+      throw new SyncKitError(
+        'SyncKit not initialized. Call init() first.',
+        'NOT_INITIALIZED'
+      )
+    }
+
+    // Return cached counter if exists
+    if (this.counters.has(id)) {
+      return this.counters.get(id)!
+    }
+
+    // Create new counter
+    const counter = new SyncCounter(id, this.clientId, this.storage, this.syncManager)
+    this.counters.set(id, counter)
+
+    // Initialize counter asynchronously
+    counter.init().catch(error => {
+      console.error(`Failed to initialize counter ${id}:`, error)
+    })
+
+    return counter
+  }
+
+  /**
+   * Create or get a set CRDT
+   * Sets are cached per ID
+   */
+  set<T extends string = string>(id: string): SyncSet<T> {
+    if (!this.initialized) {
+      throw new SyncKitError(
+        'SyncKit not initialized. Call init() first.',
+        'NOT_INITIALIZED'
+      )
+    }
+
+    // Return cached set if exists
+    if (this.sets.has(id)) {
+      return this.sets.get(id)!
+    }
+
+    // Create new set
+    const set = new SyncSet<T>(id, this.clientId, this.storage, this.syncManager)
+    this.sets.set(id, set)
+
+    // Initialize set asynchronously
+    set.init().catch(error => {
+      console.error(`Failed to initialize set ${id}:`, error)
+    })
+
+    return set
+  }
+
+  /**
+   * Create or get a text CRDT
+   * Texts are cached per ID
+   */
+  text(id: string): SyncText {
+    if (!this.initialized) {
+      throw new SyncKitError(
+        'SyncKit not initialized. Call init() first.',
+        'NOT_INITIALIZED'
+      )
+    }
+
+    // Return cached text if exists
+    if (this.texts.has(id)) {
+      return this.texts.get(id)!
+    }
+
+    // Create new text
+    const text = new SyncText(id, this.clientId, this.storage, this.syncManager)
+    this.texts.set(id, text)
+
+    // Initialize text asynchronously
+    text.init().catch(error => {
+      console.error(`Failed to initialize text ${id}:`, error)
+    })
+
+    return text
+  }
+
+  /**
+   * Create or get a rich text CRDT
+   * Rich texts are cached per ID
+   */
+  richText(id: string): RichText {
+    if (!this.initialized) {
+      throw new SyncKitError(
+        'SyncKit not initialized. Call init() first.',
+        'NOT_INITIALIZED'
+      )
+    }
+
+    // Return cached rich text if exists
+    if (this.richTexts.has(id)) {
+      return this.richTexts.get(id)!
+    }
+
+    // Create CrossTabSync instance for this document (enables same-browser tab-to-tab sync)
+    const crossTabSync = new CrossTabSync(id, { enabled: true })
+    console.log('[SyncKit] Created CrossTabSync for document:', id)
+
+    // Create new rich text with cross-tab sync support
+    const richText = new RichText(id, this.clientId, this.storage, this.syncManager, crossTabSync)
+    this.richTexts.set(id, richText)
+
+    // Initialize rich text asynchronously
+    richText.init().catch(error => {
+      console.error(`Failed to initialize rich text ${id}:`, error)
+    })
+
+    return richText
+  }
+
+  /**
+   * Get or create awareness instance for a document
+   * Awareness instances are cached per document ID
+   */
+  getAwareness(documentId: string): Awareness {
+    if (!this.initialized) {
+      throw new SyncKitError(
+        'SyncKit not initialized. Call init() first.',
+        'NOT_INITIALIZED'
+      )
+    }
+
+    // Return cached awareness if exists
+    if (this.awarenessInstances.has(documentId)) {
+      return this.awarenessInstances.get(documentId)!
+    }
+
+    // Create CrossTabSync instance for this document (enables same-browser tab-to-tab awareness sync)
+    const crossTabSync = new CrossTabSync(documentId, { enabled: true })
+
+    // Create new awareness with cross-tab sync support
+    const awareness = new Awareness(this.clientId, documentId, crossTabSync)
+    this.awarenessInstances.set(documentId, awareness)
+
+    // Register with sync manager IMMEDIATELY (before init)
+    if (this.syncManager) {
+      this.syncManager.registerAwareness(documentId, awareness)
+
+      // Subscribe to awareness updates from server (critical for receiving other clients' cursor updates)
+      this.syncManager.subscribeToAwareness(documentId).catch(error => {
+        console.error(`Failed to subscribe to awareness for ${documentId}:`, error)
+      })
+    }
+
+    // Initialize awareness asynchronously
+    awareness.init().catch(error => {
+      console.error(`Failed to initialize awareness for ${documentId}:`, error)
+    })
+
+    return awareness
+  }
+
   /**
    * List all document IDs in storage
    */
@@ -226,7 +401,21 @@ export class SyncKit {
   getClientId(): string {
     return this.clientId
   }
-  
+
+  /**
+   * Get storage adapter instance
+   */
+  getStorage(): StorageAdapter {
+    return this.storage
+  }
+
+  /**
+   * Get sync manager instance (only available if serverUrl is configured)
+   */
+  getSyncManager(): SyncManager | undefined {
+    return this.syncManager
+  }
+
   /**
    * Check if SyncKit is initialized
    */
@@ -320,14 +509,60 @@ export class SyncKit {
   }
 
   /**
+   * Send leave updates for all awareness instances
+   * Call this before closing/navigating to notify other clients
+   */
+  sendAllLeaveUpdates(): void {
+    if (!this.syncManager) return
+
+    for (const documentId of this.awarenessInstances.keys()) {
+      try {
+        // Fire and forget - can't await in beforeunload handler
+        this.syncManager.sendAwarenessLeave(documentId).catch((error) => {
+          console.error(`Failed to send leave update for ${documentId}:`, error)
+        })
+      } catch (error) {
+        console.error(`Failed to send leave update for ${documentId}:`, error)
+      }
+    }
+  }
+
+  /**
    * Cleanup and dispose all resources
    */
   dispose(): void {
+    // Send leave updates before disposal
+    this.sendAllLeaveUpdates()
+
     // Dispose all documents
     for (const doc of this.documents.values()) {
       doc.dispose()
     }
     this.documents.clear()
+
+    // Dispose all counters
+    for (const counter of this.counters.values()) {
+      counter.dispose()
+    }
+    this.counters.clear()
+
+    // Dispose all sets
+    for (const set of this.sets.values()) {
+      set.dispose()
+    }
+    this.sets.clear()
+
+    // Dispose all texts
+    for (const text of this.texts.values()) {
+      text.dispose()
+    }
+    this.texts.clear()
+
+    // Dispose all awareness instances
+    for (const awareness of this.awarenessInstances.values()) {
+      awareness.dispose()
+    }
+    this.awarenessInstances.clear()
 
     // Dispose network components
     if (this.syncManager) {
@@ -344,7 +579,22 @@ export class SyncKit {
   }
 
   // Private methods
-  
+
+  /**
+   * Setup beforeunload handler to send leave updates when page closes
+   */
+  private setupBeforeUnloadHandler(): void {
+    // Only in browser environment
+    if (typeof window === 'undefined') return
+
+    const handleBeforeUnload = () => {
+      // Send leave updates synchronously before page unloads
+      this.sendAllLeaveUpdates()
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+  }
+
   private generateClientId(): string {
     // Generate a random client ID
     const timestamp = Date.now().toString(36)

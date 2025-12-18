@@ -12,6 +12,34 @@
 // Core exports
 export { SyncKit } from './synckit'
 export { SyncDocument } from './document'
+export { SyncText } from './text'
+export { RichText } from './crdt/richtext'
+export { SyncCounter } from './counter'
+export { SyncSet } from './set'
+export { Awareness } from './awareness'
+export type { AwarenessState, AwarenessUpdate, AwarenessCallback } from './awareness'
+
+// RichText types
+export type {
+  RichTextStorageData,
+  FormatRange,
+  FormatChangeCallback
+} from './crdt/richtext'
+
+// Peritext types (for custom formatting)
+export type { FormatAttributes } from './crdt/peritext'
+
+// Delta utilities (for Quill interop)
+export type { Delta, DeltaOp } from './crdt/delta'
+export { DeltaUtils } from './crdt/delta'
+
+// Cross-tab sync
+export { CrossTabSync } from './sync/cross-tab'
+export type { CrossTabSyncOptions } from './sync/cross-tab'
+
+// Undo/Redo
+export { UndoManager } from './undo/undo-manager'
+export type { Operation, UndoManagerState } from './undo/undo-manager'
 
 // Storage adapters
 export { MemoryStorage, IndexedDBStorage, createStorage } from './storage'
@@ -42,19 +70,6 @@ export {
   DocumentError,
   NetworkError,
 } from './types'
-
-// React hooks (optional, requires React)
-export {
-  SyncProvider,
-  useSyncKit,
-  useSyncDocument,
-  useSyncField,
-  useSyncDocumentList,
-  useNetworkStatus,
-  useSyncState,
-  useSyncDocumentWithState,
-} from './adapters/react'
-export type { SyncProviderProps, UseSyncDocumentResult } from './adapters/react'
 
 // Version
 export const VERSION = '0.1.0-alpha.1'
