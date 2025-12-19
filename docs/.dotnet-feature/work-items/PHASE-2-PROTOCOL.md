@@ -59,7 +59,29 @@ public class SyncWebSocketMiddleware
                 _logger.LogInformation("WebSocket connection established: {ConnectionId}", 
                     connection.Id);
                 
-                await connection.ProcessMessagesAsync();
+                try
+                {
+                    await connection.ProcessMessagesAsync();
+                }
+                catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+                {
+                    // Client disconnected - not an error
+                    _logger.LogDebug("Client {ConnectionId} disconnected", connection.Id);
+                }
+                catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+                {
+                    // Client closed connection abruptly - common, not an error
+                    _logger.LogDebug("Client {ConnectionId} closed connection", connection.Id);
+                }
+                catch (Exception ex)
+                {
+                    // Unexpected error - log but don't expose to client
+                    _logger.LogError(ex, "Unhandled exception for connection {ConnectionId}", connection.Id);
+                }
+                finally
+                {
+                    await _connectionManager.RemoveConnectionAsync(connection.Id);
+                }
             }
             else
             {
@@ -98,6 +120,8 @@ app.UseMiddleware<SyncWebSocketMiddleware>();
 - [ ] Non-WebSocket requests to `/ws` return 400
 - [ ] Connection ID logged on connect
 - [ ] WebSocket options configurable
+- [ ] Graceful handling of client disconnects (no error logs)
+- [ ] Unhandled exceptions logged but not exposed to client
 
 ---
 
@@ -135,10 +159,16 @@ public enum ConnectionState
 
 #### Implementation
 
+> **Best Practice:** Use `ArrayPool<byte>` for WebSocket buffers to reduce GC pressure under high connection loads. This follows Microsoft's [ASP.NET Core performance best practices](https://learn.microsoft.com/en-us/aspnet/core/performance/performance-best-practices) for memory management.
+
 ```csharp
 // SyncKit.Server/WebSocket/Connection.cs
+using System.Buffers;
+
 public class Connection : IAsyncDisposable
 {
+    private const int BufferSize = 4096;
+    
     public string Id { get; }
     public ConnectionState State { get; private set; }
     public ProtocolType Protocol { get; private set; } = ProtocolType.Unknown;
@@ -154,6 +184,7 @@ public class Connection : IAsyncDisposable
     private readonly HashSet<string> _subscribedDocuments = new();
     private DateTime _lastActivity;
     private bool _isAlive = true;
+    private byte[]? _rentedBuffer;
 
     public Connection(
         WebSocket webSocket,
@@ -172,7 +203,9 @@ public class Connection : IAsyncDisposable
 
     public async Task ProcessMessagesAsync()
     {
-        var buffer = new byte[4096];
+        // Rent buffer from ArrayPool to reduce GC pressure
+        _rentedBuffer = ArrayPool<byte>.Shared.Rent(BufferSize);
+        var buffer = _rentedBuffer;
         
         try
         {
@@ -297,6 +330,13 @@ public class Connection : IAsyncDisposable
         _cts.Cancel();
         _cts.Dispose();
         _webSocket.Dispose();
+        
+        // Return rented buffer to pool
+        if (_rentedBuffer is not null)
+        {
+            ArrayPool<byte>.Shared.Return(_rentedBuffer);
+            _rentedBuffer = null;
+        }
     }
 }
 ```
@@ -308,6 +348,7 @@ public class Connection : IAsyncDisposable
 - [ ] Messages parsed with correct handler
 - [ ] Send works for both protocols
 - [ ] Clean disposal of resources
+- [ ] ArrayPool used for receive buffers (returned on dispose)
 
 ---
 
@@ -916,6 +957,7 @@ public interface IConnectionManager
     IReadOnlyList<Connection> GetConnectionsByUser(string userId);
     Task RemoveConnectionAsync(string connectionId);
     Task BroadcastToDocumentAsync(string documentId, IMessage message, string? excludeConnectionId = null);
+    Task CloseAllAsync(WebSocketCloseStatus status, string description); // For graceful shutdown
     int ConnectionCount { get; }
 }
 ```
@@ -999,14 +1041,36 @@ public class ConnectionManager : IConnectionManager
             .ToList();
     }
 
+    /// <summary>
+    /// Remove connection and clean up all subscriptions.
+    /// Matches TypeScript handleDisconnect() behavior.
+    /// </summary>
     public async Task RemoveConnectionAsync(string connectionId)
     {
         if (_connections.TryRemove(connectionId, out var connection))
         {
+            // 1. Unsubscribe from all documents (matches TypeScript)
+            var subscriptions = connection.GetSubscriptions();
+            foreach (var documentId in subscriptions)
+            {
+                _coordinator.Unsubscribe(documentId, connectionId);
+            }
+            
+            // 2. Unsubscribe from awareness updates
+            foreach (var documentId in _coordinator.GetAwarenessDocumentIds())
+            {
+                _coordinator.UnsubscribeFromAwareness(documentId, connectionId);
+            }
+            
+            // Note: Awareness client state cleaned up by periodic cleanup task
+            // (30s timeout, matches TypeScript AWARENESS_TIMEOUT)
+            
+            // 3. Dispose connection resources (WebSocket, buffer pool, etc.)
             await connection.DisposeAsync();
+            
             _logger.LogInformation(
-                "Connection removed: {ConnectionId}. Total: {Count}",
-                connectionId, _connections.Count);
+                "Connection removed: {ConnectionId}. Unsubscribed from {DocCount} documents. Total: {Count}",
+                connectionId, subscriptions.Count, _connections.Count);
         }
     }
 
@@ -1026,6 +1090,31 @@ public class ConnectionManager : IConnectionManager
 
     public int ConnectionCount => _connections.Count;
 
+    /// <summary>
+    /// Close all connections gracefully. Used during server shutdown.
+    /// Matches TypeScript registry.closeAll() behavior.
+    /// </summary>
+    public async Task CloseAllAsync(WebSocketCloseStatus status, string description)
+    {
+        _logger.LogInformation("Closing all {Count} connections: {Reason}", 
+            _connections.Count, description);
+        
+        var tasks = _connections.Values.Select(async c =>
+        {
+            try
+            {
+                await c.CloseAsync(status, description);
+                await RemoveConnectionAsync(c.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error closing connection {ConnectionId}", c.Id);
+            }
+        });
+        
+        await Task.WhenAll(tasks);
+    }
+
     private void HandleMessage(object? sender, IMessage message)
     {
         // Dispatch to message handlers
@@ -1042,6 +1131,8 @@ public class ConnectionManager : IConnectionManager
 - [ ] Lookup by user ID works
 - [ ] Broadcast to document works
 - [ ] Thread-safe operations
+- [ ] RemoveConnectionAsync cleans up all subscriptions (document + awareness)
+- [ ] CloseAllAsync closes all connections gracefully (for shutdown)
 
 ---
 

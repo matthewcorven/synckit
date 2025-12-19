@@ -814,6 +814,152 @@ Address feedback from code review and make necessary fixes.
 
 ---
 
+### V7-11: Connection Rate Limiting (Optional)
+
+**Priority:** P2  
+**Estimate:** 3 hours  
+**Dependencies:** V7-03
+
+#### Description
+
+Add per-connection message rate limiting to protect against misbehaving clients. This is an **enhancement beyond the TypeScript reference** implementation.
+
+> **Note:** The TypeScript server does not implement per-connection rate limiting. This is a .NET-specific security enhancement.
+
+#### Implementation
+
+```csharp
+// SyncKit.Server/WebSocket/ConnectionRateLimiter.cs
+public class ConnectionRateLimiter
+{
+    private readonly int _maxMessagesPerSecond;
+    private readonly ILogger<ConnectionRateLimiter> _logger;
+    
+    private int _messageCount;
+    private DateTime _windowStart;
+    private readonly object _lock = new();
+
+    public ConnectionRateLimiter(int maxMessagesPerSecond, ILogger<ConnectionRateLimiter> logger)
+    {
+        _maxMessagesPerSecond = maxMessagesPerSecond;
+        _logger = logger;
+        _windowStart = DateTime.UtcNow;
+    }
+
+    public bool TryAcquire(string connectionId)
+    {
+        lock (_lock)
+        {
+            var now = DateTime.UtcNow;
+            if ((now - _windowStart).TotalSeconds >= 1)
+            {
+                // Reset window
+                _windowStart = now;
+                _messageCount = 0;
+            }
+            
+            if (++_messageCount > _maxMessagesPerSecond)
+            {
+                _logger.LogWarning(
+                    "Rate limit exceeded for connection {ConnectionId}: {Count}/{Max} messages/sec",
+                    connectionId, _messageCount, _maxMessagesPerSecond);
+                return false;
+            }
+            
+            return true;
+        }
+    }
+}
+
+// Integration in Connection.ProcessMessagesAsync():
+if (!_rateLimiter.TryAcquire(Id))
+{
+    SendError("Rate limit exceeded. Please slow down.");
+    continue;
+}
+```
+
+#### Configuration
+
+```json
+{
+  "SyncKit": {
+    "RateLimiting": {
+      "Enabled": true,
+      "MaxMessagesPerSecond": 100
+    }
+  }
+}
+```
+
+#### Acceptance Criteria
+
+- [ ] Configurable rate limit per connection
+- [ ] Graceful rejection with error message
+- [ ] Rate limit logged for monitoring
+- [ ] Can be disabled via configuration
+
+---
+
+### V7-12: High-Performance Logging (Optional)
+
+**Priority:** P2  
+**Estimate:** 1 hour  
+**Dependencies:** V7-07
+
+#### Description
+
+Add `LoggerMessage.Define` source-generated logging for hot paths to reduce allocation overhead. This follows [Microsoft's high-performance logging guidance](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/loggermessage).
+
+> **Note:** This is an optimization for high-throughput scenarios. Standard Serilog logging is sufficient for most deployments.
+
+#### Implementation
+
+```csharp
+// SyncKit.Server/Logging/LogMessages.cs
+public static partial class LogMessages
+{
+    [LoggerMessage(
+        EventId = 1001,
+        Level = LogLevel.Debug,
+        Message = "Delta received for document {DocumentId} from client {ClientId}")]
+    public static partial void DeltaReceived(
+        ILogger logger, string documentId, string clientId);
+
+    [LoggerMessage(
+        EventId = 1002,
+        Level = LogLevel.Debug,
+        Message = "Broadcasting to {SubscriberCount} subscribers for document {DocumentId}")]
+    public static partial void BroadcastingDelta(
+        ILogger logger, int subscriberCount, string documentId);
+
+    [LoggerMessage(
+        EventId = 1003,
+        Level = LogLevel.Debug,
+        Message = "Message sent to connection {ConnectionId}: {MessageType}")]
+    public static partial void MessageSent(
+        ILogger logger, string connectionId, string messageType);
+
+    [LoggerMessage(
+        EventId = 2001,
+        Level = LogLevel.Warning,
+        Message = "Connection {ConnectionId} authentication timeout")]
+    public static partial void AuthTimeout(
+        ILogger logger, string connectionId);
+}
+
+// Usage in hot path:
+LogMessages.DeltaReceived(_logger, documentId, clientId);
+```
+
+#### Acceptance Criteria
+
+- [ ] Hot path logging uses `LoggerMessage.Define`
+- [ ] Zero-allocation logging verified in benchmarks
+- [ ] Event IDs documented for log analysis
+
+---
+
 ## Phase 7 Summary
 
 | ID | Title | Priority | Est (h) | Status |
@@ -828,7 +974,9 @@ Address feedback from code review and make necessary fixes.
 | V7-08 | Create test report | P0 | 2 | ⬜ |
 | V7-09 | Prepare PR description | P0 | 2 | ⬜ |
 | V7-10 | Code review and fixes | P0 | 8 | ⬜ |
-| **Total** | | | **43** | |
+| V7-11 | Connection rate limiting (optional) | P2 | 3 | ⬜ |
+| V7-12 | High-performance logging (optional) | P2 | 1 | ⬜ |
+| **Total** | | | **47** | |
 
 **Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete
 

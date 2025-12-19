@@ -150,12 +150,41 @@ public class SyncKitConfig
 | `SYNC_BATCH_DELAY` | `SyncBatchDelay` | `50` |
 | `SYNCKIT_AUTH_REQUIRED` | `AuthRequired` | `true` |
 
+#### Configuration Registration
+
+```csharp
+// Program.cs - Options pattern with validation (mirrors TypeScript Zod validation)
+builder.Services.AddOptions<SyncKitConfig>()
+    .Bind(builder.Configuration)
+    .ValidateDataAnnotations()
+    .ValidateOnStart(); // Fail fast on startup if config invalid
+```
+
+#### Data Annotations (matching TypeScript Zod schema)
+
+```csharp
+public class SyncKitConfig
+{
+    [Required, MinLength(32)] // Matches: jwtSecret: z.string().min(32)
+    public string JwtSecret { get; set; } = null!;
+    
+    [Range(1, 65535)] // Matches: port: z.number().int().positive()
+    public int Port { get; set; } = 8080;
+    
+    [Range(1, int.MaxValue)]
+    public int WsHeartbeatInterval { get; set; } = 30000;
+    
+    // ... other properties with matching validation
+}
+```
+
 #### Acceptance Criteria
 
 - [ ] Configuration loads from appsettings.json
 - [ ] Configuration loads from environment variables
 - [ ] Environment variables override appsettings
-- [ ] Configuration validation fails if JWT_SECRET missing
+- [ ] Configuration validation fails on startup if JWT_SECRET missing or <32 chars
+- [ ] Validation rules match TypeScript Zod schema
 - [ ] IOptions<SyncKitConfig> injectable via DI
 
 ---
@@ -268,6 +297,30 @@ public record HealthStats
 }
 ```
 
+#### ASP.NET Core Health Checks Integration
+
+In addition to the `/health` stats endpoint, add ASP.NET Core health checks for container orchestration:
+
+```csharp
+// Program.cs
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" });
+
+// Liveness probe - is the process running?
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+});
+
+// Readiness probe - can accept traffic? (expanded in Phase 6 with DB/Redis checks)
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+```
+
+> **Note:** Kubernetes and Docker use separate liveness/readiness probes. The existing `/health` endpoint provides detailed stats for monitoring dashboards.
+
 #### Expected Response
 
 ```json
@@ -287,10 +340,10 @@ GET /health HTTP/1.1
 
 #### Acceptance Criteria
 
-- [ ] `GET /health` returns 200
-- [ ] Response is valid JSON
-- [ ] Response includes status, version, uptime
-- [ ] Response includes stats (connections, documents, memory)
+- [ ] `GET /health` returns 200 with JSON stats (matches TypeScript server)
+- [ ] Response includes status, version, uptime, stats
+- [ ] `GET /health/live` returns 200 (liveness probe)
+- [ ] `GET /health/ready` returns 200 when ready (readiness probe)
 - [ ] Uptime is accurate (seconds since start)
 
 ---
@@ -582,6 +635,74 @@ ASP.NET Core implementation of the SyncKit sync server.
 
 ---
 
+### F1-09: Implement Graceful Shutdown
+
+**Priority:** P1  
+**Estimate:** 2 hours  
+**Dependencies:** F1-02
+
+#### Description
+
+Implement graceful shutdown handling using `IHostApplicationLifetime`, matching the TypeScript server's SIGTERM/SIGINT handlers.
+
+> **Reference:** TypeScript server [index.ts](server/typescript/src/index.ts) implements shutdown with 10s force-exit timeout.
+
+#### Tasks
+
+1. Register shutdown handlers via `IHostApplicationLifetime`
+2. Stop accepting new connections
+3. Close existing WebSocket connections gracefully
+4. Dispose storage/Redis connections
+5. Add force-exit timeout (10s)
+
+#### Implementation
+
+```csharp
+// Program.cs
+var app = builder.Build();
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+
+lifetime.ApplicationStopping.Register(async () =>
+{
+    Log.Information("Shutdown signal received, closing gracefully...");
+    
+    // 1. Stop accepting new WebSocket connections
+    // (middleware will reject new upgrades)
+    
+    // 2. Close all active WebSocket connections
+    var connectionManager = app.Services.GetRequiredService<IConnectionManager>();
+    await connectionManager.CloseAllAsync(
+        WebSocketCloseStatus.EndpointUnavailable, 
+        "Server shutdown");
+    
+    // 3. Dispose coordinator (clears awareness, unsubscribes)
+    var coordinator = app.Services.GetRequiredService<ISyncCoordinator>();
+    await coordinator.DisposeAsync();
+    
+    Log.Information("Graceful shutdown complete");
+});
+
+// Force exit after 10 seconds (matches TypeScript)
+lifetime.ApplicationStopping.Register(() =>
+{
+    Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ =>
+    {
+        Log.Warning("Forced shutdown after timeout");
+        Environment.Exit(1);
+    });
+});
+```
+
+#### Acceptance Criteria
+
+- [ ] Server responds to SIGTERM gracefully
+- [ ] Server responds to SIGINT (Ctrl+C) gracefully
+- [ ] Active WebSocket connections closed with 1001 status
+- [ ] Storage/Redis connections disposed
+- [ ] Force exit after 10 seconds if shutdown hangs
+
+---
+
 ## Phase 1 Summary
 
 | ID | Title | Priority | Est (h) | Status |
@@ -589,11 +710,12 @@ ASP.NET Core implementation of the SyncKit sync server.
 | F1-01 | Create solution structure | P0 | 2 | ⬜ |
 | F1-02 | Add configuration system | P0 | 4 | ⬜ |
 | F1-03 | Add logging infrastructure | P0 | 3 | ⬜ |
-| F1-04 | Implement health endpoint | P0 | 2 | ⬜ |
+| F1-04 | Implement health endpoint | P0 | 4 | ⬜ |
 | F1-05 | Create Dockerfile | P0 | 2 | ⬜ |
 | F1-06 | Create docker-compose.yml | P0 | 2 | ⬜ |
 | F1-07 | Setup GitHub Actions CI | P1 | 4 | ⬜ |
 | F1-08 | Add README.md | P1 | 2 | ⬜ |
-| **Total** | | | **21** | |
+| F1-09 | Implement graceful shutdown | P1 | 2 | ⬜ |
+| **Total** | | | **25** | |
 
 **Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete
