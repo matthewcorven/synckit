@@ -31,7 +31,7 @@ Configure the test environment to run the existing test suite against the .NET s
 The test environment requires PostgreSQL and Redis for full feature parity validation. All dependencies are provided via Docker Compose.
 
 ```yaml
-# server/dotnet/docker-compose.test.yml
+# server/csharp/docker-compose.test.yml
 version: '3.8'
 
 services:
@@ -102,7 +102,7 @@ volumes:
 
 ```bash
 #!/bin/bash
-# server/dotnet/run-tests.sh
+# server/csharp/run-tests.sh
 set -e
 
 echo "Starting test environment (PostgreSQL + Redis + .NET Server)..."
@@ -124,7 +124,7 @@ bun test
 TEST_EXIT=$?
 
 # Cleanup
-cd ../server/dotnet
+cd ../server/csharp
 docker compose -f docker-compose.test.yml down
 
 exit $TEST_EXIT
@@ -134,11 +134,11 @@ exit $TEST_EXIT
 
 ```bash
 #!/bin/bash
-# tests/run-against-dotnet.sh
+# tests/run-against-csharp.sh
 set -e
 
 # Start only PostgreSQL and Redis via Docker
-cd ../server/dotnet
+cd ../server/csharp
 docker compose -f docker-compose.test.yml up -d postgres redis
 
 # Wait for dependencies
@@ -535,7 +535,7 @@ Create detailed performance benchmarks comparing .NET and TypeScript servers.
 #### Benchmark Suite
 
 ```csharp
-// server/dotnet/benchmarks/SyncBenchmarks.cs
+// server/csharp/benchmarks/SyncBenchmarks.cs
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net90)]
 public class SyncBenchmarks
@@ -729,7 +729,7 @@ Adds ASP.NET Core 10 server implementation for SyncKit with full protocol compat
 
 ## Changes
 
-- **New:** `server/dotnet/` - Complete .NET server implementation
+- **New:** `server/csharp/` - Complete .NET server implementation
 - **New:** Docker support for .NET server
 - **Docs:** .NET-specific documentation and guides
 
@@ -743,7 +743,7 @@ Adds ASP.NET Core 10 server implementation for SyncKit with full protocol compat
 ## How to Test
 
 ```bash
-cd server/dotnet
+cd server/csharp
 docker compose up -d
 cd ../../tests
 SYNCKIT_SERVER_URL=ws://localhost:8080/ws bun test

@@ -62,28 +62,24 @@ The following items appear in [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 
 ## 3. Test Count Clarification
 
-### Current Discrepancies
+### ✅ Resolved (December 2025)
 
-| Source | Total Tests | Breakdown |
-|--------|-------------|-----------|
-| PROPOSAL.md | 385 integration tests + 7 binary = 392 | "Pass all 385 integration tests" |
-| IMPLEMENTATION_PLAN.md | 410 total | Binary(7) + Sync(86) + Storage(55) + Offline(103) + Load(73) + Chaos(86) |
-| PHASE-7-TESTING.md | 410 total | Binary(7) + Integration(244) + Load(73) + Chaos(86) |
+| Source | Total Tests | Status |
+|--------|-------------|--------|
+| PROPOSAL.md | 410 total | ✅ Updated |
+| IMPLEMENTATION_PLAN.md | 410 total | ✅ Consistent |
+| PHASE-7-TESTING.md | 410 total | ✅ Consistent |
+| tests/README.md | 410 total | ✅ Source of truth |
 
-### Actual Test File Count (from workspace)
+**Breakdown:** Binary(7) + Integration(244) + Load(73) + Chaos(86) = 410
 
-| Category | Files | Notes |
-|----------|-------|-------|
-| Binary | 3 | `tests/binary/*.test.ts` |
-| Integration | 18 | `tests/integration/**/*.test.ts` |
-| Load | 6 | `tests/load/*.test.ts` |
-| Chaos | 5 | `tests/chaos/*.test.ts` |
-| **Total Files** | **32** | Individual test cases may be higher |
+### Test Case Count Verification
 
-**Recommendation:** 
-1. Run `bun test --reporter=summary` to get exact test case counts
-2. Update all documents to reference the same canonical count
-3. Note: "410 tests" likely refers to individual `test()` cases, not files
+The 410 total represents individual `test()` cases across 32 test files. The `tests/README.md` serves as the canonical source of truth for test counts.
+
+**Note:** Test files vs test cases:
+- **Files:** 32 total (3 binary + 18 integration + 6 load + 5 chaos)
+- **Cases:** 410 total (7 binary + 244 integration + 73 load + 86 chaos)
 
 ---
 

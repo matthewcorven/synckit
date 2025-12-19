@@ -824,6 +824,301 @@ public class AuthMessageHandlerTests
 
 ---
 
+### A3-08: Implement JWT Generation Service
+
+**Priority:** P0  
+**Estimate:** 4 hours  
+**Dependencies:** A3-01
+
+#### Description
+
+Create a service to generate JWT tokens for the `/auth/login` endpoint. Must match TypeScript server token generation.
+
+#### Tasks
+
+1. Create `IJwtGenerator.cs` interface
+2. Create `JwtGenerator.cs` implementation
+3. Generate access tokens (24h default)
+4. Generate refresh tokens (7d default)
+5. Include permissions in token claims
+
+#### Interface
+
+```csharp
+// SyncKit.Server/Auth/IJwtGenerator.cs
+public interface IJwtGenerator
+{
+    string GenerateAccessToken(string userId, string clientId, string[] permissions);
+    string GenerateRefreshToken(string userId);
+    (string AccessToken, string RefreshToken) GenerateTokenPair(
+        string userId, 
+        string clientId, 
+        string[] permissions);
+}
+```
+
+#### Implementation
+
+```csharp
+// SyncKit.Server/Auth/JwtGenerator.cs
+public class JwtGenerator : IJwtGenerator
+{
+    private readonly byte[] _secretBytes;
+    private readonly string _issuer;
+    private readonly string _audience;
+    private readonly TimeSpan _accessTokenExpiry;
+    private readonly TimeSpan _refreshTokenExpiry;
+
+    public JwtGenerator(IOptions<SyncKitConfig> config)
+    {
+        var jwtConfig = config.Value.Auth.Jwt;
+        _secretBytes = Encoding.UTF8.GetBytes(jwtConfig.Secret);
+        _issuer = jwtConfig.Issuer ?? "synckit-server";
+        _audience = jwtConfig.Audience ?? "synckit-client";
+        _accessTokenExpiry = ParseDuration(jwtConfig.ExpiresIn ?? "24h");
+        _refreshTokenExpiry = ParseDuration(jwtConfig.RefreshExpiresIn ?? "7d");
+    }
+
+    public string GenerateAccessToken(string userId, string clientId, string[] permissions)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userId),
+            new("clientId", clientId),
+            new("permissions", string.Join(" ", permissions))
+        };
+
+        var key = new SymmetricSecurityKey(_secretBytes);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _issuer,
+            audience: _audience,
+            claims: claims,
+            expires: DateTime.UtcNow.Add(_accessTokenExpiry),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public string GenerateRefreshToken(string userId)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userId),
+            new("type", "refresh")
+        };
+
+        var key = new SymmetricSecurityKey(_secretBytes);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _issuer,
+            audience: _audience,
+            claims: claims,
+            expires: DateTime.UtcNow.Add(_refreshTokenExpiry),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public (string AccessToken, string RefreshToken) GenerateTokenPair(
+        string userId, string clientId, string[] permissions)
+    {
+        return (
+            GenerateAccessToken(userId, clientId, permissions),
+            GenerateRefreshToken(userId)
+        );
+    }
+
+    private static TimeSpan ParseDuration(string duration)
+    {
+        // Parse "24h", "7d", "30m" format
+        var value = int.Parse(duration[..^1]);
+        return duration[^1] switch
+        {
+            'h' => TimeSpan.FromHours(value),
+            'd' => TimeSpan.FromDays(value),
+            'm' => TimeSpan.FromMinutes(value),
+            's' => TimeSpan.FromSeconds(value),
+            _ => TimeSpan.FromHours(24)
+        };
+    }
+}
+```
+
+#### Acceptance Criteria
+
+- [ ] Access tokens generated with correct claims
+- [ ] Refresh tokens generated with extended expiry
+- [ ] Tokens pass validation by JwtValidator
+- [ ] Expiry times configurable
+
+---
+
+### A3-09: Implement AuthController (REST Endpoints)
+
+**Priority:** P0  
+**Estimate:** 6 hours  
+**Dependencies:** A3-01, A3-02, A3-08
+
+#### Description
+
+Implement REST authentication endpoints matching the TypeScript server.
+
+#### Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/auth/login` | User login, returns tokens | No |
+| POST | `/auth/refresh` | Refresh access token | Bearer (refresh token) |
+| GET | `/auth/me` | Get current user info | Bearer |
+| POST | `/auth/verify` | Verify token validity | No |
+
+#### Implementation
+
+```csharp
+// SyncKit.Server/Controllers/AuthController.cs
+[ApiController]
+[Route("auth")]
+public class AuthController : ControllerBase
+{
+    private readonly IJwtGenerator _jwtGenerator;
+    private readonly IJwtValidator _jwtValidator;
+    private readonly IApiKeyValidator _apiKeyValidator;
+    private readonly ILogger<AuthController> _logger;
+
+    public AuthController(
+        IJwtGenerator jwtGenerator,
+        IJwtValidator jwtValidator,
+        IApiKeyValidator apiKeyValidator,
+        ILogger<AuthController> logger)
+    {
+        _jwtGenerator = jwtGenerator;
+        _jwtValidator = jwtValidator;
+        _apiKeyValidator = apiKeyValidator;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Login with credentials or API key
+    /// </summary>
+    [HttpPost("login")]
+    public IActionResult Login([FromBody] LoginRequest request)
+    {
+        // For development/testing, accept any userId
+        // In production, this would validate against a user store
+        if (string.IsNullOrEmpty(request.UserId))
+        {
+            return BadRequest(new { error = "userId required" });
+        }
+
+        var clientId = request.ClientId ?? Guid.NewGuid().ToString("N")[..16];
+        var permissions = request.Permissions ?? new[] { "document:read", "document:write" };
+
+        var (accessToken, refreshToken) = _jwtGenerator.GenerateTokenPair(
+            request.UserId, clientId, permissions);
+
+        _logger.LogInformation("User {UserId} logged in", request.UserId);
+
+        return Ok(new LoginResponse
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            UserId = request.UserId,
+            ExpiresIn = 86400 // 24 hours in seconds
+        });
+    }
+
+    /// <summary>
+    /// Refresh access token using refresh token
+    /// </summary>
+    [HttpPost("refresh")]
+    public IActionResult Refresh([FromBody] RefreshRequest request)
+    {
+        var payload = _jwtValidator.Validate(request.RefreshToken);
+        if (payload == null)
+        {
+            return Unauthorized(new { error = "Invalid refresh token" });
+        }
+
+        // Generate new access token
+        var accessToken = _jwtGenerator.GenerateAccessToken(
+            payload.Sub, payload.ClientId, payload.Permissions);
+
+        return Ok(new RefreshResponse
+        {
+            AccessToken = accessToken,
+            ExpiresIn = 86400
+        });
+    }
+
+    /// <summary>
+    /// Get current user info from token
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    public IActionResult Me()
+    {
+        var token = HttpContext.Request.Headers.Authorization
+            .FirstOrDefault()?.Replace("Bearer ", "");
+
+        if (string.IsNullOrEmpty(token))
+        {
+            return Unauthorized(new { error = "No token provided" });
+        }
+
+        var payload = _jwtValidator.Validate(token);
+        if (payload == null)
+        {
+            return Unauthorized(new { error = "Invalid token" });
+        }
+
+        return Ok(new MeResponse
+        {
+            UserId = payload.Sub,
+            ClientId = payload.ClientId,
+            Permissions = payload.Permissions
+        });
+    }
+
+    /// <summary>
+    /// Verify if a token is valid
+    /// </summary>
+    [HttpPost("verify")]
+    public IActionResult Verify([FromBody] VerifyRequest request)
+    {
+        var payload = _jwtValidator.Validate(request.Token);
+        
+        return Ok(new VerifyResponse
+        {
+            Valid = payload != null,
+            UserId = payload?.Sub,
+            ExpiresAt = payload?.Exp
+        });
+    }
+}
+
+// Request/Response DTOs
+public record LoginRequest(string UserId, string? ClientId, string[]? Permissions);
+public record LoginResponse(string AccessToken, string RefreshToken, string UserId, int ExpiresIn);
+public record RefreshRequest(string RefreshToken);
+public record RefreshResponse(string AccessToken, int ExpiresIn);
+public record MeResponse(string UserId, string ClientId, string[] Permissions);
+public record VerifyRequest(string Token);
+public record VerifyResponse(bool Valid, string? UserId, long? ExpiresAt);
+```
+
+#### Acceptance Criteria
+
+- [ ] `/auth/login` returns valid token pair
+- [ ] `/auth/refresh` generates new access token
+- [ ] `/auth/me` returns user info from token
+- [ ] `/auth/verify` validates tokens correctly
+- [ ] Error responses match TypeScript server format
+
+---
+
 ## Phase 3 Summary
 
 | ID | Title | Priority | Est (h) | Status |
@@ -835,7 +1130,9 @@ public class AuthMessageHandlerTests
 | A3-05 | Add auth timeout | P1 | 2 | ⬜ |
 | A3-06 | Enforce auth on all operations | P0 | 3 | ⬜ |
 | A3-07 | Auth unit tests | P0 | 4 | ⬜ |
-| **Total** | | | **25** | |
+| A3-08 | Implement JWT generation service | P0 | 4 | ⬜ |
+| A3-09 | Implement AuthController (REST) | P0 | 6 | ⬜ |
+| **Total** | | | **35** | |
 
 **Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
@@ -845,19 +1142,29 @@ public class AuthMessageHandlerTests
 
 After completing Phase 3, the following should work:
 
-1. **JWT Authentication**
+1. **REST Login Endpoint**
+   ```bash
+   curl -X POST http://localhost:8080/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"userId":"user-1","permissions":["document:read","document:write"]}'
+   
+   # Response:
+   # {"accessToken":"eyJ...","refreshToken":"eyJ...","userId":"user-1","expiresIn":86400}
+   ```
+
+2. **JWT Authentication (WebSocket)**
    ```json
    > {"type":"auth","id":"1","timestamp":0,"token":"eyJ..."}
    < {"type":"auth_success","id":"2","timestamp":0,"userId":"user-1","permissions":["document:read"]}
    ```
 
-2. **API Key Authentication**
+3. **API Key Authentication**
    ```json
    > {"type":"auth","id":"1","timestamp":0,"apiKey":"sk_test_..."}
    < {"type":"auth_success","id":"2","timestamp":0,...}
    ```
 
-3. **Permission Enforcement**
+4. **Permission Enforcement**
    ```json
    // Without auth:
    > {"type":"subscribe","id":"1","timestamp":0,"documentId":"doc-1"}
@@ -868,6 +1175,6 @@ After completing Phase 3, the following should work:
    < {"type":"error","id":"2","timestamp":0,"error":"Read access denied"}
    ```
 
-4. **Auth Timeout**
+5. **Auth Timeout**
    - Connect without sending auth message
    - Connection should close after 30 seconds

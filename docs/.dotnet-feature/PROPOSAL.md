@@ -38,7 +38,7 @@ This proposal outlines the implementation of a production-ready ASP.NET Core 10 
 ### Key Goals
 
 1. **Protocol Compatibility** - 100% compatible with existing SDK clients
-2. **Test Suite Compliance** - Pass all 385 integration tests (JSON protocol)
+2. **Test Suite Compliance** - Pass all 410 tests (JSON protocol for test suite, Binary for SDK)
 3. **Dual Protocol Support** - Auto-detect and handle both JSON and binary protocols
 4. **Feature Parity** - Match TypeScript reference server functionality
 5. **Community-Driven** - Self-directed implementation with protocol guidance from maintainer
@@ -688,28 +688,36 @@ SYNCKIT_SERVER_URL=http://localhost:5000 bun test:integration
 
 ## Open Questions
 
-### For Maintainer Review
+### Resolved Questions
 
-1. **SDK Payload Normalization**
-   - Original proposal mentioned SDK sends `{ field, value }` which server normalizes to `{ delta: { field: value } }`.
-   - Is this still accurate for v0.2.0?
-   - Should normalization be bidirectional?
+> The following questions were resolved during implementation planning (December 2025):
 
-2. **Vector Clock Field Names**
-   - SDK uses `clock`, server uses `vectorClock`?
-   - Need both supported transparently?
+1. **SDK Payload Normalization** ✅
+   - **Status:** Still accurate for v0.2.0
+   - SDK sends `{ field, value }`, server normalizes to `{ delta: { field: value } }`
+   - Only server-sent messages use the `data` property wrapper
+   - Normalization is server-side only (not bidirectional)
 
-3. **Awareness Timeout**
-   - Default stale client timeout (30s)?
-   - Should this be configurable per-document?
+2. **Vector Clock Field Names** ✅
+   - **Status:** Support both `clock` and `vectorClock` transparently
+   - Must maintain parity with TypeScript reference server
+   - Accept either field name on input, use `vectorClock` on output
 
-4. **Test Suite Updates**
-   - Are there plans to update `tests/` during v0.2.x that I should track?
-   - Any specific test files I should monitor for protocol changes?
+3. **Awareness Timeout** ✅
+   - **Status:** Global configuration only
+   - Default: 30 seconds
+   - Configurable via `AWARENESS_TIMEOUT_MS` environment variable
+   - Per-document configuration not required
 
-5. **PostgreSQL Schema**
-   - Is the schema in TypeScript server definitive?
-   - Any planned schema migrations for v0.3.0?
+4. **Test Suite Updates** ✅
+   - **Status:** No planned changes during v0.2.x
+   - Test suite expected to remain stable
+   - Monitor upstream `tests/` directory for any changes
+
+5. **PostgreSQL Schema** ✅
+   - **Status:** TypeScript schema is definitive
+   - Expected to remain consistent through v0.3.0
+   - No planned migrations that would affect .NET implementation
 
 ---
 

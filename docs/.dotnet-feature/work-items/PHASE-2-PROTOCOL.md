@@ -1286,6 +1286,87 @@ public class ProtocolDetectionTests
 
 ---
 
+## Unified Connection Disconnect Flow
+
+When a connection closes (gracefully or abruptly), the following cleanup sequence **must** execute in order:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CONNECTION DISCONNECT FLOW                    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. STOP MESSAGE PROCESSING                                       │
+│    • Cancel receive loop CancellationToken                       │
+│    • Set State = Disconnecting                                   │
+│    • Stop heartbeat timer                                        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. UNSUBSCRIBE FROM ALL DOCUMENTS                                │
+│    • Get list of subscribed document IDs                         │
+│    • For each document:                                          │
+│      - Remove connection from document subscribers               │
+│      - coordinator.Unsubscribe(documentId, connectionId)         │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. CLEAR AWARENESS STATE                                         │
+│    • For each subscribed document:                               │
+│      - Remove client from awareness store                        │
+│      - Broadcast null state to other subscribers                 │
+│    • awarenessStore.RemoveAllForConnectionAsync(connectionId)    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. NOTIFY OTHER CLIENTS                                          │
+│    • For each previously-subscribed document:                    │
+│      - Send AWARENESS_UPDATE with state: null                    │
+│      - Other clients know this client went offline               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. DISPOSE RESOURCES                                             │
+│    • Close WebSocket with appropriate close code:                │
+│      - 1000 (Normal) for graceful disconnect                     │
+│      - 1001 (Going Away) for server shutdown                     │
+│      - 1008 (Policy Violation) for auth failure                  │
+│    • Return ArrayPool buffer                                     │
+│    • Dispose CancellationTokenSource                             │
+│    • Remove from ConnectionManager registry                      │
+│    • Set State = Disconnected                                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Implementation Reference
+
+The disconnect flow is implemented across:
+
+| Component | Responsibility |
+|-----------|----------------|
+| `Connection.DisposeAsync()` | Steps 1, 5 (resource cleanup) |
+| `ConnectionManager.RemoveConnectionAsync()` | Steps 2, 3, 4 (subscription/awareness cleanup) |
+| `AwarenessCleanupService` | Periodic cleanup for stale clients (Phase 5) |
+
+### WebSocket Close Codes Reference
+
+| Code | Name | When Used |
+|------|------|-----------|
+| 1000 | Normal Closure | Client/server graceful disconnect |
+| 1001 | Going Away | Server shutdown |
+| 1008 | Policy Violation | Auth failure, permission denied |
+| 1011 | Internal Error | Unhandled server exception |
+| 4001 | Auth Required | Custom: no auth message received |
+| 4002 | Auth Failed | Custom: invalid token |
+| 4003 | Permission Denied | Custom: RBAC rejection |
+
+---
+
 ## Phase 2 Summary
 
 | ID | Title | Priority | Est (h) | Status |

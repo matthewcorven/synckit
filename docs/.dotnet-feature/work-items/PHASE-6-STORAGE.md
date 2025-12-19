@@ -13,7 +13,7 @@ PostgreSQL and Redis are **required** for this phase. Both are provided via Dock
 
 ```bash
 # Start storage dependencies
-cd server/dotnet
+cd server/csharp
 docker compose -f docker-compose.test.yml up -d postgres redis
 
 # Verify services are healthy
@@ -859,7 +859,7 @@ Integration tests for storage providers. Tests can run against:
 Start test dependencies via Docker Compose before running storage tests:
 
 ```bash
-cd server/dotnet
+cd server/csharp
 docker compose -f docker-compose.test.yml up -d postgres redis
 ```
 

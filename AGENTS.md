@@ -25,7 +25,7 @@
 | `core/` | Rust CRDT engine (compiled to WebAssembly) |
 | `sdk/` | TypeScript SDK (`@synckit-js/sdk`) |
 | `server/typescript/` | Reference TypeScript WebSocket server |
-| `server/dotnet/` | .NET Server implementation (in development) |
+| `server/csharp/` | .NET Server implementation (in development) |
 | `tests/` | Integration, load, and chaos test suites |
 | `examples/` | Example applications (React, Vue, Svelte, Vanilla) |
 | `docs/` | Documentation and guides |
@@ -79,7 +79,7 @@ PostgreSQL and Redis are **required** for full test validation. Both are provide
 
 ```bash
 # Start test dependencies
-cd server/dotnet
+cd server/csharp
 docker compose -f docker-compose.test.yml up -d
 
 # Run tests
