@@ -1367,6 +1367,93 @@ The disconnect flow is implemented across:
 
 ---
 
+### P2-10: Implement Graceful Shutdown
+
+**Priority:** P1  
+**Estimate:** 2 hours  
+**Dependencies:** P2-08 (ConnectionManager)  
+**Moved from:** F1-09 (Phase 1)
+
+#### Description
+
+Implement graceful shutdown handling using `IHostApplicationLifetime`. This integrates with the `ConnectionManager` to close all WebSocket connections cleanly before the server terminates.
+
+> **Reference:** TypeScript server [index.ts](../../../server/typescript/src/index.ts) lines 127-144
+
+#### Why Moved to Phase 2
+
+Graceful shutdown is only meaningful when there are WebSocket connections to close. The shutdown coordinator pattern requires `IConnectionManager.CloseAllAsync()` which is implemented in P2-08.
+
+#### Tasks
+
+1. Create `Services/IShutdownCoordinator.cs` interface
+2. Create `Services/ShutdownCoordinator.cs` implementation
+3. Create `Services/GracefulShutdownService.cs` hosted service
+4. Register shutdown services in `Program.cs`
+5. Register `ConnectionManager` with shutdown coordinator
+6. Set readiness probe to unhealthy on shutdown
+
+#### Implementation
+
+See [F1-09.md](F1-09.md) for full implementation details. Key additions for Phase 2:
+
+```csharp
+// ConnectionManager registers itself with shutdown coordinator
+public class ConnectionManager : IConnectionManager
+{
+    public ConnectionManager(
+        IShutdownCoordinator shutdownCoordinator,
+        /* other deps */)
+    {
+        // Register for shutdown notification
+        shutdownCoordinator.Register("WebSocket Connections", async ct =>
+        {
+            await CloseAllAsync(
+                WebSocketCloseStatus.EndpointUnavailable,  // 1001 Going Away
+                "Server shutdown");
+        });
+    }
+}
+```
+
+#### Shutdown Sequence
+
+```
+1. SIGTERM/SIGINT received
+2. Readiness probe → unhealthy (stop new connections)
+3. ShutdownCoordinator calls registered handlers (LIFO order):
+   a. ConnectionManager.CloseAllAsync() - close all WebSockets with 1001
+   b. (Future: SyncCoordinator.DisposeAsync() - Phase 4)
+   c. (Future: Redis unsubscribe - Phase 6)
+4. If not complete in 10s → force exit
+```
+
+#### Acceptance Criteria
+
+- [ ] Server responds to SIGTERM gracefully
+- [ ] Server responds to SIGINT (Ctrl+C) gracefully  
+- [ ] Readiness probe (`/health/ready`) returns 503 immediately on shutdown
+- [ ] All WebSocket connections closed with status 1001 (Going Away)
+- [ ] "Server shutdown" close reason sent to clients
+- [ ] Force exit after 10 seconds if shutdown hangs
+- [ ] Solution builds without errors
+
+#### Verification
+
+```bash
+# Start server with a connected WebSocket client
+wscat -c ws://localhost:8080/ws &
+
+# Send SIGTERM
+kill -TERM $(pgrep -f "SyncKit.Server")
+
+# Expected:
+# - wscat receives close frame with code 1001
+# - Server logs show graceful shutdown sequence
+```
+
+---
+
 ## Phase 2 Summary
 
 | ID | Title | Priority | Est (h) | Status |
@@ -1380,7 +1467,10 @@ The disconnect flow is implemented across:
 | P2-07 | Implement heartbeat (ping/pong) | P0 | 3 | ⬜ |
 | P2-08 | Add ConnectionManager | P0 | 4 | ⬜ |
 | P2-09 | Protocol unit tests | P0 | 6 | ⬜ |
-| **Total** | | | **39** | |
+| P2-10 | Implement graceful shutdown | P1 | 2 | ⬜ |
+| **Total** | | | **41** | |
+
+> **Note:** P2-10 was moved from Phase 1 (F1-09) because graceful shutdown requires WebSocket infrastructure to close connections properly.
 
 **Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete
 

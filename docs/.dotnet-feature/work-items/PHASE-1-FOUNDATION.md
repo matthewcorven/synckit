@@ -978,7 +978,9 @@ lifetime.ApplicationStopping.Register(() =>
 | F1-06 | Create docker-compose.yml | P0 | 2 | ⬜ |
 | F1-07 | Setup GitHub Actions CI | P1 | 4 | ⬜ |
 | F1-08 | Add README.md | P1 | 2 | ⬜ |
-| F1-09 | Implement graceful shutdown | P1 | 2 | ⬜ |
-| **Total** | | | **25** | |
+| ~~F1-09~~ | ~~Implement graceful shutdown~~ | - | - | ➡️ Moved to P2-10 |
+| **Total** | | | **23** | |
+
+> **Note:** F1-09 (Graceful Shutdown) was moved to Phase 2 as P2-10. Graceful shutdown requires WebSocket infrastructure to close connections properly. See [PHASE-2-PROTOCOL.md](PHASE-2-PROTOCOL.md#p2-10-implement-graceful-shutdown).
 
 **Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete
