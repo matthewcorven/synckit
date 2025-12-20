@@ -31,7 +31,7 @@ Configure the test environment to run the existing test suite against the .NET s
 The test environment requires PostgreSQL and Redis for full feature parity validation. All dependencies are provided via Docker Compose.
 
 ```yaml
-# server/csharp/docker-compose.test.yml
+# server/csharp/src/docker-compose.test.yml
 version: '3.8'
 
 services:
@@ -102,7 +102,7 @@ volumes:
 
 ```bash
 #!/bin/bash
-# server/csharp/run-tests.sh
+# server/csharp/src/run-tests.sh
 set -e
 
 echo "Starting test environment (PostgreSQL + Redis + .NET Server)..."
@@ -535,7 +535,7 @@ Create detailed performance benchmarks comparing .NET and TypeScript servers.
 #### Benchmark Suite
 
 ```csharp
-// server/csharp/benchmarks/SyncBenchmarks.cs
+// server/csharp/src/benchmarks/SyncBenchmarks.cs
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net90)]
 public class SyncBenchmarks
@@ -729,7 +729,7 @@ Adds ASP.NET Core 10 server implementation for SyncKit with full protocol compat
 
 ## Changes
 
-- **New:** `server/csharp/` - Complete .NET server implementation
+- **New:** `server/csharp/src/` - Complete .NET server implementation
 - **New:** Docker support for .NET server
 - **Docs:** .NET-specific documentation and guides
 

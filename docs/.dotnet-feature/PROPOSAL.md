@@ -186,7 +186,7 @@ server/
     └── README.md
 ```
 
-> **Note:** Structure follows `server/{language}/` pattern per [PROJECT_STRUCTURE.md](../../PROJECT_STRUCTURE.md).
+> **Note:** Structure follows `server/{language}/src/` pattern per [PROJECT_STRUCTURE.md](../../PROJECT_STRUCTURE.md).
 
 ---
 

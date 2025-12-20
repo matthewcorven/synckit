@@ -15,11 +15,11 @@
 
 #### Description
 
-Create the .NET solution and project structure following the established `server/{language}/` pattern.
+Create the .NET solution and project structure following the established `server/{language}/src/` pattern.
 
 #### Tasks
 
-1. Create `server/csharp/` directory
+1. Create `server/csharp/src/` directory
 2. Create solution file `SyncKit.Server.sln`
 3. Create main project `SyncKit.Server/`
 4. Create test project `SyncKit.Server.Tests/`
@@ -30,7 +30,7 @@ Create the .NET solution and project structure following the established `server
 #### File Structure
 
 ```
-server/csharp/
+server/csharp/src/
 ├── SyncKit.Server.sln
 ├── .editorconfig
 ├── Directory.Build.props
@@ -93,7 +93,7 @@ Add `.editorconfig` for consistent code style enforcement following [Microsoft's
 #### .editorconfig
 
 ```editorconfig
-# server/csharp/.editorconfig
+# server/csharp/src/.editorconfig
 # Top-most EditorConfig file
 root = true
 
@@ -293,7 +293,7 @@ dotnet_diagnostic.IDE0005.severity = warning    # Remove unnecessary usings
 #### Directory.Build.props
 
 ```xml
-<!-- server/csharp/Directory.Build.props -->
+<!-- server/csharp/src/Directory.Build.props -->
 <Project>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -787,11 +787,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'server/csharp/**'
+      - 'server/csharp/src/**'
   pull_request:
     branches: [main]
     paths:
-      - 'server/csharp/**'
+      - 'server/csharp/src/**'
 
 defaults:
   run:
@@ -845,7 +845,7 @@ jobs:
 
 #### Acceptance Criteria
 
-- [ ] Workflow triggers on push/PR to server/csharp/**
+- [ ] Workflow triggers on push/PR to server/csharp/src/**
 - [ ] Build step succeeds
 - [ ] Test step runs all tests
 - [ ] Coverage report uploaded
@@ -865,7 +865,7 @@ Create comprehensive README documentation for the .NET server implementation.
 
 #### Tasks
 
-1. Create server/csharp/README.md
+1. Create server/csharp/src/README.md
 2. Document prerequisites
 3. Document quick start
 4. Document configuration
