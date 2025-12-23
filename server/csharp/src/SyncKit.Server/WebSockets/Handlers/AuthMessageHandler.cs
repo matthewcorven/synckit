@@ -101,6 +101,12 @@ public class AuthMessageHandler : IMessageHandler
         connection.TokenPayload = payload;
         connection.State = ConnectionState.Authenticated;
 
+        // Cancel auth timeout since authentication succeeded
+        if (connection is Connection conn)
+        {
+            conn.CancelAuthTimeout();
+        }
+
         _logger.LogInformation(
             "Connection {ConnectionId} authenticated as user {UserId}",
             connection.Id, payload.UserId);

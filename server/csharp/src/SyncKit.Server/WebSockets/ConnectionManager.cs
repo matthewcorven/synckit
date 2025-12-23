@@ -65,11 +65,13 @@ public class ConnectionManager : IConnectionManager
 
         // Create connection instance
         var connectionLogger = _loggerFactory.CreateLogger<Connection>();
+        var configOptions = Options.Create(_config);
         var connection = new Connection(
             webSocket,
             connectionId,
             jsonHandler,
             binaryHandler,
+            configOptions,
             connectionLogger);
 
         // Track the connection
@@ -83,6 +85,12 @@ public class ConnectionManager : IConnectionManager
 
         // Start heartbeat monitoring
         connection.StartHeartbeat(_config.WsHeartbeatInterval, _config.WsHeartbeatTimeout);
+
+        // Start authentication timeout if auth is required
+        if (_config.AuthRequired)
+        {
+            connection.StartAuthTimeout();
+        }
 
         _logger.LogDebug("Connection created: {ConnectionId} (Total: {ConnectionCount})",
             connectionId, _connections.Count);

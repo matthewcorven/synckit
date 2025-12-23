@@ -1,6 +1,8 @@
 using System.Net.WebSockets;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
+using SyncKit.Server.Configuration;
 using SyncKit.Server.WebSockets;
 using SyncKit.Server.WebSockets.Protocol;
 using SyncKit.Server.WebSockets.Protocol.Messages;
@@ -28,11 +30,18 @@ public class ConnectionHeartbeatTests
         // Setup WebSocket to be open
         _mockWebSocket.Setup(ws => ws.State).Returns(WebSocketState.Open);
 
+        var config = new SyncKitConfig
+        {
+            AuthRequired = false,
+            AuthTimeoutMs = 30000
+        };
+        var options = Options.Create(config);
         _connection = new Connection(
             _mockWebSocket.Object,
             "test-conn-1",
             _mockJsonHandler.Object,
             _mockBinaryHandler.Object,
+            options,
             _mockLogger.Object);
     }
 

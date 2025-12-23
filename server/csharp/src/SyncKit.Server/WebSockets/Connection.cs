@@ -1,5 +1,7 @@
 using System.Buffers;
 using System.Net.WebSockets;
+using Microsoft.Extensions.Options;
+using SyncKit.Server.Configuration;
 using SyncKit.Server.WebSockets.Protocol;
 
 namespace SyncKit.Server.WebSockets;
@@ -16,11 +18,13 @@ public class Connection : IConnection
     private readonly IProtocolHandler _jsonHandler;
     private readonly IProtocolHandler _binaryHandler;
     private readonly ILogger<Connection> _logger;
+    private readonly SyncKitConfig _config;
     private readonly CancellationTokenSource _cts = new();
     private readonly HashSet<string> _subscribedDocuments = new();
     private byte[]? _rentedBuffer;
     private Timer? _heartbeatTimer;
     private DateTime _lastPong;
+    private CancellationTokenSource? _authTimeoutCts;
 
     /// <inheritdoc />
     public string Id { get; }
@@ -59,18 +63,21 @@ public class Connection : IConnection
     /// <param name="connectionId">Unique identifier for this connection.</param>
     /// <param name="jsonHandler">JSON protocol handler.</param>
     /// <param name="binaryHandler">Binary protocol handler.</param>
+    /// <param name="config">Server configuration.</param>
     /// <param name="logger">Logger instance.</param>
     public Connection(
         WebSocket webSocket,
         string connectionId,
         IProtocolHandler jsonHandler,
         IProtocolHandler binaryHandler,
+        IOptions<SyncKitConfig> config,
         ILogger<Connection> logger)
     {
         _webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
         Id = connectionId ?? throw new ArgumentNullException(nameof(connectionId));
         _jsonHandler = jsonHandler ?? throw new ArgumentNullException(nameof(jsonHandler));
         _binaryHandler = binaryHandler ?? throw new ArgumentNullException(nameof(binaryHandler));
+        _config = config?.Value ?? throw new ArgumentNullException(nameof(config));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         State = ConnectionState.Connecting;
         LastActivity = DateTime.UtcNow;
@@ -392,10 +399,79 @@ public class Connection : IConnection
         }
     }
 
+    /// <summary>
+    /// Start the authentication timeout.
+    /// If the connection is not authenticated within the timeout period, it will be terminated.
+    /// </summary>
+    public void StartAuthTimeout()
+    {
+        // Only start timeout if auth is required and not already authenticated
+        if (!_config.AuthRequired || State == ConnectionState.Authenticated)
+        {
+            return;
+        }
+
+        _authTimeoutCts = new CancellationTokenSource();
+        _ = EnforceAuthTimeoutAsync(_authTimeoutCts.Token);
+
+        _logger.LogDebug(
+            "Started auth timeout for connection {ConnectionId} ({TimeoutMs}ms)",
+            Id, _config.AuthTimeoutMs);
+    }
+
+    /// <summary>
+    /// Cancel the authentication timeout (called when auth succeeds).
+    /// </summary>
+    public void CancelAuthTimeout()
+    {
+        if (_authTimeoutCts is not null)
+        {
+            _authTimeoutCts.Cancel();
+            _authTimeoutCts.Dispose();
+            _authTimeoutCts = null;
+
+            _logger.LogDebug("Cancelled auth timeout for connection {ConnectionId}", Id);
+        }
+    }
+
+    /// <summary>
+    /// Enforce authentication timeout - close connection if not authenticated in time.
+    /// </summary>
+    private async Task EnforceAuthTimeoutAsync(CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(_config.AuthTimeoutMs, ct);
+
+            // If we reach here, timeout expired without cancellation
+            if (State != ConnectionState.Authenticated)
+            {
+                _logger.LogWarning(
+                    "Connection {ConnectionId} failed to authenticate within {TimeoutMs}ms - terminating",
+                    Id, _config.AuthTimeoutMs);
+
+                await CloseAsync(
+                    WebSocketCloseStatus.PolicyViolation,
+                    "Authentication timeout",
+                    CancellationToken.None);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Auth completed in time or connection closed, ignore
+            _logger.LogTrace("Auth timeout cancelled for connection {ConnectionId}", Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in auth timeout enforcement for connection {ConnectionId}", Id);
+        }
+    }
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         StopHeartbeat();
+        CancelAuthTimeout();
         await _cts.CancelAsync();
         _cts.Dispose();
 

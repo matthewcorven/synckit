@@ -1,7 +1,9 @@
 using System.Net.WebSockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
+using SyncKit.Server.Configuration;
 using SyncKit.Server.WebSockets;
 using SyncKit.Server.WebSockets.Protocol;
 
@@ -31,11 +33,18 @@ public class ProtocolDetectionTests : IDisposable
 
     private Connection CreateConnection()
     {
+        var config = new SyncKitConfig
+        {
+            AuthRequired = false,
+            AuthTimeoutMs = 30000
+        };
+        var options = Options.Create(config);
         return new Connection(
             _mockWebSocket.Object,
             "test-conn-id",
             _mockJsonHandler.Object,
             _mockBinaryHandler.Object,
+            options,
             _mockLogger.Object
         );
     }

@@ -149,4 +149,11 @@ public class SyncKitConfig
     /// Environment variable: SYNCKIT_AUTH_APIKEYS (comma-separated)
     /// </summary>
     public string[] ApiKeys { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Time in milliseconds that connections have to authenticate before being terminated.
+    /// Environment variable: AUTH_TIMEOUT_MS
+    /// </summary>
+    [Range(1000, int.MaxValue)]
+    public int AuthTimeoutMs { get; set; } = 30000;
 }
