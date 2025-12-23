@@ -112,7 +112,6 @@ Phase 3: Authentication                                          │
 ├── A3-02 API Key Validator                                      │
 ├── A3-03 Auth Message Handler ◄─────────────────────────────────┤
 ├── A3-04 Permission Checking                                    │
-├── A3-05 Auth Timeout                                           │
 ├── A3-06 Auth Guard ◄───────────────────────────────────────────┼─┐
 └── A3-07 Auth Unit Tests                                        │ │
                                                                  │ │

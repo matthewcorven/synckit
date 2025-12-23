@@ -454,76 +454,6 @@ public class PermissionChecker : IPermissionChecker
 
 ---
 
-### A3-05: Add Auth Timeout
-
-**Priority:** P1  
-**Estimate:** 2 hours  
-**Dependencies:** A3-03
-
-#### Description
-
-Enforce authentication timeout - connections must authenticate within configured time or be terminated.
-
-#### Configuration
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `AUTH_TIMEOUT_MS` | 30000 | Time allowed for auth |
-
-#### Implementation
-
-```csharp
-// In Connection class - add to constructor
-public Connection(/* ... */)
-{
-    // ... existing code ...
-    
-    // Start auth timeout
-    _authTimeoutCts = new CancellationTokenSource();
-    _ = EnforceAuthTimeoutAsync(_authTimeoutCts.Token);
-}
-
-private CancellationTokenSource? _authTimeoutCts;
-
-private async Task EnforceAuthTimeoutAsync(CancellationToken ct)
-{
-    try
-    {
-        await Task.Delay(_config.AuthTimeoutMs, ct);
-        
-        if (State != ConnectionState.Authenticated)
-        {
-            _logger.LogWarning(
-                "Connection {ConnectionId} auth timeout - terminating",
-                Id);
-            await CloseAsync(
-                WebSocketCloseStatus.PolicyViolation,
-                "Authentication timeout");
-        }
-    }
-    catch (OperationCanceledException)
-    {
-        // Auth completed in time, ignore
-    }
-}
-
-// Cancel timeout when auth succeeds
-public void OnAuthenticated()
-{
-    _authTimeoutCts?.Cancel();
-    _authTimeoutCts = null;
-}
-```
-
-#### Acceptance Criteria
-
-- [ ] Unauthenticated connections terminated after timeout
-- [ ] Authenticated connections not affected
-- [ ] Timeout configurable via environment
-- [ ] Clean cancellation on successful auth
-
----
-
 ### A3-06: Enforce Auth on All Operations
 
 **Priority:** P0  
@@ -1127,12 +1057,11 @@ public record VerifyResponse(bool Valid, string? UserId, long? ExpiresAt);
 | A3-02 | Create API key validator service | P0 | 3 | ⬜ |
 | A3-03 | Implement auth message handler | P0 | 4 | ⬜ |
 | A3-04 | Implement permission checking | P0 | 3 | ⬜ |
-| A3-05 | Add auth timeout | P1 | 2 | ⬜ |
 | A3-06 | Enforce auth on all operations | P0 | 3 | ⬜ |
 | A3-07 | Auth unit tests | P0 | 4 | ⬜ |
 | A3-08 | Implement JWT generation service | P0 | 4 | ⬜ |
 | A3-09 | Implement AuthController (REST) | P0 | 6 | ⬜ |
-| **Total** | | | **35** | |
+| **Total** | | | **33** | |
 
 **Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
@@ -1174,7 +1103,3 @@ After completing Phase 3, the following should work:
    > {"type":"subscribe","id":"1","timestamp":0,"documentId":"doc-1"}
    < {"type":"error","id":"2","timestamp":0,"error":"Read access denied"}
    ```
-
-5. **Auth Timeout**
-   - Connect without sending auth message
-   - Connection should close after 30 seconds
