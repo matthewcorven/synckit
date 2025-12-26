@@ -1266,14 +1266,14 @@ public class RedisPubSubTests : IClassFixture<RedisFixture>
 
 | ID | Title | Priority | Est (h) | Status |
 |----|-------|----------|---------|--------|
-| T6-01 | Define storage abstractions | P0 | 2 | ⬜ |
-| T6-02 | Create PostgreSQL document store | P0 | 8 | ⬜ |
+| T6-01 | Define storage abstractions + migrate existing code | P0 | 4 | ⬜ |
+| T6-02 | Create PostgreSQL storage adapter | P0 | 8 | ⬜ |
 | T6-03 | Add database migrations | P0 | 3 | ⬜ |
 | T6-04 | Create Redis pub/sub provider | P0 | 6 | ⬜ |
 | T6-05 | Create storage provider factory | P0 | 3 | ⬜ |
 | T6-06 | Add health checks for storage | P1 | 2 | ⬜ |
 | T6-07 | Storage integration tests | P0 | 6 | ⬜ |
-| **Total** | | | **30** | |
+| **Total** | | | **32** | |
 
 **Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
