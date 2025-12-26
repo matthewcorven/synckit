@@ -40,52 +40,68 @@ See [IMPLEMENTATION_PLAN.md](../IMPLEMENTATION_PLAN.md#test-dependencies-setup) 
 
 #### Description
 
-Ensure storage interfaces support multiple implementations (in-memory, PostgreSQL).
+Define `IStorageAdapter` interface with exact method name alignment to TypeScript `StorageAdapter` (`server/typescript/src/storage/interface.ts`).
 
 #### Tasks
 
-1. Review `IDocumentStore` interface
-2. Add missing methods for persistence
-3. Create `IStorageProvider` abstraction
-4. Support async enumeration
+1. Rename `IDocumentStore` to `IStorageAdapter` (matches TypeScript)
+2. Use exact same method names with `Async` suffix
+3. Add connection lifecycle methods (`ConnectAsync`, `DisconnectAsync`, `IsConnected`)
+4. Add all session operations (matches TS)
+5. Add `max_clock_value` column to deltas for SQL-level filtering
 
-#### Updated Interfaces
+#### Updated Interface
 
 ```csharp
-// SyncKit.Server/Storage/IStorageProvider.cs
-public interface IStorageProvider
-{
-    IDocumentStore Documents { get; }
-    IAwarenessStore Awareness { get; }
-    Task InitializeAsync(CancellationToken ct = default);
-    Task<HealthCheckResult> CheckHealthAsync(CancellationToken ct = default);
-}
+// SyncKit.Server/Storage/IStorageAdapter.cs
+// Exact alignment with TypeScript StorageAdapter interface
 
-// SyncKit.Server/Sync/IDocumentStore.cs (updated)
-public interface IDocumentStore
+public interface IStorageAdapter
 {
-    Task<Document> GetOrCreateAsync(string documentId);
-    Task<Document?> GetAsync(string documentId);
-    Task<bool> ExistsAsync(string documentId);
-    Task DeleteAsync(string documentId);
-    Task<IReadOnlyList<string>> GetDocumentIdsAsync(int limit = 1000, string? cursor = null);
-    Task AddDeltaAsync(string documentId, StoredDelta delta);
-    Task<IReadOnlyList<StoredDelta>> GetDeltasSinceAsync(string documentId, VectorClock? since);
-    Task<VectorClock> GetVectorClockAsync(string documentId);
-    
-    // New: for persistence
-    Task SaveSnapshotAsync(string documentId, byte[] snapshot, VectorClock clock);
-    Task<(byte[]? Snapshot, VectorClock Clock)?> GetSnapshotAsync(string documentId);
-    Task CompactDeltasAsync(string documentId, VectorClock upToClock);
+    // === Connection Lifecycle (matches TS) ===
+    Task ConnectAsync(CancellationToken ct = default);
+    Task DisconnectAsync(CancellationToken ct = default);
+    bool IsConnected { get; }
+    Task<bool> HealthCheckAsync(CancellationToken ct = default);
+
+    // === Document Operations (matches TS) ===
+    Task<DocumentState?> GetDocumentAsync(string id, CancellationToken ct = default);
+    Task<DocumentState> SaveDocumentAsync(string id, JsonElement state, CancellationToken ct = default);
+    Task<DocumentState> UpdateDocumentAsync(string id, JsonElement state, CancellationToken ct = default);
+    Task<bool> DeleteDocumentAsync(string id, CancellationToken ct = default);
+    Task<IReadOnlyList<DocumentState>> ListDocumentsAsync(int limit = 100, int offset = 0, CancellationToken ct = default);
+
+    // === Vector Clock Operations (matches TS) ===
+    Task<Dictionary<string, long>> GetVectorClockAsync(string documentId, CancellationToken ct = default);
+    Task UpdateVectorClockAsync(string documentId, string clientId, long clockValue, CancellationToken ct = default);
+    Task MergeVectorClockAsync(string documentId, Dictionary<string, long> clock, CancellationToken ct = default);
+
+    // === Delta Operations (matches TS) ===
+    Task<DeltaEntry> SaveDeltaAsync(DeltaEntry delta, CancellationToken ct = default);
+    Task<IReadOnlyList<DeltaEntry>> GetDeltasAsync(string documentId, int limit = 100, CancellationToken ct = default);
+    Task<IReadOnlyList<DeltaEntry>> GetDeltasSinceAsync(string documentId, long? sinceMaxClock, CancellationToken ct = default);
+
+    // === Session Operations (matches TS) ===
+    Task<SessionEntry> SaveSessionAsync(SessionEntry session, CancellationToken ct = default);
+    Task UpdateSessionAsync(string sessionId, DateTime lastSeen, Dictionary<string, object>? metadata = null, CancellationToken ct = default);
+    Task<bool> DeleteSessionAsync(string sessionId, CancellationToken ct = default);
+    Task<IReadOnlyList<SessionEntry>> GetSessionsAsync(string userId, CancellationToken ct = default);
+
+    // === Maintenance (matches TS) ===
+    Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default);
 }
 ```
 
 #### Acceptance Criteria
 
-- [ ] IStorageProvider defined
-- [ ] IDocumentStore supports snapshots
-- [ ] Compaction interface defined
-- [ ] Health check supported
+- [ ] Interface renamed to `IStorageAdapter` (matches TS `StorageAdapter`)
+- [ ] All method names match TypeScript exactly (with `Async` suffix)
+- [ ] Connection lifecycle: `ConnectAsync()`, `DisconnectAsync()`, `IsConnected`
+- [ ] Document ops: `GetDocumentAsync()`, `SaveDocumentAsync()`, `UpdateDocumentAsync()`, `DeleteDocumentAsync()`, `ListDocumentsAsync()`
+- [ ] Vector clock ops: `GetVectorClockAsync()`, `UpdateVectorClockAsync()`, `MergeVectorClockAsync()`
+- [ ] Delta ops: `SaveDeltaAsync()`, `GetDeltasAsync()`, `GetDeltasSinceAsync()`
+- [ ] Session ops: `SaveSessionAsync()`, `UpdateSessionAsync()`, `DeleteSessionAsync()`, `GetSessionsAsync()`
+- [ ] Maintenance: `CleanupAsync()`
 
 ---
 
@@ -97,251 +113,464 @@ public interface IDocumentStore
 
 #### Description
 
-Implement document storage with PostgreSQL using Npgsql.
+Implement document storage with PostgreSQL using Npgsql. Schema aligns with TypeScript reference (`server/typescript/src/storage/schema.sql`).
 
-#### Database Schema
+#### Database Schema (Aligned with TypeScript)
 
 ```sql
 -- migrations/001_initial_schema.sql
+-- Aligned with server/typescript/src/storage/schema.sql
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Documents table (matches TS)
 CREATE TABLE IF NOT EXISTS documents (
     id VARCHAR(255) PRIMARY KEY,
-    vector_clock JSONB NOT NULL DEFAULT '{}',
-    snapshot BYTEA,
-    snapshot_clock JSONB,
+    state JSONB NOT NULL DEFAULT '{}',           -- Current state (acts as snapshot)
+    version BIGINT NOT NULL DEFAULT 1,           -- Auto-incrementing version
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS deltas (
-    id VARCHAR(255) PRIMARY KEY,
-    document_id VARCHAR(255) NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+-- Vector clocks in separate table (matches TS)
+CREATE TABLE IF NOT EXISTS vector_clocks (
+    document_id VARCHAR(255) NOT NULL,
     client_id VARCHAR(255) NOT NULL,
-    data JSONB NOT NULL,
-    vector_clock JSONB NOT NULL,
-    timestamp BIGINT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    clock_value BIGINT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (document_id, client_id),
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_deltas_document_id ON deltas(document_id);
-CREATE INDEX idx_deltas_timestamp ON deltas(document_id, timestamp);
+-- Deltas table (matches TS + max_clock_value for SQL filtering)
+CREATE TABLE IF NOT EXISTS deltas (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    document_id VARCHAR(255) NOT NULL,
+    client_id VARCHAR(255) NOT NULL,
+    operation_type VARCHAR(50) NOT NULL,         -- 'set', 'delete', 'merge'
+    field_path VARCHAR(500) NOT NULL,
+    value JSONB,
+    clock_value BIGINT NOT NULL,
+    max_clock_value BIGINT NOT NULL,             -- For SQL-level filtering
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
+);
+
+-- Sessions table (matches TS)
+CREATE TABLE IF NOT EXISTS sessions (
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    client_id VARCHAR(255),
+    connected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    metadata JSONB DEFAULT '{}'
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_documents_updated_at ON documents(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vector_clocks_document_id ON vector_clocks(document_id);
+CREATE INDEX IF NOT EXISTS idx_deltas_document_id ON deltas(document_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_deltas_max_clock ON deltas(document_id, max_clock_value);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 ```
 
-#### Implementation
+#### Implementation (Exact Method Name Alignment)
 
 ```csharp
-// SyncKit.Server/Storage/PostgreSqlDocumentStore.cs
-public class PostgreSqlDocumentStore : IDocumentStore
+// SyncKit.Server/Storage/PostgresAdapter.cs
+// Implements IStorageAdapter with exact TypeScript method name alignment
+public class PostgresAdapter : IStorageAdapter
 {
     private readonly NpgsqlDataSource _dataSource;
-    private readonly ILogger<PostgreSqlDocumentStore> _logger;
+    private readonly ILogger<PostgresAdapter> _logger;
+    private bool _isConnected;
 
-    public PostgreSqlDocumentStore(
-        NpgsqlDataSource dataSource,
-        ILogger<PostgreSqlDocumentStore> logger)
+    public PostgresAdapter(NpgsqlDataSource dataSource, ILogger<PostgresAdapter> logger)
     {
         _dataSource = dataSource;
         _logger = logger;
     }
 
-    public async Task<Document> GetOrCreateAsync(string documentId)
+    // === Connection Lifecycle (matches TS) ===
+    
+    public bool IsConnected => _isConnected;
+
+    public async Task ConnectAsync(CancellationToken ct = default)
     {
-        await using var conn = await _dataSource.OpenConnectionAsync();
-        
-        // Try to get existing
-        await using var selectCmd = conn.CreateCommand();
-        selectCmd.CommandText = @"
-            SELECT vector_clock, snapshot, snapshot_clock 
-            FROM documents 
-            WHERE id = @id";
-        selectCmd.Parameters.AddWithValue("id", documentId);
-
-        await using var reader = await selectCmd.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
-        {
-            var clockJson = reader.GetString(0);
-            var clock = JsonSerializer.Deserialize<Dictionary<string, long>>(clockJson) ?? new();
-            
-            // Load deltas
-            var deltas = await GetDeltasAsync(documentId);
-            
-            return new Document(documentId, VectorClock.FromDict(clock), deltas);
-        }
-        await reader.CloseAsync();
-
-        // Create new
-        await using var insertCmd = conn.CreateCommand();
-        insertCmd.CommandText = @"
-            INSERT INTO documents (id, vector_clock) 
-            VALUES (@id, '{}')
-            ON CONFLICT (id) DO NOTHING";
-        insertCmd.Parameters.AddWithValue("id", documentId);
-        await insertCmd.ExecuteNonQueryAsync();
-
-        _logger.LogDebug("Created new document: {DocumentId}", documentId);
-        return new Document(documentId);
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        _isConnected = true;
+        _logger.LogInformation("✅ PostgreSQL connected");
     }
 
-    public async Task<Document?> GetAsync(string documentId)
+    public async Task DisconnectAsync(CancellationToken ct = default)
     {
-        await using var conn = await _dataSource.OpenConnectionAsync();
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT vector_clock FROM documents WHERE id = @id";
-        cmd.Parameters.AddWithValue("id", documentId);
-
-        var result = await cmd.ExecuteScalarAsync();
-        if (result == null)
-        {
-            return null;
-        }
-
-        var clockJson = (string)result;
-        var clock = JsonSerializer.Deserialize<Dictionary<string, long>>(clockJson) ?? new();
-        var deltas = await GetDeltasAsync(documentId);
-        
-        return new Document(documentId, VectorClock.FromDict(clock), deltas);
+        _isConnected = false;
+        _logger.LogInformation("PostgreSQL disconnected");
+        await Task.CompletedTask;
     }
 
-    public async Task AddDeltaAsync(string documentId, StoredDelta delta)
+    public async Task<bool> HealthCheckAsync(CancellationToken ct = default)
     {
-        await using var conn = await _dataSource.OpenConnectionAsync();
-        await using var transaction = await conn.BeginTransactionAsync();
-
         try
         {
-            // Insert delta
-            await using var deltaCmd = conn.CreateCommand();
-            deltaCmd.Transaction = transaction;
-            deltaCmd.CommandText = @"
-                INSERT INTO deltas (id, document_id, client_id, data, vector_clock, timestamp)
-                VALUES (@id, @docId, @clientId, @data::jsonb, @clock::jsonb, @ts)";
-            deltaCmd.Parameters.AddWithValue("id", delta.Id);
-            deltaCmd.Parameters.AddWithValue("docId", documentId);
-            deltaCmd.Parameters.AddWithValue("clientId", delta.ClientId);
-            deltaCmd.Parameters.AddWithValue("data", delta.Data.GetRawText());
-            deltaCmd.Parameters.AddWithValue("clock", JsonSerializer.Serialize(delta.VectorClock.ToDict()));
-            deltaCmd.Parameters.AddWithValue("ts", delta.Timestamp);
-            await deltaCmd.ExecuteNonQueryAsync();
-
-            // Update document vector clock
-            await using var docCmd = conn.CreateCommand();
-            docCmd.Transaction = transaction;
-            docCmd.CommandText = @"
-                UPDATE documents 
-                SET vector_clock = @clock::jsonb, updated_at = NOW()
-                WHERE id = @id";
-            
-            // Merge clocks - would need to fetch and merge
-            var existingClock = await GetVectorClockInternalAsync(conn, transaction, documentId);
-            var mergedClock = existingClock.Merge(delta.VectorClock);
-            
-            docCmd.Parameters.AddWithValue("clock", JsonSerializer.Serialize(mergedClock.ToDict()));
-            docCmd.Parameters.AddWithValue("id", documentId);
-            await docCmd.ExecuteNonQueryAsync();
-
-            await transaction.CommitAsync();
-            
-            _logger.LogDebug("Added delta {DeltaId} to document {DocumentId}", delta.Id, documentId);
+            await using var conn = await _dataSource.OpenConnectionAsync(ct);
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT 1";
+            await cmd.ExecuteScalarAsync(ct);
+            return true;
         }
         catch
         {
-            await transaction.RollbackAsync();
+            return false;
+        }
+    }
+
+    // === Document Operations (matches TS) ===
+    
+    public async Task<DocumentState?> GetDocumentAsync(string id, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT id, state, version, created_at, updated_at 
+            FROM documents WHERE id = @id";
+        cmd.Parameters.AddWithValue("id", id);
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        if (await reader.ReadAsync(ct))
+        {
+            return new DocumentState(
+                reader.GetString(0),
+                JsonDocument.Parse(reader.GetString(1)).RootElement,
+                reader.GetInt64(2),
+                reader.GetDateTime(3),
+                reader.GetDateTime(4)
+            );
+        }
+        return null;
+    }
+
+    public async Task<DocumentState> SaveDocumentAsync(string id, JsonElement state, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO documents (id, state, version)
+            VALUES (@id, @state::jsonb, 1)
+            ON CONFLICT (id) DO UPDATE
+            SET state = @state::jsonb, updated_at = NOW()
+            RETURNING id, state, version, created_at, updated_at";
+        cmd.Parameters.AddWithValue("id", id);
+        cmd.Parameters.AddWithValue("state", state.GetRawText());
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        await reader.ReadAsync(ct);
+        return new DocumentState(
+            reader.GetString(0),
+            JsonDocument.Parse(reader.GetString(1)).RootElement,
+            reader.GetInt64(2),
+            reader.GetDateTime(3),
+            reader.GetDateTime(4)
+        );
+    }
+
+    public async Task<DocumentState> UpdateDocumentAsync(string id, JsonElement state, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            UPDATE documents 
+            SET state = @state::jsonb, updated_at = NOW()
+            WHERE id = @id
+            RETURNING id, state, version, created_at, updated_at";
+        cmd.Parameters.AddWithValue("id", id);
+        cmd.Parameters.AddWithValue("state", state.GetRawText());
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        if (!await reader.ReadAsync(ct))
+            throw new KeyNotFoundException($"Document not found: {id}");
+            
+        return new DocumentState(
+            reader.GetString(0),
+            JsonDocument.Parse(reader.GetString(1)).RootElement,
+            reader.GetInt64(2),
+            reader.GetDateTime(3),
+            reader.GetDateTime(4)
+        );
+    }
+
+    public async Task<bool> DeleteDocumentAsync(string id, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM documents WHERE id = @id";
+        cmd.Parameters.AddWithValue("id", id);
+        return await cmd.ExecuteNonQueryAsync(ct) > 0;
+    }
+
+    public async Task<IReadOnlyList<DocumentState>> ListDocumentsAsync(int limit = 100, int offset = 0, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT id, state, version, created_at, updated_at 
+            FROM documents ORDER BY updated_at DESC LIMIT @limit OFFSET @offset";
+        cmd.Parameters.AddWithValue("limit", limit);
+        cmd.Parameters.AddWithValue("offset", offset);
+
+        var results = new List<DocumentState>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            results.Add(new DocumentState(
+                reader.GetString(0),
+                JsonDocument.Parse(reader.GetString(1)).RootElement,
+                reader.GetInt64(2),
+                reader.GetDateTime(3),
+                reader.GetDateTime(4)
+            ));
+        }
+        return results;
+    }
+
+    // === Vector Clock Operations (matches TS) ===
+    
+    public async Task<Dictionary<string, long>> GetVectorClockAsync(string documentId, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT client_id, clock_value FROM vector_clocks WHERE document_id = @docId";
+        cmd.Parameters.AddWithValue("docId", documentId);
+
+        var clock = new Dictionary<string, long>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            clock[reader.GetString(0)] = reader.GetInt64(1);
+        }
+        return clock;
+    }
+
+    public async Task UpdateVectorClockAsync(string documentId, string clientId, long clockValue, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO vector_clocks (document_id, client_id, clock_value, updated_at)
+            VALUES (@docId, @clientId, @clockValue, NOW())
+            ON CONFLICT (document_id, client_id)
+            DO UPDATE SET clock_value = @clockValue, updated_at = NOW()";
+        cmd.Parameters.AddWithValue("docId", documentId);
+        cmd.Parameters.AddWithValue("clientId", clientId);
+        cmd.Parameters.AddWithValue("clockValue", clockValue);
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
+    public async Task MergeVectorClockAsync(string documentId, Dictionary<string, long> clock, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var transaction = await conn.BeginTransactionAsync(ct);
+
+        try
+        {
+            foreach (var (clientId, clockValue) in clock)
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.CommandText = @"
+                    INSERT INTO vector_clocks (document_id, client_id, clock_value, updated_at)
+                    VALUES (@docId, @clientId, @clockValue, NOW())
+                    ON CONFLICT (document_id, client_id)
+                    DO UPDATE SET 
+                        clock_value = GREATEST(vector_clocks.clock_value, @clockValue),
+                        updated_at = NOW()";
+                cmd.Parameters.AddWithValue("docId", documentId);
+                cmd.Parameters.AddWithValue("clientId", clientId);
+                cmd.Parameters.AddWithValue("clockValue", clockValue);
+                await cmd.ExecuteNonQueryAsync(ct);
+            }
+            await transaction.CommitAsync(ct);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(ct);
             throw;
         }
     }
 
-    public async Task<IReadOnlyList<StoredDelta>> GetDeltasSinceAsync(string documentId, VectorClock? since)
+    // === Delta Operations (matches TS) ===
+    
+    public async Task<DeltaEntry> SaveDeltaAsync(DeltaEntry delta, CancellationToken ct = default)
     {
-        var allDeltas = await GetDeltasAsync(documentId);
-        
-        if (since == null)
-        {
-            return allDeltas;
-        }
-
-        return allDeltas
-            .Where(d => !d.VectorClock.HappensBefore(since) && !d.VectorClock.Equals(since))
-            .ToList();
-    }
-
-    private async Task<List<StoredDelta>> GetDeltasAsync(string documentId)
-    {
-        await using var conn = await _dataSource.OpenConnectionAsync();
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = @"
-            SELECT id, client_id, data, vector_clock, timestamp 
-            FROM deltas 
-            WHERE document_id = @docId 
-            ORDER BY timestamp";
-        cmd.Parameters.AddWithValue("docId", documentId);
+            INSERT INTO deltas (document_id, client_id, operation_type, field_path, value, clock_value, max_clock_value, timestamp)
+            VALUES (@docId, @clientId, @opType, @fieldPath, @value::jsonb, @clockValue, @maxClockValue, NOW())
+            RETURNING id, timestamp";
+        cmd.Parameters.AddWithValue("docId", delta.DocumentId);
+        cmd.Parameters.AddWithValue("clientId", delta.ClientId);
+        cmd.Parameters.AddWithValue("opType", delta.OperationType);
+        cmd.Parameters.AddWithValue("fieldPath", delta.FieldPath);
+        cmd.Parameters.AddWithValue("value", delta.Value?.GetRawText() ?? (object)DBNull.Value);
+        cmd.Parameters.AddWithValue("clockValue", delta.ClockValue);
+        cmd.Parameters.AddWithValue("maxClockValue", delta.MaxClockValue);
 
-        var deltas = new List<StoredDelta>();
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        await reader.ReadAsync(ct);
+        return delta with { Id = reader.GetGuid(0).ToString(), Timestamp = reader.GetDateTime(1) };
+    }
+
+    public async Task<IReadOnlyList<DeltaEntry>> GetDeltasAsync(string documentId, int limit = 100, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT id, document_id, client_id, operation_type, field_path, value, clock_value, max_clock_value, timestamp 
+            FROM deltas WHERE document_id = @docId ORDER BY timestamp DESC LIMIT @limit";
+        cmd.Parameters.AddWithValue("docId", documentId);
+        cmd.Parameters.AddWithValue("limit", limit);
+        return await ReadDeltasAsync(cmd, ct);
+    }
+
+    public async Task<IReadOnlyList<DeltaEntry>> GetDeltasSinceAsync(string documentId, long? sinceMaxClock, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        
+        cmd.CommandText = sinceMaxClock == null
+            ? @"SELECT id, document_id, client_id, operation_type, field_path, value, clock_value, max_clock_value, timestamp 
+                FROM deltas WHERE document_id = @docId ORDER BY timestamp"
+            : @"SELECT id, document_id, client_id, operation_type, field_path, value, clock_value, max_clock_value, timestamp 
+                FROM deltas WHERE document_id = @docId AND max_clock_value > @sinceMaxClock ORDER BY timestamp";
+        
+        cmd.Parameters.AddWithValue("docId", documentId);
+        if (sinceMaxClock != null) cmd.Parameters.AddWithValue("sinceMaxClock", sinceMaxClock.Value);
+        return await ReadDeltasAsync(cmd, ct);
+    }
+
+    // === Session Operations (matches TS) ===
+    
+    public async Task<SessionEntry> SaveSessionAsync(SessionEntry session, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO sessions (id, user_id, client_id, connected_at, last_seen, metadata)
+            VALUES (@id, @userId, @clientId, NOW(), NOW(), @metadata::jsonb)
+            ON CONFLICT (id) DO UPDATE SET last_seen = NOW(), metadata = @metadata::jsonb
+            RETURNING connected_at, last_seen";
+        cmd.Parameters.AddWithValue("id", session.Id);
+        cmd.Parameters.AddWithValue("userId", session.UserId);
+        cmd.Parameters.AddWithValue("clientId", session.ClientId ?? (object)DBNull.Value);
+        cmd.Parameters.AddWithValue("metadata", JsonSerializer.Serialize(session.Metadata ?? new()));
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        await reader.ReadAsync(ct);
+        return session with { ConnectedAt = reader.GetDateTime(0), LastSeen = reader.GetDateTime(1) };
+    }
+
+    public async Task UpdateSessionAsync(string sessionId, DateTime lastSeen, Dictionary<string, object>? metadata = null, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"UPDATE sessions SET last_seen = @lastSeen, metadata = COALESCE(@metadata::jsonb, metadata) WHERE id = @id";
+        cmd.Parameters.AddWithValue("id", sessionId);
+        cmd.Parameters.AddWithValue("lastSeen", lastSeen);
+        cmd.Parameters.AddWithValue("metadata", metadata != null ? JsonSerializer.Serialize(metadata) : (object)DBNull.Value);
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
+    public async Task<bool> DeleteSessionAsync(string sessionId, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM sessions WHERE id = @id";
+        cmd.Parameters.AddWithValue("id", sessionId);
+        return await cmd.ExecuteNonQueryAsync(ct) > 0;
+    }
+
+    public async Task<IReadOnlyList<SessionEntry>> GetSessionsAsync(string userId, CancellationToken ct = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"SELECT id, user_id, client_id, connected_at, last_seen, metadata FROM sessions WHERE user_id = @userId ORDER BY last_seen DESC";
+        cmd.Parameters.AddWithValue("userId", userId);
+
+        var results = new List<SessionEntry>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
         {
-            var clockJson = reader.GetString(3);
-            var clockDict = JsonSerializer.Deserialize<Dictionary<string, long>>(clockJson) ?? new();
+            results.Add(new SessionEntry
+            {
+                Id = reader.GetString(0),
+                UserId = reader.GetString(1),
+                ClientId = reader.IsDBNull(2) ? null : reader.GetString(2),
+                ConnectedAt = reader.GetDateTime(3),
+                LastSeen = reader.GetDateTime(4),
+                Metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(reader.GetString(5))
+            });
+        }
+        return results;
+    }
+
+    // === Maintenance (matches TS cleanup()) ===
+    
+    public async Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default)
+    {
+        options ??= new CleanupOptions();
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        
+        await using var sessionsCmd = conn.CreateCommand();
+        sessionsCmd.CommandText = $"DELETE FROM sessions WHERE last_seen < NOW() - INTERVAL '{options.OldSessionsHours} hours'";
+        var sessionsDeleted = await sessionsCmd.ExecuteNonQueryAsync(ct);
+
+        await using var deltasCmd = conn.CreateCommand();
+        deltasCmd.CommandText = $"DELETE FROM deltas WHERE timestamp < NOW() - INTERVAL '{options.OldDeltasDays} days'";
+        var deltasDeleted = await deltasCmd.ExecuteNonQueryAsync(ct);
+
+        _logger.LogInformation("Cleanup: {Sessions} sessions, {Deltas} deltas deleted", sessionsDeleted, deltasDeleted);
+        return new CleanupResult(sessionsDeleted, deltasDeleted);
+    }
+
+    // Helper
+    private async Task<IReadOnlyList<DeltaEntry>> ReadDeltasAsync(NpgsqlCommand cmd, CancellationToken ct)
+    {
+        var deltas = new List<DeltaEntry>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+            var clockValue = reader.GetInt64(5);
             
             deltas.Add(new StoredDelta
             {
-                Id = reader.GetString(0),
-                ClientId = reader.GetString(1),
-                Data = JsonDocument.Parse(reader.GetString(2)).RootElement,
-                VectorClock = VectorClock.FromDict(clockDict),
-                Timestamp = reader.GetInt64(4)
+                Id = reader.GetGuid(0).ToString(),
+                DocumentId = "", // Set by caller if needed
+                ClientId = clientId,
+                OperationType = reader.GetString(2),
+                FieldPath = reader.GetString(3),
+                Value = reader.IsDBNull(4) ? null : JsonDocument.Parse(reader.GetString(4)).RootElement,
+                VectorClock = new VectorClock(new Dictionary<string, long> { [clientId] = clockValue }),
+                Timestamp = reader.GetDateTime(7).Ticks
             });
         }
         return deltas;
     }
 
-    public async Task SaveSnapshotAsync(string documentId, byte[] snapshot, VectorClock clock)
-    {
-        await using var conn = await _dataSource.OpenConnectionAsync();
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
-            UPDATE documents 
-            SET snapshot = @snapshot, snapshot_clock = @clock::jsonb, updated_at = NOW()
-            WHERE id = @id";
-        cmd.Parameters.AddWithValue("snapshot", snapshot);
-        cmd.Parameters.AddWithValue("clock", JsonSerializer.Serialize(clock.ToDict()));
-        cmd.Parameters.AddWithValue("id", documentId);
-        await cmd.ExecuteNonQueryAsync();
-    }
-
-    public async Task CompactDeltasAsync(string documentId, VectorClock upToClock)
-    {
-        // Delete deltas that are included in snapshot
-        await using var conn = await _dataSource.OpenConnectionAsync();
-        await using var cmd = conn.CreateCommand();
-        
-        // This is a simplification - real implementation would check vector clock ordering
-        cmd.CommandText = @"
-            DELETE FROM deltas 
-            WHERE document_id = @docId 
-            AND timestamp <= @maxTs";
-        
-        // Get max timestamp from upToClock entries
-        var maxTimestamp = upToClock.Entries.Values.DefaultIfEmpty(0).Max();
-        cmd.Parameters.AddWithValue("docId", documentId);
-        cmd.Parameters.AddWithValue("maxTs", maxTimestamp);
-        
-        var deleted = await cmd.ExecuteNonQueryAsync();
-        _logger.LogInformation(
-            "Compacted {Count} deltas for document {DocumentId}", 
-            deleted, documentId);
-    }
-
-    // ... other methods (Delete, Exists, etc.)
+    // ... other methods (Delete, Exists, GetDocumentIdsAsync, etc.)
 }
 ```
 
 #### Acceptance Criteria
 
-- [ ] Documents stored in PostgreSQL
-- [ ] Deltas stored with vector clocks
-- [ ] Snapshot storage works
-- [ ] Compaction removes old deltas
-- [ ] Connection pooling used
-- [ ] Transactions for consistency
+- [ ] Schema matches TypeScript reference (`schema.sql`)
+- [ ] `documents.state` stores current state (no separate snapshot columns)
+- [ ] `documents.version` auto-increments on update
+- [ ] `deltas.max_clock_value` populated for SQL filtering
+- [ ] `GetDeltasSinceAsync()` uses SQL-level filtering
+- [ ] `CleanupAsync()` matches TypeScript `cleanup()` behavior
+- [ ] Vector clocks stored in separate table
+- [ ] Connection pooling via `NpgsqlDataSource`
+- [ ] Transactions for multi-table consistency
 
 ---
 
