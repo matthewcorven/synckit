@@ -1,0 +1,57 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, feature/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start test services (Postgres + Redis)
+        run: docker compose -f server/typescript/docker-compose.yml up -d postgres redis
+
+      - name: Wait for Postgres healthy
+        run: |
+          for i in $(seq 1 60); do
+            s=$(docker inspect --format='{{.State.Health.Status}}' synckit-postgres 2>/dev/null || echo "");
+            if [ "$s" = "healthy" ]; then echo "Postgres healthy"; break; fi
+            sleep 2
+            if [ $i -eq 60 ]; then echo "Postgres not healthy" && docker compose -f server/typescript/docker-compose.yml ps && exit 1; fi
+          done
+
+      - name: Wait for Redis healthy
+        run: |
+          for i in $(seq 1 60); do
+            s=$(docker inspect --format='{{.State.Health.Status}}' synckit-redis 2>/dev/null || echo "");
+            if [ "$s" = "healthy" ]; then echo "Redis healthy"; break; fi
+            sleep 2
+            if [ $i -eq 60 ]; then echo "Redis not healthy" && docker compose -f server/typescript/docker-compose.yml ps && exit 1; fi
+          done
+
+      - name: Set up Bun (for TS tests)
+        uses: oven-sh/setup-bun@v1
+
+      - name: Run TypeScript integration tests
+        run: |
+          cd server/typescript
+          bun install --frozen-lockfile
+          bun test tests/integration --summary
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run C# integration tests
+        run: dotnet test server/csharp/src/SyncKit.Server.Tests/SyncKit.Server.Tests.csproj --no-build --verbosity minimal
+
+      - name: Tear down test services
+        if: always()
+        run: docker compose -f server/typescript/docker-compose.yml down -v

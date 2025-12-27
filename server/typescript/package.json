@@ -68,7 +68,8 @@
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.56.0",
-    "prettier": "^3.2.4"
+    "prettier": "^3.2.4",
+    "testcontainers": "^9.0.1"
   },
   "engines": {
     "bun": ">=1.0.0"
