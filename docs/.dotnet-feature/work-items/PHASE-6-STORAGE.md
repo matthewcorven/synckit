@@ -1229,7 +1229,9 @@ public class RedisPubSubTests : IClassFixture<RedisFixture>
 | T6-05 | Create storage provider factory | P0 | 3 | ⬜ |
 | T6-06 | Add health checks for storage | P1 | 2 | ⬜ |
 | T6-07 | Storage integration tests | P0 | 6 | ⬜ |
-| **Total** | | | **31** | |
+| T6-08 | Redis-backed Awareness Store | P0 | 4 | ⬜ |
+| T6-09 | PostgreSQL-backed Awareness Store | P0 | 6 | ⬜ |
+| **Total** | | | **41** | |
 
 > **Note:** T6-03 (migrations) runs **before** T6-02 (adapter), since the adapter assumes schema exists.
 
