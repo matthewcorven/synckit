@@ -29,7 +29,8 @@ describe('Protocol - Message Serialization', () => {
       token: 'test-token',
     };
 
-    const serialized = serializeMessage(message);
+    // Explicitly request JSON text protocol for this assertion
+    const serialized = serializeMessage(message, false);
     expect(serialized).toBeDefined();
     expect(typeof serialized).toBe('string');
     
@@ -48,7 +49,8 @@ describe('Protocol - Message Serialization', () => {
       vectorClock: { client1: 5, client2: 3 },
     };
 
-    const serialized = serializeMessage(message);
+    // Explicitly use JSON text protocol for this check
+    const serialized = serializeMessage(message, false);
     const parsed = JSON.parse(serialized);
     
     expect(parsed.type).toBe(MessageType.SYNC_REQUEST);
@@ -66,7 +68,8 @@ describe('Protocol - Message Serialization', () => {
       vectorClock: { client1: 6 },
     };
 
-    const serialized = serializeMessage(message);
+    // Explicitly use JSON text protocol for this check
+    const serialized = serializeMessage(message, false);
     const parsed = JSON.parse(serialized);
     
     expect(parsed.type).toBe(MessageType.DELTA);
@@ -131,14 +134,26 @@ describe('Protocol - Round-trip Serialization', () => {
       apiKey: 'api-key-456',
     };
 
-    const serialized = serializeMessage(original);
-    const parsed = parseMessage(serialized);
+    // JSON text protocol round-trip
+    const serializedJson = serializeMessage(original, false);
+    const parsedJson = parseMessage(serializedJson);
 
-    expect(parsed).toBeDefined();
-    expect(parsed?.type).toBe(original.type);
-    expect(parsed?.id).toBe(original.id);
-    expect(parsed?.timestamp).toBe(original.timestamp);
-    expect((parsed as AuthMessage)?.token).toBe(original.token);
-    expect((parsed as AuthMessage)?.apiKey).toBe(original.apiKey);
+    expect(parsedJson).toBeDefined();
+    expect(parsedJson?.type).toBe(original.type);
+    expect(parsedJson?.id).toBe(original.id);
+    expect(parsedJson?.timestamp).toBe(original.timestamp);
+    expect((parsedJson as AuthMessage)?.token).toBe(original.token);
+    expect((parsedJson as AuthMessage)?.apiKey).toBe(original.apiKey);
+
+    // Binary protocol round-trip
+    const serializedBin = serializeMessage(original, true);
+    const parsedBin = parseMessage(serializedBin);
+
+    expect(parsedBin).toBeDefined();
+    expect(parsedBin?.type).toBe(original.type);
+    expect(parsedBin?.id).toBe(original.id);
+    expect(parsedBin?.timestamp).toBe(original.timestamp);
+    expect((parsedBin as AuthMessage)?.token).toBe(original.token);
+    expect((parsedBin as AuthMessage)?.apiKey).toBe(original.apiKey);
   });
 });
