@@ -290,7 +290,7 @@ public class AwarenessUpdateHandler : IMessageHandler
 {
     private readonly AuthGuard _authGuard;
     private readonly IAwarenessStore _awarenessStore;
-    private readonly IDocumentStore _documentStore;
+    private readonly IStorageAdapter _storage;
     private readonly IConnectionManager _connectionManager;
     private readonly ILogger<AwarenessUpdateHandler> _logger;
 
@@ -299,13 +299,13 @@ public class AwarenessUpdateHandler : IMessageHandler
     public AwarenessUpdateHandler(
         AuthGuard authGuard,
         IAwarenessStore awarenessStore,
-        IDocumentStore documentStore,
+        IStorageAdapter storage,
         IConnectionManager connectionManager,
         ILogger<AwarenessUpdateHandler> logger)
     {
         _authGuard = authGuard;
         _awarenessStore = awarenessStore;
-        _documentStore = documentStore;
+        _storage = storage;
         _connectionManager = connectionManager;
         _logger = logger;
     }

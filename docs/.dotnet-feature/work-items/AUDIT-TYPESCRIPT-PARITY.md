@@ -60,7 +60,7 @@ Core sync data structures that must match for correct operation.
 | `Sync/VectorClock.cs` | `sync/coordinator.ts` (mock) + `core/` (Rust) | ⬜ |
 | `Sync/Document.cs` | `sync/coordinator.ts` (DocumentState) | ⬜ |
 | `Sync/StoredDelta` (in Document.cs) | `sync/coordinator.ts` | ⬜ |
-| `Sync/IDocumentStore.cs` | `storage/interface.ts` | ⬜ |
+| `Sync/IDocumentStore.cs` (removed) | `storage/interface.ts` | ✅ migrated to `IStorageAdapter` |
 | `Sync/InMemoryDocumentStore.cs` | `sync/coordinator.ts` (in-memory maps) | ⬜ |
 
 ### 3. Awareness Models (COMPLETED - Reference)

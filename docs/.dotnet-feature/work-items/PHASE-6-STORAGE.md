@@ -44,7 +44,7 @@ Define `IStorageAdapter` interface with exact method name alignment to TypeScrip
 
 #### Tasks
 
-1. Rename `IDocumentStore` to `IStorageAdapter` (matches TypeScript)
+1. `IDocumentStore` removed; use `IStorageAdapter` (matches TypeScript)
 2. Use exact same method names with `Async` suffix
 3. Add connection lifecycle methods (`ConnectAsync`, `DisconnectAsync`, `IsConnected`)
 4. Add all session operations (matches TS)
@@ -941,7 +941,8 @@ public static class StorageProviderFactory
 
     private static void AddInMemoryStorage(this IServiceCollection services)
     {
-        services.AddSingleton<IDocumentStore, InMemoryDocumentStore>();
+        // Register in-memory adapter implementation
+        services.AddSingleton<Storage.IStorageAdapter, Storage.InMemoryStorageAdapter>();
         services.AddSingleton<IAwarenessStore, InMemoryAwarenessStore>();
     }
 
@@ -954,7 +955,8 @@ public static class StorageProviderFactory
 
         services.AddNpgsqlDataSource(connectionString);
         services.AddSingleton<IMigrationRunner, MigrationRunner>();
-        services.AddSingleton<IDocumentStore, PostgreSqlDocumentStore>();
+        // Register PostgreSQL-backed storage adapter
+        services.AddSingleton<Storage.IStorageAdapter, PostgreSqlStorageAdapter>();
         services.AddSingleton<IAwarenessStore, InMemoryAwarenessStore>(); // Awareness stays in-memory
     }
 

@@ -316,7 +316,7 @@ Create in-memory document store for managing documents.
 
 ```csharp
 // SyncKit.Server/Sync/IDocumentStore.cs
-public interface IDocumentStore
+(obsolete) `IDocumentStore` has been removed; use `IStorageAdapter`
 {
     Task<Document> GetOrCreateAsync(string documentId);
     Task<Document?> GetAsync(string documentId);
@@ -328,7 +328,7 @@ public interface IDocumentStore
 }
 
 // SyncKit.Server/Sync/InMemoryDocumentStore.cs
-public class InMemoryDocumentStore : IDocumentStore
+public class InMemoryDocumentStore : InMemoryStorageAdapter // obsolete wrapper for compatibility
 {
     private readonly ConcurrentDictionary<string, Document> _documents = new();
     private readonly ILogger<InMemoryDocumentStore> _logger;
@@ -432,18 +432,18 @@ Handle SUBSCRIBE messages to add connections to document subscriptions.
 public class SubscribeMessageHandler : IMessageHandler
 {
     private readonly AuthGuard _authGuard;
-    private readonly IDocumentStore _documentStore;
+    private readonly IStorageAdapter _storage;
     private readonly ILogger<SubscribeMessageHandler> _logger;
 
     public MessageType[] HandledTypes => new[] { MessageType.Subscribe };
 
     public SubscribeMessageHandler(
         AuthGuard authGuard,
-        IDocumentStore documentStore,
+        IStorageAdapter storage,
         ILogger<SubscribeMessageHandler> logger)
     {
         _authGuard = authGuard;
-        _documentStore = documentStore;
+        _storage = storage;
         _logger = logger;
     }
 
@@ -519,16 +519,16 @@ Handle UNSUBSCRIBE messages to remove connections from document subscriptions.
 // SyncKit.Server/WebSocket/Handlers/UnsubscribeMessageHandler.cs
 public class UnsubscribeMessageHandler : IMessageHandler
 {
-    private readonly IDocumentStore _documentStore;
+    private readonly IStorageAdapter _storage;
     private readonly ILogger<UnsubscribeMessageHandler> _logger;
 
     public MessageType[] HandledTypes => new[] { MessageType.Unsubscribe };
 
     public UnsubscribeMessageHandler(
-        IDocumentStore documentStore,
+        IStorageAdapter storage,
         ILogger<UnsubscribeMessageHandler> logger)
     {
-        _documentStore = documentStore;
+        _storage = storage;
         _logger = logger;
     }
 
@@ -536,11 +536,8 @@ public class UnsubscribeMessageHandler : IMessageHandler
     {
         var unsubscribe = (UnsubscribeMessage)message;
 
-        var document = await _documentStore.GetAsync(unsubscribe.DocumentId);
-        if (document != null)
-        {
-            document.Unsubscribe(connection.Id);
-        }
+        // Remove document from connection's subscriptions (no legacy Document operations)
+        connection.RemoveSubscription(unsubscribe.DocumentId);
         
         connection.RemoveSubscription(unsubscribe.DocumentId);
 
@@ -594,7 +591,7 @@ Handle DELTA messages - validate, store, and broadcast to other subscribers.
 public class DeltaMessageHandler : IMessageHandler
 {
     private readonly AuthGuard _authGuard;
-    private readonly IDocumentStore _documentStore;
+    private readonly IStorageAdapter _storage;
     private readonly IConnectionManager _connectionManager;
     private readonly ILogger<DeltaMessageHandler> _logger;
 
@@ -602,12 +599,12 @@ public class DeltaMessageHandler : IMessageHandler
 
     public DeltaMessageHandler(
         AuthGuard authGuard,
-        IDocumentStore documentStore,
+        IStorageAdapter storage,
         IConnectionManager connectionManager,
         ILogger<DeltaMessageHandler> logger)
     {
         _authGuard = authGuard;
-        _documentStore = documentStore;
+        _storage = storage;
         _connectionManager = connectionManager;
         _logger = logger;
     }
@@ -705,18 +702,18 @@ Handle SYNC_REQUEST messages for clients requesting missed updates.
 public class SyncRequestMessageHandler : IMessageHandler
 {
     private readonly AuthGuard _authGuard;
-    private readonly IDocumentStore _documentStore;
+    private readonly IStorageAdapter _storage;
     private readonly ILogger<SyncRequestMessageHandler> _logger;
 
     public MessageType[] HandledTypes => new[] { MessageType.SyncRequest };
 
     public SyncRequestMessageHandler(
         AuthGuard authGuard,
-        IDocumentStore documentStore,
+        IStorageAdapter storage,
         ILogger<SyncRequestMessageHandler> logger)
     {
         _authGuard = authGuard;
-        _documentStore = documentStore;
+        _storage = storage;
         _logger = logger;
     }
 
@@ -725,13 +722,13 @@ public class SyncRequestMessageHandler : IMessageHandler
         var request = (SyncRequestMessage)message;
 
         // Check permissions
-        if (!await _authGuard.RequireReadAsync(connection, request.DocumentId))
+        if (!_authGuard.RequireRead(connection, request.DocumentId))
         {
             return;
         }
 
-        var document = await _documentStore.GetAsync(request.DocumentId);
-        if (document == null)
+        var docState = await _storage.GetDocumentAsync(request.DocumentId);
+        if (docState == null)
         {
             // Document doesn't exist - send empty response
             await connection.SendAsync(new SyncResponseMessage
@@ -751,7 +748,7 @@ public class SyncRequestMessageHandler : IMessageHandler
             ? VectorClock.FromDict(request.VectorClock) 
             : null;
         
-        var deltas = document.GetDeltasSince(clientClock);
+        var deltas = await _storage.GetDeltasSinceViaAdapterAsync(request.DocumentId, clientClock);
 
         _logger.LogDebug(
             "Sync request for {DocumentId}: returning {DeltaCount} deltas since {Clock}",
@@ -763,7 +760,7 @@ public class SyncRequestMessageHandler : IMessageHandler
             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             RequestId = request.Id,
             DocumentId = request.DocumentId,
-            State = document.VectorClock.ToDict(),
+            State = await _storage.GetVectorClockAsync(request.DocumentId),
             Deltas = deltas.Select(d => new DeltaPayload
             {
                 Delta = d.Data,
