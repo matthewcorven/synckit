@@ -22,7 +22,6 @@ The following items appear in [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 | 4 | S4-13 | LWW merge unit tests | 4 | ✅ Included in S4-09 |
 | 5 | W5-08 | Awareness unit tests | 4 | ✅ Exists as W5-07 |
 | 6 | T6-08 | Storage unit tests | 4 | ✅ Part of T6-07 |
-| 6 | T6-09 | PostgreSQL integration tests | 4 | ✅ Part of T6-07 |
 | 7 | V7-09 | Prepare PR description | 2 | ⚠️ Add to PHASE-7-TESTING.md |
 | 7 | V7-10 | Code review and fixes | 8 | ⚠️ Add to PHASE-7-TESTING.md |
 
