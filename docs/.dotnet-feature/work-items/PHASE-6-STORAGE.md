@@ -130,73 +130,57 @@ public interface IStorageAdapter
 
 ---
 
-### T6-02: Create PostgreSQL Document Store
+### T6-02: Create PostgreSQL Storage Adapter
 
 **Priority:** P0  
-**Estimate:** 8 hours  
-**Dependencies:** T6-01
+**Estimate:** 6 hours  
+**Dependencies:** T6-01, T6-03 (schema must exist)
 
 #### Description
 
-Implement document storage with PostgreSQL using Npgsql. Schema aligns with TypeScript reference (`server/typescript/src/storage/schema.sql`).
+Implement `PostgresStorageAdapter` that operates against the **existing shared schema**. The C# server does **NOT** manage schema creation—the schema is owned by shared migration tooling (T6-03).
 
-#### Database Schema (Aligned with TypeScript)
+#### Key Design Decision: Shared Infrastructure
+
+Since both TypeScript and C# servers share the same PostgreSQL instance:
+
+1. **Schema is managed externally** - by shared migration tooling (T6-03)
+2. **C# adapter assumes schema exists** - no inline schema creation
+3. **C# validates schema on startup** - ensures required tables exist
+4. **Both servers are protocol-compatible** - same table structures, same data formats
+
+#### Schema Validation (Not Creation)
+
+```csharp
+// SyncKit.Server/Storage/SchemaValidator.cs
+public class SchemaValidator
+{
+    private static readonly string[] RequiredTables = 
+    {
+        "documents", "vector_clocks", "deltas", "sessions"
+    };
+
+    public async Task<bool> ValidateSchemaAsync(CancellationToken ct = default)
+    {
+        // Query information_schema.tables
+        // Return false with clear error if any required table is missing
+        // Log success if all tables exist
+    }
+}
+```
+
+#### Expected Schema (Reference Only)
+
+The C# adapter expects this schema to exist (created by T6-03):
 
 ```sql
--- migrations/001_initial_schema.sql
--- Aligned with server/typescript/src/storage/schema.sql
+-- Reference: server/typescript/src/storage/schema.sql
+-- DO NOT create from C# - use shared migration tooling
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Documents table (matches TS)
-CREATE TABLE IF NOT EXISTS documents (
-    id VARCHAR(255) PRIMARY KEY,
-    state JSONB NOT NULL DEFAULT '{}',           -- Current state (acts as snapshot)
-    version BIGINT NOT NULL DEFAULT 1,           -- Auto-incrementing version
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Vector clocks in separate table (matches TS)
-CREATE TABLE IF NOT EXISTS vector_clocks (
-    document_id VARCHAR(255) NOT NULL,
-    client_id VARCHAR(255) NOT NULL,
-    clock_value BIGINT NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (document_id, client_id),
-    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
-);
-
--- Deltas table (matches TS + max_clock_value for SQL filtering)
-CREATE TABLE IF NOT EXISTS deltas (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    document_id VARCHAR(255) NOT NULL,
-    client_id VARCHAR(255) NOT NULL,
-    operation_type VARCHAR(50) NOT NULL,         -- 'set', 'delete', 'merge'
-    field_path VARCHAR(500) NOT NULL,
-    value JSONB,
-    clock_value BIGINT NOT NULL,
-    max_clock_value BIGINT NOT NULL,             -- For SQL-level filtering
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
-);
-
--- Sessions table (matches TS)
-CREATE TABLE IF NOT EXISTS sessions (
-    id VARCHAR(255) PRIMARY KEY,
-    user_id VARCHAR(255) NOT NULL,
-    client_id VARCHAR(255),
-    connected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    metadata JSONB DEFAULT '{}'
-);
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_documents_updated_at ON documents(updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_vector_clocks_document_id ON vector_clocks(document_id);
-CREATE INDEX IF NOT EXISTS idx_deltas_document_id ON deltas(document_id, timestamp DESC);
-CREATE INDEX IF NOT EXISTS idx_deltas_max_clock ON deltas(document_id, max_clock_value);
-CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+-- documents: id, state (JSONB), version, created_at, updated_at
+-- vector_clocks: document_id, client_id, clock_value, updated_at
+-- deltas: id (UUID), document_id, client_id, operation_type, field_path, value, clock_value, timestamp
+-- sessions: id, user_id, client_id, connected_at, last_seen, metadata
 ```
 
 #### Implementation (Exact Method Name Alignment)
@@ -587,155 +571,88 @@ public class PostgresAdapter : IStorageAdapter
 
 #### Acceptance Criteria
 
-- [ ] Schema matches TypeScript reference (`schema.sql`)
-- [ ] `documents.state` stores current state (no separate snapshot columns)
-- [ ] `documents.version` auto-increments on update
-- [ ] `deltas.max_clock_value` populated for SQL filtering
-- [ ] `GetDeltasSinceAsync()` uses SQL-level filtering
-- [ ] `CleanupAsync()` matches TypeScript `cleanup()` behavior
-- [ ] Vector clocks stored in separate table
+- [ ] `SchemaValidator` checks for required tables on startup
+- [ ] Startup fails fast with clear error if schema is missing
+- [ ] All `IStorageAdapter` methods implemented
+- [ ] Operations compatible with TypeScript schema
 - [ ] Connection pooling via `NpgsqlDataSource`
 - [ ] Transactions for multi-table consistency
+- [ ] **No schema creation code** - schema managed by T6-03
 
 ---
 
-### T6-03: Add Database Migrations
+### T6-03: Shared Database Migration Tooling
 
 **Priority:** P0  
-**Estimate:** 3 hours  
-**Dependencies:** T6-02
+**Estimate:** 4 hours  
+**Dependencies:** T6-01
 
 #### Description
 
-Set up database migration system for schema management.
+Create standalone migration tooling that manages the shared PostgreSQL schema for both TypeScript and C# servers. Migrations run as a separate step **before** starting either server.
 
-#### Tasks
+#### Background: Shared Infrastructure
 
-1. Create migrations folder structure
-2. Implement migration runner
-3. Create initial schema migration
-4. Add startup migration execution
+Since both servers share the same PostgreSQL instance via Aspire:
 
-#### Implementation
+| Approach | Problem |
+|----------|---------|
+| ❌ Each server manages own migrations | Race conditions, duplicate schemas |
+| ✅ **Shared migration tooling** | Single source of truth, runs before servers |
+
+#### Architecture
+
+```
+Aspire Orchestration
+        │
+        ▼
+┌───────────────────┐
+│  Migration Runner │  ◄── Runs FIRST
+│  (TypeScript/Bun) │
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│    PostgreSQL     │
+│  (schema created) │
+└─────────┬─────────┘
+          │
+    ┌─────┴─────┐
+    ▼           ▼
+ TS Server   C# Server
+(validates)  (validates)
+```
+
+#### Implementation Options
+
+**Option A: Enhance existing TypeScript migration**
+
+Leverage `server/typescript/src/storage/migrate.ts` - already exists and works.
+
+**Option B: Aspire integration**
+
+Add migration as a pre-start resource that both servers wait for:
 
 ```csharp
-// SyncKit.Server/Storage/Migrations/IMigrationRunner.cs
-public interface IMigrationRunner
-{
-    Task RunMigrationsAsync(CancellationToken ct = default);
-}
+// AppHost.cs
+var migrations = builder.AddExecutable("synckit-migrations", "bun", tsServerPath, 
+        "run", "src/storage/migrate.ts")
+    .WithEnvironment("DATABASE_URL", syncKitDb.Resource.ConnectionStringExpression)
+    .WaitFor(syncKitDb);
 
-// SyncKit.Server/Storage/Migrations/MigrationRunner.cs
-public class MigrationRunner : IMigrationRunner
-{
-    private readonly NpgsqlDataSource _dataSource;
-    private readonly ILogger<MigrationRunner> _logger;
-
-    public MigrationRunner(NpgsqlDataSource dataSource, ILogger<MigrationRunner> logger)
-    {
-        _dataSource = dataSource;
-        _logger = logger;
-    }
-
-    public async Task RunMigrationsAsync(CancellationToken ct = default)
-    {
-        await using var conn = await _dataSource.OpenConnectionAsync(ct);
-        
-        // Create migrations table
-        await using var createTableCmd = conn.CreateCommand();
-        createTableCmd.CommandText = @"
-            CREATE TABLE IF NOT EXISTS schema_migrations (
-                version VARCHAR(255) PRIMARY KEY,
-                applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )";
-        await createTableCmd.ExecuteNonQueryAsync(ct);
-
-        // Get applied migrations
-        await using var getAppliedCmd = conn.CreateCommand();
-        getAppliedCmd.CommandText = "SELECT version FROM schema_migrations";
-        var applied = new HashSet<string>();
-        await using var reader = await getAppliedCmd.ExecuteReaderAsync(ct);
-        while (await reader.ReadAsync(ct))
-        {
-            applied.Add(reader.GetString(0));
-        }
-        await reader.CloseAsync();
-
-        // Get migration files (embedded resources or from disk)
-        var migrations = GetMigrations();
-
-        foreach (var (version, sql) in migrations.OrderBy(m => m.Version))
-        {
-            if (applied.Contains(version))
-            {
-                continue;
-            }
-
-            _logger.LogInformation("Applying migration: {Version}", version);
-
-            await using var transaction = await conn.BeginTransactionAsync(ct);
-            try
-            {
-                await using var migrationCmd = conn.CreateCommand();
-                migrationCmd.Transaction = transaction;
-                migrationCmd.CommandText = sql;
-                await migrationCmd.ExecuteNonQueryAsync(ct);
-
-                await using var recordCmd = conn.CreateCommand();
-                recordCmd.Transaction = transaction;
-                recordCmd.CommandText = "INSERT INTO schema_migrations (version) VALUES (@v)";
-                recordCmd.Parameters.AddWithValue("v", version);
-                await recordCmd.ExecuteNonQueryAsync(ct);
-
-                await transaction.CommitAsync(ct);
-                _logger.LogInformation("Applied migration: {Version}", version);
-            }
-            catch
-            {
-                await transaction.RollbackAsync(ct);
-                throw;
-            }
-        }
-    }
-
-    private IEnumerable<(string Version, string Sql)> GetMigrations()
-    {
-        // Load from embedded resources
-        var assembly = typeof(MigrationRunner).Assembly;
-        var prefix = "SyncKit.Server.Storage.Migrations.Scripts.";
-
-        foreach (var name in assembly.GetManifestResourceNames()
-            .Where(n => n.StartsWith(prefix) && n.EndsWith(".sql"))
-            .OrderBy(n => n))
-        {
-            using var stream = assembly.GetManifestResourceStream(name)!;
-            using var reader = new StreamReader(stream);
-            var sql = reader.ReadToEnd();
-            var version = name.Replace(prefix, "").Replace(".sql", "");
-            yield return (version, sql);
-        }
-    }
-}
-```
-
-#### Migration Files
-
-```
-SyncKit.Server/
-  Storage/
-    Migrations/
-      Scripts/
-        001_initial_schema.sql
-        002_add_indexes.sql
+// Both servers wait for migrations
+tsBackend.WaitFor(migrations);
+csharpBackend.WaitFor(migrations);
 ```
 
 #### Acceptance Criteria
 
-- [ ] Migrations tracked in database
-- [ ] Only unapplied migrations run
-- [ ] Migrations run in order
-- [ ] Rollback on failure
-- [ ] Startup migration execution
+- [ ] Single canonical schema location (`server/typescript/src/storage/schema.sql`)
+- [ ] Migration runs as separate step before servers start
+- [ ] Aspire orchestration runs migrations automatically
+- [ ] Both servers validate schema on startup (don't create)
+- [ ] Clear error messages when schema is missing
+- [ ] Idempotent execution (safe to run multiple times)
 
 ---
 
@@ -743,7 +660,7 @@ SyncKit.Server/
 
 **Priority:** P0  
 **Estimate:** 6 hours  
-**Dependencies:** S4-06, W5-03
+**Dependencies:** T6-01, S4-06, W5-03
 
 #### Description
 
@@ -1306,13 +1223,15 @@ public class RedisPubSubTests : IClassFixture<RedisFixture>
 | ID | Title | Priority | Est (h) | Status |
 |----|-------|----------|---------|--------|
 | T6-01 | Define storage abstractions + migrate existing code | P0 | 4 | ⬜ |
-| T6-02 | Create PostgreSQL storage adapter | P0 | 8 | ⬜ |
-| T6-03 | Add database migrations | P0 | 3 | ⬜ |
+| T6-02 | Create PostgreSQL storage adapter | P0 | 6 | ⬜ |
+| T6-03 | Shared database migration tooling | P0 | 4 | ⬜ |
 | T6-04 | Create Redis pub/sub provider | P0 | 6 | ⬜ |
 | T6-05 | Create storage provider factory | P0 | 3 | ⬜ |
 | T6-06 | Add health checks for storage | P1 | 2 | ⬜ |
 | T6-07 | Storage integration tests | P0 | 6 | ⬜ |
-| **Total** | | | **32** | |
+| **Total** | | | **31** | |
+
+> **Note:** T6-03 (migrations) runs **before** T6-02 (adapter), since the adapter assumes schema exists.
 
 **Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete
 

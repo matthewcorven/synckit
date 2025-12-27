@@ -41,32 +41,49 @@ cd server/csharp
 docker compose -f docker-compose.test.yml up -d postgres redis
 ```
 
+## Shared Infrastructure Note
+
+Both TypeScript and C# servers share the **same PostgreSQL and Redis instances** via Aspire orchestration. This means:
+
+- **Schema is managed centrally** - by shared migration tooling (T6-03), not individual servers
+- **C# adapter validates, doesn't create** - assumes schema already exists
+- **Both servers are protocol-compatible** - same tables, same data formats
+
 ## Work Items
 
 | ID | Title | Priority | Est (h) | Document |
 |----|-------|----------|---------|----------|
 | T6-01 | Define storage abstractions | P0 | 2 | [T6-01.md](T6-01.md) |
-| T6-02 | Create PostgreSQL document store | P0 | 8 | [T6-02.md](T6-02.md) |
-| T6-03 | Add database migrations | P0 | 3 | [T6-03.md](T6-03.md) |
+| T6-02 | Create PostgreSQL storage adapter | P0 | 6 | [T6-02.md](T6-02.md) |
+| T6-03 | Shared database migration tooling | P0 | 4 | [T6-03.md](T6-03.md) |
 | T6-04 | Create Redis pub/sub provider | P0 | 6 | [T6-04.md](T6-04.md) |
 | T6-05 | Create storage provider factory | P0 | 3 | [T6-05.md](T6-05.md) |
 | T6-06 | Add health checks for storage | P1 | 2 | [T6-06.md](T6-06.md) |
 | T6-07 | Storage integration tests | P0 | 6 | [T6-07.md](T6-07.md) |
-| **Total** | | | **30** | |
+| **Total** | | | **29** | |
 
 ## Dependencies
 
 ```
-S4-03 ─► T6-01 ─► T6-02 ─► T6-03
-              │
-              └─► T6-05
+                    ┌─► T6-03 (Migrations) ─► T6-02 (PostgreSQL Adapter) ─┐
+                    │                                                      │
+S4-03 ─► T6-01 (Interfaces) ─────────────────────────────────────────────►├─► T6-05 (Factory)
+                    │                                                      │
+                    └─► T6-04 (Redis Pub/Sub) ────────────────────────────┘
+                              ▲
+                              │
+                    S4-06, W5-03
 
-S4-06, W5-03 ─► T6-04 ─► T6-05
+T6-02, T6-04 ─► T6-06 (Health Checks)
 
-T6-02, T6-04 ─► T6-06
-
-T6-02...T6-06 ─► T6-07
+T6-02...T6-06 ─► T6-07 (Integration Tests)
 ```
+
+**Key sequencing:**
+- T6-01 defines interfaces that all other tasks depend on
+- T6-03 (migrations) runs before T6-02 (adapter) since the adapter assumes schema exists
+- T6-04 (Redis) can run in parallel with T6-02/T6-03 after T6-01 completes
+- T6-05 (factory) needs both T6-02 and T6-04 complete
 
 ## Connection Strings
 
