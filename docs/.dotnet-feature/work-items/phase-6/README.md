@@ -13,7 +13,28 @@ This phase implements persistent storage with PostgreSQL and Redis pub/sub for m
 
 ## Prerequisites
 
-PostgreSQL and Redis are **required** for this phase. Both are provided via Docker Compose:
+PostgreSQL and Redis are **required** for this phase. You have two options:
+
+### Option 1: Aspire Orchestration (Recommended)
+
+The Aspire AppHost provides the easiest way to start all dependencies:
+
+```bash
+cd orchestration/aspire
+dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL"
+```
+
+This automatically:
+- Starts PostgreSQL with persistent volume
+- Starts Redis with persistent volume  
+- Configures connection strings via environment variables
+- Provides unified dashboard at https://localhost:17235
+
+See [orchestration/aspire/README.md](../../../../orchestration/aspire/README.md) for all configuration options.
+
+### Option 2: Docker Compose
+
+For manual control or CI/CD pipelines:
 
 ```bash
 cd server/csharp
@@ -49,10 +70,12 @@ T6-02...T6-06 ─► T6-07
 
 ## Connection Strings
 
-| Service | Connection String |
-|---------|------------------|
-| PostgreSQL | `Host=localhost;Port=5432;Database=synckit_test;Username=synckit;Password=synckit_test` |
-| Redis | `localhost:6379` |
+| Service | Aspire (auto-injected) | Manual Connection String |
+|---------|------------------------|--------------------------|
+| PostgreSQL | `ConnectionStrings__synckit` | `Host=localhost;Port=5432;Database=synckit_test;Username=synckit;Password=synckit_test` |
+| Redis | `ConnectionStrings__redis` | `localhost:6379` |
+
+> **Note:** When using Aspire, connection strings are automatically injected as environment variables. No manual configuration needed.
 
 ## Exit Criteria
 

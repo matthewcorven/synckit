@@ -22,13 +22,40 @@ Configure the test environment to run the existing test suite against the .NET s
 #### Tasks
 
 1. Update test configuration for .NET server
-2. Create Docker Compose for test environment
-3. Add test server startup scripts
+2. Configure Aspire orchestration for test environment
+3. Add test server startup scripts (Aspire CLI or Docker Compose)
 4. Configure parallel test execution
 
-#### Test Environment Configuration
+#### Test Environment Options
 
-The test environment requires PostgreSQL and Redis for full feature parity validation. All dependencies are provided via Docker Compose.
+The test environment requires PostgreSQL and Redis for full feature parity validation. You have two options:
+
+### Option 1: Aspire Orchestration (Recommended)
+
+The Aspire AppHost provides the easiest way to start the full test environment:
+
+```bash
+# Start C# backend with PostgreSQL + Redis
+cd orchestration/aspire
+dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL"
+
+# In another terminal, run tests
+cd tests
+export SYNCKIT_SERVER_URL=ws://localhost:5000/ws
+export SYNCKIT_HTTP_URL=http://localhost:5000
+bun test
+```
+
+**Benefits of Aspire:**
+- Automatic dependency management (PostgreSQL, Redis)
+- Persistent volumes for data across restarts
+- Unified dashboard for monitoring all services
+- Proper health checks and startup ordering
+- Connection strings automatically injected
+
+### Option 2: Docker Compose (CI/CD)
+
+For CI/CD pipelines or when Aspire is not available:
 
 ```yaml
 # server/csharp/src/docker-compose.test.yml
@@ -98,7 +125,49 @@ volumes:
 
 #### Test Runner Scripts
 
-**Option 1: Full Docker Compose (Recommended)**
+**Option 1: Aspire Orchestration (Recommended for Development)**
+
+```bash
+#!/bin/bash
+# tests/run-against-csharp-aspire.sh
+set -e
+
+echo "Starting test environment via Aspire..."
+
+# Start Aspire AppHost in background
+cd ../orchestration/aspire
+dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL" &
+ASPIRE_PID=$!
+
+# Wait for server to be ready (Aspire handles dependency ordering)
+echo "Waiting for services to be healthy..."
+for i in {1..60}; do
+    if curl -s http://localhost:5000/health > /dev/null; then
+        echo "Server ready!"
+        break
+    fi
+    echo "Waiting for server... ($i/60)"
+    sleep 2
+done
+
+# Run tests
+cd ../../tests
+export SYNCKIT_SERVER_URL=ws://localhost:5000/ws
+export SYNCKIT_HTTP_URL=http://localhost:5000
+export SYNCKIT_USE_STORAGE=true
+export SYNCKIT_USE_REDIS=true
+bun test
+
+# Capture exit code
+TEST_EXIT=$?
+
+# Cleanup - Aspire handles container cleanup on exit
+kill $ASPIRE_PID 2>/dev/null || true
+
+exit $TEST_EXIT
+```
+
+**Option 2: Docker Compose (CI/CD)**
 
 ```bash
 #!/bin/bash
@@ -130,7 +199,7 @@ docker compose -f docker-compose.test.yml down
 exit $TEST_EXIT
 ```
 
-**Option 2: Local Development (Dependencies via Docker)**
+**Option 3: Local Development (Dependencies via Docker)**
 
 ```bash
 #!/bin/bash
@@ -434,6 +503,23 @@ const chaos = new ChaosProxy({
 
 Verify the .NET server works with the production SDK (binary protocol).
 
+#### Prerequisites
+
+Start the test environment using Aspire:
+
+```bash
+# Start C# backend with PostgreSQL + Redis
+cd orchestration/aspire
+dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL"
+```
+
+Or for cross-backend testing:
+
+```bash
+# Start both backends to verify SDK works with either
+dotnet run --project SyncKit.AppHost --launch-profile "Full Stack (Both Backends + PostgreSQL)"
+```
+
 #### Test Scenarios
 
 1. SDK connects to .NET server
@@ -441,6 +527,7 @@ Verify the .NET server works with the production SDK (binary protocol).
 3. Awareness updates work
 4. Reconnection works
 5. All SDK features functional
+6. **Cross-backend sync** (data written via TS backend readable via C# backend)
 
 #### Test Implementation
 
@@ -986,16 +1073,52 @@ LogMessages.DeltaReceived(_logger, documentId, clientId);
 
 After completing Phase 7:
 
-1. **All Tests Pass**
+### Using Aspire Orchestration (Recommended)
+
+1. **Start Test Environment**
    ```bash
+   # Start C# backend with full infrastructure
+   cd orchestration/aspire
+   dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL"
+   
+   # Aspire Dashboard available at https://localhost:17235
+   # Monitor all services, logs, and traces in one place
+   ```
+
+2. **Run All Tests**
+   ```bash
+   # In another terminal
    cd tests
-   SYNCKIT_SERVER_URL=ws://localhost:8080/ws bun test
+   SYNCKIT_SERVER_URL=ws://localhost:5000/ws bun test
    
    # Expected output:
    # ✓ 410 tests passed
    # 0 failed
    # 0 skipped
    ```
+
+3. **Cross-Backend Compatibility Test**
+   ```bash
+   # Start both backends against same PostgreSQL/Redis
+   cd orchestration/aspire
+   dotnet run --project SyncKit.AppHost --launch-profile "Full Stack (Both Backends + PostgreSQL)"
+   
+   # Run tests against TypeScript backend
+   cd tests
+   SYNCKIT_SERVER_URL=ws://localhost:3000/ws bun test
+   
+   # Run tests against C# backend
+   SYNCKIT_SERVER_URL=ws://localhost:5000/ws bun test
+   
+   # Both should pass with identical results
+   ```
+
+### Validation Checklist
+
+1. **All Tests Pass**
+   - ✓ 410 tests pass against C# backend
+   - ✓ Same tests pass against TypeScript backend
+   - ✓ Cross-backend data sharing works via shared PostgreSQL/Redis
 
 2. **Performance Targets Met**
    - p99 latency <100ms ✓
@@ -1009,6 +1132,7 @@ After completing Phase 7:
 4. **Documentation Complete**
    - Test report generated ✓
    - Performance comparison documented ✓
+   - Aspire orchestration documented ✓
 
 ---
 

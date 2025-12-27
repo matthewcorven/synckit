@@ -11,6 +11,31 @@
 
 This phase runs the complete test suite against the .NET server and prepares the implementation for PR and merge.
 
+## Quick Start with Aspire
+
+The fastest way to set up the test environment is using Aspire orchestration:
+
+```bash
+# Start C# backend with PostgreSQL + Redis
+cd orchestration/aspire
+dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL"
+
+# In another terminal, run tests
+cd tests
+SYNCKIT_SERVER_URL=ws://localhost:5000/ws bun test
+```
+
+For cross-backend compatibility testing:
+
+```bash
+# Start both backends against same PostgreSQL/Redis
+dotnet run --project SyncKit.AppHost --launch-profile "Full Stack (Both Backends + PostgreSQL)"
+
+# Run tests against both backends to verify parity
+```
+
+See [orchestration/aspire/README.md](../../../../orchestration/aspire/README.md) for all launch profiles.
+
 ## Work Items
 
 | ID | Title | Priority | Est (h) | Document |

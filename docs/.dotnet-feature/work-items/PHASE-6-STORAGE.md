@@ -9,7 +9,31 @@
 
 ## Prerequisites
 
-PostgreSQL and Redis are **required** for this phase. Both are provided via Docker Compose:
+PostgreSQL and Redis are **required** for this phase. You have two options for running these dependencies:
+
+### Option 1: Aspire Orchestration (Recommended)
+
+The Aspire AppHost provides a unified way to start all dependencies with proper configuration:
+
+```bash
+# Navigate to orchestration directory
+cd orchestration/aspire
+
+# Start with PostgreSQL + Redis + C# backend
+dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL"
+```
+
+This automatically:
+- Starts PostgreSQL container with persistent volume
+- Starts Redis container with persistent volume
+- Configures connection strings via environment variables
+- Waits for dependencies to be healthy before starting the server
+
+See [orchestration/aspire/README.md](../../../orchestration/aspire/README.md) for full configuration options.
+
+### Option 2: Docker Compose (Manual)
+
+For standalone testing without Aspire:
 
 ```bash
 # Start storage dependencies
@@ -20,11 +44,12 @@ docker compose -f docker-compose.test.yml up -d postgres redis
 docker compose -f docker-compose.test.yml ps
 ```
 
-**Connection Strings:**
-| Service | Connection String |
-|---------|------------------|
-| PostgreSQL | `Host=localhost;Port=5432;Database=synckit_test;Username=synckit;Password=synckit_test` |
-| Redis | `localhost:6379` |
+### Connection Strings
+
+| Service | Aspire Environment Variable | Manual Connection String |
+|---------|----------------------------|--------------------------|
+| PostgreSQL | `ConnectionStrings__synckit` (auto-injected) | `Host=localhost;Port=5432;Database=synckit_test;Username=synckit;Password=synckit_test` |
+| Redis | `ConnectionStrings__redis` (auto-injected) | `localhost:6379` |
 
 See [IMPLEMENTATION_PLAN.md](../IMPLEMENTATION_PLAN.md#test-dependencies-setup) for full Docker Compose configuration.
 
@@ -1082,12 +1107,24 @@ builder.Services.AddHealthChecks()
 #### Description
 
 Integration tests for storage providers. Tests can run against:
-1. **Docker Compose services** (recommended for CI/CD and full validation)
-2. **Testcontainers** (for isolated unit-style integration tests)
+1. **Aspire Orchestration** (recommended for development and full validation)
+2. **Docker Compose services** (for CI/CD pipelines)
+3. **Testcontainers** (for isolated unit-style integration tests)
 
 #### Prerequisites
 
-Start test dependencies via Docker Compose before running storage tests:
+**Option 1: Aspire Orchestration (Recommended for Development)**
+
+```bash
+# Start PostgreSQL + Redis via Aspire
+cd orchestration/aspire
+dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL"
+
+# Connection strings are automatically configured
+# View in Aspire Dashboard: https://localhost:17235
+```
+
+**Option 2: Docker Compose (CI/CD)**
 
 ```bash
 cd server/csharp
@@ -1285,6 +1322,32 @@ public class RedisPubSubTests : IClassFixture<RedisFixture>
 
 After completing Phase 6, the following should work:
 
+### Using Aspire Orchestration (Recommended)
+
+1. **PostgreSQL Persistence with Aspire**
+   ```bash
+   # Start with Aspire - PostgreSQL + Redis auto-configured
+   cd orchestration/aspire
+   dotnet run --project SyncKit.AppHost --launch-profile "C# Backend + PostgreSQL"
+   
+   # Aspire Dashboard shows all services at https://localhost:17235
+   # Data persists across restarts (persistent volumes)
+   ```
+
+2. **Multi-Instance Testing with Aspire**
+   ```bash
+   # Start both TypeScript and C# backends against same PostgreSQL/Redis
+   cd orchestration/aspire
+   dotnet run --project SyncKit.AppHost --launch-profile "Full Stack (Both Backends + PostgreSQL)"
+   
+   # TypeScript backend: http://localhost:3000
+   # C# backend: http://localhost:5000
+   # Both share the same PostgreSQL and Redis instances
+   # Deltas sent to one backend appear on the other via Redis pub/sub
+   ```
+
+### Using Manual Configuration
+
 1. **PostgreSQL Persistence**
    ```bash
    # Start with PostgreSQL
@@ -1310,8 +1373,10 @@ After completing Phase 6, the following should work:
    # Deltas sent to instance 1 appear on instance 2
    ```
 
-3. **Health Checks**
-   ```bash
-   curl http://localhost:8080/health/ready
-   # {"status":"Healthy","results":{"postgresql":{"status":"Healthy"},"redis":{"status":"Healthy"}}}
-   ```
+### Health Checks
+
+```bash
+# Via Aspire Dashboard or direct curl
+curl http://localhost:5000/health/ready
+# {"status":"Healthy","results":{"postgresql":{"status":"Healthy"},"redis":{"status":"Healthy"}}}
+```
