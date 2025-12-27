@@ -65,6 +65,8 @@ The current authentication implementation (`src/routes/auth.ts`) accepts **any e
 - **PostgreSQL** 15+ (optional - works without it)
 - **Redis** 7+ (optional - for multi-server setups)
 
+Migrations: apply or check migrations with `bun run src/storage/migrate.ts` (or use `bun run db:migrate` / `bun run db:migrate:status`).
+
 ### Installation
 
 ```bash
@@ -381,7 +383,7 @@ server/typescript/
 │       ├── interface.ts      # Storage interface
 │       ├── postgres.ts       # PostgreSQL adapter
 │       ├── redis.ts          # Redis pub/sub
-│       ├── migrate.ts        # Database migration utility
+│       ├── migrate.ts        # Database migration utility (runs canonical `schema.sql`; supports `--status` to validate schema existence)
 │       ├── schema.sql        # Database schema
 │       └── README.md         # Storage documentation
 ├── tests/

@@ -34,6 +34,18 @@ The storage layer provides production-ready data persistence and multi-server co
 
 ## Quick Start
 
+Migrations are provided in `src/storage/migrations/` and are applied by the migration runner (`src/storage/migrate.ts`).
+
+You can check migration status or apply them manually:
+
+```bash
+# Apply migrations
+bun run db:migrate
+
+# Check schema status (returns exit code 0 if schema present)
+bun run db:migrate:status
+```
+
 ### 1. Setup Database
 
 ```bash
