@@ -1,0 +1,4 @@
+NAME                   IMAGE                                              COMMAND                  SERVICE          CREATED         STATUS                          PORTS
+src-postgres-1         postgres:15-alpine                                 "docker-entrypoint.s…"   postgres         2 minutes ago   Up 2 minutes (healthy)          0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+src-redis-1            redis:7-alpine                                     "docker-entrypoint.s…"   redis            2 minutes ago   Up 2 minutes (healthy)          0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+src-synckit-dotnet-1   mcr.microsoft.com/dotnet/sdk:10.0-preview-alpine   "sh -lc 'dotnet rest…"   synckit-dotnet   2 minutes ago   Exited (0) About a minute ago   
