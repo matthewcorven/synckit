@@ -7,6 +7,7 @@
 export const TEST_CONFIG = {
   // Server configuration
   server: {
+    type: process.env.TEST_SERVER_TYPE === 'csharp' ? 'csharp' : 'typescript', // 'typescript' | 'csharp'
     host: 'localhost',
     port: 8090, // Different from default 8080 to avoid conflicts
     wsPath: '/ws',

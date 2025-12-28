@@ -11,6 +11,7 @@ import { auth } from '../../../server/typescript/src/routes/auth';
 import { TEST_CONFIG, getServerUrl } from '../config';
 import { MemoryStorageAdapter, clearMemoryStorage } from './memory-storage';
 import type { StorageAdapter } from '../../../server/typescript/src/storage/interface';
+import { spawn, ChildProcess } from 'child_process';
 
 /**
  * Test server instance
@@ -21,6 +22,7 @@ export class TestServer {
   private wsServer: SyncWebSocketServer | null = null;
   private storage: StorageAdapter | null = null;
   private isRunning: boolean = false;
+  private dotnetProcess: ChildProcess | null = null;
 
   /**
    * Start the test server
@@ -30,6 +32,34 @@ export class TestServer {
       throw new Error('Server is already running');
     }
 
+    if (TEST_CONFIG.server.type === 'csharp') {
+      // Start the .NET server as a child process
+      // Use SYNCKIT_SERVER_URL for consistent cross-platform URL binding
+      // This takes precedence over ASPNETCORE_URLS and launchSettings.json
+      const serverUrl = `http://${TEST_CONFIG.server.host}:${TEST_CONFIG.server.port}`;
+      this.dotnetProcess = spawn('dotnet', ['run', '--no-build'], {
+        cwd: require('path').resolve(__dirname, '../../../server/csharp/src/SyncKit.Server'),
+        stdio: TEST_CONFIG.features.verbose ? 'inherit' : 'ignore',
+        env: {
+          ...process.env,
+          SYNCKIT_SERVER_URL: serverUrl,
+          // Disable auth for tests (matches TypeScript server test behavior)
+          SYNCKIT_AUTH_REQUIRED: 'false',
+          // Also provide JWT_SECRET for auth if needed (matches test config)
+          JWT_SECRET: 'test-secret-key-for-integration-tests-only-32-chars',
+        },
+      });
+
+      // Wait for the .NET server to be ready
+      await this.waitForReady();
+      this.isRunning = true;
+      if (TEST_CONFIG.features.verbose) {
+        console.log(`[TestServer] Started .NET server on ${getServerUrl()}`);
+      }
+      return;
+    }
+
+    // TypeScript server (default)
     // Create Hono app
     this.app = new Hono();
 
@@ -39,7 +69,6 @@ export class TestServer {
     // Health check endpoint
     this.app.get('/health', (c) => {
       const stats = this.wsServer?.getStats();
-      
       return c.json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -98,6 +127,24 @@ export class TestServer {
    */
   async stop(): Promise<void> {
     if (!this.isRunning) {
+      return;
+    }
+
+    if (TEST_CONFIG.server.type === 'csharp') {
+      if (this.dotnetProcess) {
+        this.dotnetProcess.kill('SIGTERM');
+        // Wait for process to exit
+        await new Promise(resolve => {
+          this.dotnetProcess?.once('exit', resolve);
+        });
+        this.dotnetProcess = null;
+      }
+      this.isRunning = false;
+      if (TEST_CONFIG.features.verbose) {
+        console.log('[TestServer] Stopped .NET server');
+      }
+      // Small delay to ensure cleanup completes
+      await new Promise(resolve => setTimeout(resolve, 50));
       return;
     }
 

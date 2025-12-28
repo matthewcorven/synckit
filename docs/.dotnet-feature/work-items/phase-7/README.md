@@ -11,6 +11,31 @@
 
 This phase runs the complete test suite against the .NET server and prepares the implementation for PR and merge.
 
+**Key Principle:** All existing tests (pre-dating the .NET server) can be run against either the TypeScript or C# server implementation using the same test harness with environment variable configuration.
+
+## Dual-Server Testing
+
+The test harness supports running tests against either server implementation:
+
+| Environment Variable | Values | Default | Description |
+|---------------------|--------|---------|-------------|
+| `TEST_SERVER_TYPE` | `typescript`, `csharp` | `typescript` | Server to spawn |
+| `SYNCKIT_SERVER_URL` | URL | auto | External server URL |
+| `SYNCKIT_AUTH_REQUIRED` | `true`, `false` | `true` | Auth requirement |
+
+```bash
+# Run against TypeScript (default)
+cd tests && bun test
+
+# Run against C# server
+cd tests && TEST_SERVER_TYPE=csharp bun test
+
+# Run against external server
+cd tests && SYNCKIT_SERVER_URL=ws://localhost:8080/ws bun test
+```
+
+See [DOTNET_TEST_UPDATE_PLAN.md](DOTNET_TEST_UPDATE_PLAN.md) for .NET unit test updates required.
+
 ## Quick Start with Aspire
 
 The fastest way to set up the test environment is using Aspire orchestration:
