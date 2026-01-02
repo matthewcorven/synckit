@@ -1,3 +1,11 @@
+# =============================================================================
+# Integration Tests Workflow
+# =============================================================================
+# Runs integration tests for both TypeScript and C# servers.
+# - TypeScript tests: run against the TypeScript server
+# - C# unit tests: run separately (no external dependencies needed for unit tests)
+# =============================================================================
+
 name: Integration Tests
 
 on:
@@ -7,7 +15,8 @@ on:
     branches: [ main ]
 
 jobs:
-  integration:
+  typescript-integration:
+    name: TypeScript Integration Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -44,14 +53,50 @@ jobs:
           bun install --frozen-lockfile
           bun test tests/integration --summary
 
+      - name: Tear down test services
+        if: always()
+        run: docker compose -f server/typescript/docker-compose.yml down -v
+
+  csharp-unit-tests:
+    name: C# Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
 
-      - name: Run C# integration tests
-        run: dotnet test server/csharp/src/SyncKit.Server.Tests/SyncKit.Server.Tests.csproj --no-build --verbosity minimal
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
-      - name: Tear down test services
+      - name: Restore dependencies
+        run: dotnet restore server/csharp/src/SyncKit.Server.sln
+
+      - name: Build solution
+        run: dotnet build server/csharp/src/SyncKit.Server.sln --no-restore --configuration Release
+
+      - name: Run unit tests (non-Integration category)
+        run: |
+          dotnet test server/csharp/src/SyncKit.Server.Tests/SyncKit.Server.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --verbosity normal \
+            --filter "Category!=Integration" \
+            --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
         if: always()
-        run: docker compose -f server/typescript/docker-compose.yml down -v
+        with:
+          name: csharp-test-results
+          path: server/csharp/src/SyncKit.Server.Tests/TestResults/

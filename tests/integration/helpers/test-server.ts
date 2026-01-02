@@ -32,6 +32,16 @@ export class TestServer {
       throw new Error('Server is already running');
     }
 
+    if (TEST_CONFIG.server.type === 'external') {
+      // External mode: connect to already-running server, don't spawn anything
+      await this.waitForReady();
+      this.isRunning = true;
+      if (TEST_CONFIG.features.verbose) {
+        console.log(`[TestServer] Connected to external server at ${getServerUrl()}`);
+      }
+      return;
+    }
+
     if (TEST_CONFIG.server.type === 'csharp') {
       // Start the .NET server as a child process
       // Use SYNCKIT_SERVER_URL for consistent cross-platform URL binding
@@ -127,6 +137,15 @@ export class TestServer {
    */
   async stop(): Promise<void> {
     if (!this.isRunning) {
+      return;
+    }
+
+    if (TEST_CONFIG.server.type === 'external') {
+      // External mode: don't stop anything, just mark as not running
+      this.isRunning = false;
+      if (TEST_CONFIG.features.verbose) {
+        console.log('[TestServer] Disconnected from external server (server still running)');
+      }
       return;
     }
 
