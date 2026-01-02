@@ -89,6 +89,27 @@ bun test
 
 ---
 
+## Testing During Development
+
+When developing and debugging server processes, run test commands in a **separate terminal** to avoid interrupting your debug session.
+
+### Quick Health Check
+
+```bash
+# In a separate terminal while server is running
+curl -s -w '\nHTTP Status: %{http_code}\n' http://localhost:8090/health
+```
+
+### Port Configuration
+
+Different servers use different default ports:
+- .NET server: port 8090
+- TypeScript server: port 8080
+
+> **💡 VS Code Users:** Pre-configured tasks are available in `.vscode/tasks.json` (`Health Check`, `Health Check (Verbose)`). Access via `Cmd+Shift+P` → "Tasks: Run Task". Tasks run in a new terminal panel and prompt for the port.
+
+---
+
 ## Reference Implementation
 
 When implementing the .NET server, refer to the TypeScript server as the canonical reference:
