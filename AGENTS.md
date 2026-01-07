@@ -91,20 +91,77 @@ bun test
 
 ## Testing During Development
 
-When developing and debugging server processes, run test commands in a **separate terminal** to avoid interrupting your debug session.
+### ⚠️ Critical: Terminal Separation for Server Testing
+
+**The .NET server is a long-running process.** When running tests against it, you **MUST use separate terminals**:
+
+| Terminal | Purpose | Notes |
+|----------|---------|-------|
+| **Terminal 1** | .NET server process | Runs continuously, do NOT interrupt |
+| **Terminal 2** | Test commands | All `bun test`, `curl`, health checks |
+
+**Common mistake:** Running `curl` or `bun test` in the same terminal as `dotnet run` will kill the server process (Ctrl+C or command completion terminates the foreground process).
+
+### .NET Server Testing Workflow
+
+**Step 1: Start the .NET server (Terminal 1 - dedicated)**
+```bash
+cd server/csharp/src/SyncKit.Server
+SYNCKIT_SERVER_URL=http://localhost:8090 \
+SYNCKIT_AUTH_REQUIRED=false \
+JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
+dotnet run
+```
+> Leave this terminal running. The server logs will appear here.
+
+**Step 2: Run tests (Terminal 2 - separate)**
+```bash
+cd tests
+
+# Option A: Run all integration tests
+./run-against-csharp.sh
+
+# Option B: Run specific test category
+./run-against-csharp.sh sync      # Sync protocol tests
+./run-against-csharp.sh binary    # Binary protocol tests
+./run-against-csharp.sh load      # Load tests
+./run-against-csharp.sh chaos     # Chaos tests
+
+# Option C: Manual environment variables
+TEST_SERVER_TYPE=external TEST_SERVER_PORT=8090 bun test integration/
+```
+
+**Alternative: Auto-managed server (single terminal)**
+```bash
+cd tests
+./run-against-csharp.sh --with-server    # Script starts/stops server automatically
+```
 
 ### Quick Health Check
 
 ```bash
-# In a separate terminal while server is running
+# In Terminal 2 (NOT the server terminal)
 curl -s -w '\nHTTP Status: %{http_code}\n' http://localhost:8090/health
 ```
 
+Or use VS Code tasks: `Cmd+Shift+P` → "Tasks: Run Task" → "Health Check"
+
 ### Port Configuration
 
-Different servers use different default ports:
-- .NET server: port 8090
-- TypeScript server: port 8080
+| Server | Default Port |
+|--------|-------------|
+| .NET server | 8090 |
+| TypeScript server | 8080 |
+
+### Environment Variables for .NET Server Testing
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `TEST_SERVER_TYPE` | `external` | Use pre-started server instead of spawning one |
+| `TEST_SERVER_PORT` | `8090` | Port where external server is listening |
+| `SYNCKIT_SERVER_URL` | `http://localhost:8090` | Server's base URL |
+| `SYNCKIT_AUTH_REQUIRED` | `false` | Disable auth for testing |
+| `JWT_SECRET` | `test-secret-key-for-integration-tests-only-32-chars` | JWT signing key (must be 32+ chars) |
 
 > **💡 VS Code Users:** Pre-configured tasks are available in `.vscode/tasks.json` (`Health Check`, `Health Check (Verbose)`). Access via `Cmd+Shift+P` → "Tasks: Run Task". Tasks run in a new terminal panel and prompt for the port.
 
@@ -132,6 +189,7 @@ When implementing the .NET server, refer to the TypeScript server as the canonic
 3. **Maintain protocol compatibility** — The .NET server must pass all existing integration tests
 4. **Use Docker Compose** for PostgreSQL and Redis dependencies
 5. **Follow existing patterns** from the TypeScript server implementation
+6. **Never run tests in the same terminal as a server process** — Servers must run in dedicated terminals; tests and health checks go in separate terminals
 
 ---
 
