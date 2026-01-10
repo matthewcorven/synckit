@@ -13,30 +13,44 @@ let dockerUnavailable = false;
 
 beforeAll(async () => {
   try {
-    // Start container with a timeout to avoid hanging test runners
-    const startPromise = new PostgreSqlContainer('postgres:15')
-      .withDatabase('synckit_test')
-      .withUsername('synckit')
-      .withPassword('synckit_test')
-      .start();
+    // Check if an existing database is available (e.g., in CI with docker-compose)
+    const existingDbUrl = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
+    
+    if (existingDbUrl) {
+      // Use existing database (CI or local docker-compose)
+      console.log('Using existing database for migration tests');
+      connectionString = existingDbUrl;
+      pool = new Pool({ connectionString });
+      await pool.query('SELECT 1');
+    } else {
+      // Fallback to Testcontainers for local development
+      console.log('Starting PostgreSQL container via Testcontainers...');
+      const startPromise = new PostgreSqlContainer('postgres:15')
+        .withDatabase('synckit_test')
+        .withUsername('synckit')
+        .withPassword('synckit_test')
+        .start();
 
-    container = await Promise.race([
-      startPromise,
-      new Promise<PostgreSqlContainer>((_, reject) => setTimeout(() => reject(new Error('Testcontainers start timed out')), 20000))
-    ]) as PostgreSqlContainer;
+      container = await Promise.race([
+        startPromise,
+        new Promise<PostgreSqlContainer>((_, reject) => 
+          setTimeout(() => reject(new Error('Testcontainers start timed out')), 20000)
+        )
+      ]) as PostgreSqlContainer;
 
-    const host = container.getHost();
-    const port = container.getMappedPort(5432);
-    connectionString = `postgresql://synckit:synckit_test@${host}:${port}/synckit_test`;
+      const host = container.getHost();
+      const port = container.getMappedPort(5432);
+      connectionString = `postgresql://synckit:synckit_test@${host}:${port}/synckit_test`;
 
-    pool = new Pool({ connectionString });
-    await pool.query('SELECT 1');
+      pool = new Pool({ connectionString });
+      await pool.query('SELECT 1');
+    }
   } catch (err) {
     // Docker/Testcontainers not available in this environment - mark tests to be skipped
     console.warn('Skipping migration integration tests - docker not available or timed out:', err?.message ?? err);
     dockerUnavailable = true;
   }
-});
+}, 30000); // Increase timeout to 30 seconds
 
 afterAll(async () => {
   if (pool) await pool.end();

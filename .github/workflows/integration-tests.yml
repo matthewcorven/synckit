@@ -52,6 +52,8 @@ jobs:
           cd server/typescript
           bun install --frozen-lockfile
           bun test tests/integration --summary
+        env:
+          TEST_DATABASE_URL: postgresql://synckit:synckit_password@localhost:5432/synckit
 
       - name: Tear down test services
         if: always()
