@@ -2,15 +2,24 @@
  * Performance Profiling Tests
  * 
  * Tests for memory leaks, CPU usage, and detailed performance profiling
+ * 
+ * NOTE: These tests measure client-side (Bun/JavaScript) metrics.
+ * They are skipped when TEST_SERVER_TYPE=external because they don't
+ * profile the external server's resources (e.g., C# server memory).
+ * 
+ * To profile the C# server, query the /health endpoint for server-side metrics.
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { setupTestServer, teardownTestServer } from '../integration/helpers/test-server';
 import { TestClient } from '../integration/helpers/test-client';
 import { BinaryAdapter } from '../integration/helpers/binary-adapter';
-import { sleep } from '../integration/config';
+import { sleep, TEST_CONFIG } from '../integration/config';
 
-describe('Load - Performance Profiling', () => {
+const shouldSkip = TEST_CONFIG.server.type === 'external';
+const skipMessage = 'Profiling tests are skipped for external servers (they measure client-side metrics only)';
+
+describe.skipIf(shouldSkip)('Load - Performance Profiling', () => {
   beforeAll(async () => {
     await setupTestServer();
   }, { timeout: 30000 });

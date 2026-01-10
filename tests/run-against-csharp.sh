@@ -115,13 +115,19 @@ if [ -n "$TEST_PATTERN" ] && [ "$TEST_PATTERN" != "--with-server" ]; then
     TEST_ARGS="integration/$TEST_PATTERN"
 fi
 
+# Exclude profiling tests for external servers (they measure client-side metrics)
+# Use grep to filter out profiling.test.ts from test discovery
+TEST_EXCLUDE="load/profiling.test.ts"
+
 echo ""
 echo "Running integration tests against .NET server..."
 echo "  Pattern: ${TEST_ARGS}"
 echo "  Server: http://localhost:${SERVER_PORT}"
+echo "  Excluding: ${TEST_EXCLUDE} (client-side profiling not applicable)"
 echo ""
 
 # Run tests with extended timeout for sync operations
+# Note: Profiling tests are automatically skipped via describe.skipIf in the test file
 bun test "$TEST_ARGS" --timeout 60000
 
 echo ""
