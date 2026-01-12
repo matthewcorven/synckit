@@ -213,6 +213,35 @@ public class DeltaMessageHandler : IMessageHandler
 
         connection.Send(ackMessage);
 
+        // Also send an immediate SYNC_RESPONSE to the sender with authoritative state
+        // This helps senders converge immediately after their write, reducing flakiness
+        try
+        {
+            var fullState = await _storage.GetDocumentStateAsync(delta.DocumentId);
+            var deltas = await _storage.GetDeltasSinceViaAdapterAsync(delta.DocumentId, null);
+            var deltaPayloads = deltas.Select(d => new DeltaPayload
+            {
+                Delta = d.Data,
+                VectorClock = d.VectorClock?.ToDict() ?? new Dictionary<string, long>()
+            }).ToList();
+
+            var syncResp = new SyncResponseMessage
+            {
+                Id = Guid.NewGuid().ToString(),
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                RequestId = delta.Id,
+                DocumentId = delta.DocumentId,
+                State = fullState,
+                Deltas = deltaPayloads
+            };
+
+            connection.Send(syncResp);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send sync_response to sender for document {DocumentId}", delta.DocumentId);
+        }
+
         _logger.LogInformation(
             "Connection {ConnectionId} (user {UserId}) applied delta {DeltaId} to document {DocumentId}",
             connection.Id, connection.UserId, delta.Id, delta.DocumentId);

@@ -166,6 +166,32 @@ Protocol and message shapes are documented in the repository protocol specs (`pr
 - Follow the repository `CONTRIBUTING.md` and commit conventions.
 - For protocol or behavioural changes, update the docs under `docs/.dotnet-feature/` and coordinate with the TypeScript reference implementers.
 
+## Diagnostics
+
+The server logs per-connection metrics on disconnect (at log level `Information`):
+
+```
+Connection conn-abc123 closing: Enqueued=1500, Sent=1500, Received=800, QueueDepth=0
+```
+
+| Metric | Meaning |
+|--------|--------|
+| **Enqueued** | Messages queued for send |
+| **Sent** | Messages successfully sent over WebSocket |
+| **Received** | Messages successfully parsed from client |
+| **QueueDepth** | Pending send queue items at disconnect |
+
+**Troubleshooting tips:**
+- `Enqueued > Sent` → Messages may have been dropped or connection closed early.
+- `QueueDepth > 0` at close → Backpressure detected; check for slow clients or increase send queue capacity.
+
+For runtime metrics (CPU, heap, GC) without code changes, use `dotnet-counters`:
+
+```bash
+dotnet-counters monitor --process-id <PID> \
+  --counters System.Runtime[cpu-usage,working-set,gc-heap-size,threadpool-queue-length]
+```
+
 ## Troubleshooting
 
 - If the server fails to start due to missing `JWT_SECRET`, set `JWT_SECRET` to a secure value for development.

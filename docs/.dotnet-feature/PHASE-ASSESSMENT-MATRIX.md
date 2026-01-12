@@ -321,6 +321,17 @@ cd tests
 - [ ] Optimize large document handling for 10000+ fields
 - [ ] Adjust profiling test timeouts
 
+### Throttle Tuning Matrix (Phase 2 runs) 🔧
+- **Test #1** — Accept 20 / Creation 10 — **PASS (baseline)**
+- **Test #2** — Accept 50 / Creation 25 — **PASS**
+- **Test #3** — Accept 100 / Creation 50 — **PARTIAL**: 1 failing assertion in `large-documents.test.ts` (10k fields).
+  - **Failure:** `Client 2 received 8213/10000 fields` — `expect(fieldCount).toBeGreaterThan(9000)` failed (Received: 8213).
+  - **Run metadata:** `WS_ACCEPT_CONCURRENCY=100`, `WS_CONNECTION_CREATION_CONCURRENCY=50`, `TEST_SERVER_TYPE=external`, `TEST_SERVER_PORT=8090`.
+  - **Log (full run):** `docs/tuning-results/load-test3.log` (copied from `/tmp/load-tests-test3.log`).
+  - **Next step:** Re-run Test #3 with additional server diagnostics (send-queue metrics, GC/heap, and more verbose logs) and attempt to reproduce the 10k-fields sync shortfall.
+
+(Will continue Tests #4–#9 and update this matrix with outcomes.)
+
 #### V7-05 Chaos Test Results - COMPLETED ✅
 
 **Summary:** 79/80 tests pass (98.75%)

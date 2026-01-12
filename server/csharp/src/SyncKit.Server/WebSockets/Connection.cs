@@ -28,6 +28,11 @@ public class Connection : IConnection
     private readonly Channel<(IMessage message, WebSocketMessageType messageType, ReadOnlyMemory<byte> data)> _sendQueue;
     private readonly Task _sendTask;
 
+    // Diagnostics: atomic counters for message send/receive tracking (low-overhead)
+    private long _messagesEnqueued;
+    private long _messagesSent;
+    private long _messagesReceived;
+
     /// <inheritdoc />
     public string Id { get; }
 
@@ -232,6 +237,7 @@ public class Connection : IConnection
 
         if (parsedMessage is not null)
         {
+            Interlocked.Increment(ref _messagesReceived);
             // Raise the MessageReceived event for higher-level handlers
             MessageReceived?.Invoke(this, parsedMessage);
         }
@@ -276,6 +282,7 @@ public class Connection : IConnection
             // Queue the message for async sending (non-blocking)
             if (_sendQueue.Writer.TryWrite((message, messageType, data)))
             {
+                Interlocked.Increment(ref _messagesEnqueued);
                 _logger.LogTrace("Queued message {MessageType} {MessageId} for connection {ConnectionId} ({ByteCount} bytes)",
                     message.Type, message.Id, Id, data.Length);
                 return true;
@@ -315,6 +322,7 @@ public class Connection : IConnection
                     }
 
                     await _webSocket.SendAsync(data, messageType, true, cancellationToken);
+                    Interlocked.Increment(ref _messagesSent);
 
                     _logger.LogTrace("Sent message {MessageType} {MessageId} to connection {ConnectionId} ({ByteCount} bytes)",
                         message.Type, message.Id, Id, data.Length);
@@ -491,6 +499,15 @@ public class Connection : IConnection
     public async ValueTask DisposeAsync()
     {
         StopHeartbeat();
+
+        // Log diagnostics summary on disconnect (low-overhead atomic reads)
+        var enqueued = Interlocked.Read(ref _messagesEnqueued);
+        var sent = Interlocked.Read(ref _messagesSent);
+        var received = Interlocked.Read(ref _messagesReceived);
+        var queueDepth = _sendQueue.Reader.Count;
+        _logger.LogInformation(
+            "Connection {ConnectionId} closing: Enqueued={Enqueued}, Sent={Sent}, Received={Received}, QueueDepth={QueueDepth}",
+            Id, enqueued, sent, received, queueDepth);
 
         // Complete the send queue writer to signal no more messages
         _sendQueue.Writer.Complete();

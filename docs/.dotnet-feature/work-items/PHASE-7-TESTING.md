@@ -7,6 +7,43 @@
 
 ---
 
+## Diagnostics Instrumentation
+
+The .NET server includes lightweight, low-overhead diagnostics to help troubleshoot message delivery issues under load without affecting performance.
+
+### Per-Connection Metrics (atomic counters)
+
+| Counter | Description | Where |
+|---------|-------------|-------|
+| `Enqueued` | Messages queued for send | `Connection.Send()` |
+| `Sent` | Messages successfully sent over WebSocket | `Connection.ProcessSendQueueAsync()` |
+| `Received` | Messages successfully parsed from client | `Connection.HandleMessageAsync()` |
+| `QueueDepth` | Pending items in send queue at disconnect | `Channel.Reader.Count` |
+
+These counters are logged **once per connection** at disconnect (log level: Information):
+
+```
+Connection conn-abc123 closing: Enqueued=1500, Sent=1500, Received=800, QueueDepth=0
+```
+
+**Interpreting the output:**
+- `Enqueued > Sent` → Messages were dropped or connection closed before drain.
+- `QueueDepth > 0` at close → Backpressure; consider increasing send queue capacity or investigating slow clients.
+- `Sent ≈ Received` (on echo tests) → Healthy round-trip.
+
+### External Monitoring (zero code changes)
+
+Run `dotnet-counters` in a **separate terminal** while the server is running:
+
+```bash
+dotnet-counters monitor --process-id <PID> \
+  --counters System.Runtime[cpu-usage,working-set,gc-heap-size,threadpool-queue-length]
+```
+
+This provides CPU, heap, GC, and thread-pool metrics without modifying hot paths.
+
+---
+
 ## Work Item Details
 
 ### V7-01: Set Up Test Environment
