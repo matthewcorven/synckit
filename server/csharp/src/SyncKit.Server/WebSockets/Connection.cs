@@ -33,6 +33,12 @@ public class Connection : IConnection
     private long _messagesSent;
     private long _messagesReceived;
 
+    // Expose lightweight diagnostic properties for health aggregation
+    public long MessagesEnqueued => Interlocked.Read(ref _messagesEnqueued);
+    public long MessagesSent => Interlocked.Read(ref _messagesSent);
+    public long MessagesReceived => Interlocked.Read(ref _messagesReceived);
+    public int SendQueueDepth => _sendQueue.Reader.Count; // best-effort reader count
+
     /// <inheritdoc />
     public string Id { get; }
 

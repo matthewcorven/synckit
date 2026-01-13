@@ -140,6 +140,9 @@ try
 
     var app = builder.Build();
 
+    // Expose IServiceProvider for best-effort health diagnostics (used only for metrics gathering)
+    Program.ServiceProvider = app.Services;
+
     // Add Serilog request logging
     app.UseSerilogRequestLogging(options =>
     {

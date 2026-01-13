@@ -88,13 +88,46 @@ public class ServerStatsService : IServerStatsService
         // Convert CPU times to milliseconds (Process.TotalProcessorTime is TimeSpan)
         var cpuTotalMs = Process.GetCurrentProcess().TotalProcessorTime.TotalMilliseconds;
 
+        // Aggregate connection-level metrics if ConnectionManager is available
+        long totalEnqueued = 0, totalSent = 0, totalReceived = 0;
+        int totalSendQueueDepth = 0;
+
+        try
+        {
+            // Attempt to fetch the ConnectionManager from the global service provider
+            var provider = Program.ServiceProvider;
+            var connManager = provider?.GetService<SyncKit.Server.WebSockets.IConnectionManager>();
+            if (connManager is SyncKit.Server.WebSockets.ConnectionManager cm)
+            {
+                var conns = cm.GetAllConnections();
+                foreach (var c in conns)
+                {
+                    if (c is SyncKit.Server.WebSockets.Connection concrete)
+                    {
+                        totalEnqueued += concrete.MessagesEnqueued;
+                        totalSent += concrete.MessagesSent;
+                        totalReceived += concrete.MessagesReceived;
+                        totalSendQueueDepth += concrete.SendQueueDepth;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Best-effort only; do not crash health check if diagnostics fail
+        }
+
         return stats with
         {
             ThreadPoolAvailableWorkerThreads = worker,
             ThreadPoolAvailableCompletionPortThreads = io,
             ThreadPoolMaxWorkerThreads = maxWorker,
             ThreadPoolMaxCompletionPortThreads = maxIo,
-            ProcessCpuTotalMs = cpuTotalMs
+            ProcessCpuTotalMs = cpuTotalMs,
+            TotalMessagesEnqueued = totalEnqueued,
+            TotalMessagesSent = totalSent,
+            TotalMessagesReceived = totalReceived,
+            TotalSendQueueDepth = totalSendQueueDepth
         };
     }
 

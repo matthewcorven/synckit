@@ -94,4 +94,19 @@ public record HealthStats
     /// </summary>
     [JsonPropertyName("processCpuTotalMs")]
     public double ProcessCpuTotalMs { get; init; }
+
+    /// <summary>
+    /// Aggregated message/send queue statistics across all active connections.
+    /// </summary>
+    [JsonPropertyName("totalMessagesEnqueued")]
+    public long TotalMessagesEnqueued { get; init; }
+
+    [JsonPropertyName("totalMessagesSent")]
+    public long TotalMessagesSent { get; init; }
+
+    [JsonPropertyName("totalMessagesReceived")]
+    public long TotalMessagesReceived { get; init; }
+
+    [JsonPropertyName("totalSendQueueDepth")]
+    public int TotalSendQueueDepth { get; init; }
 }
