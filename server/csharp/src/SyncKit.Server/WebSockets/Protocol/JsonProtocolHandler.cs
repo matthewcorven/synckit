@@ -36,57 +36,57 @@ public class JsonProtocolHandler : IProtocolHandler
     /// <inheritdoc />
     public IMessage? Parse(ReadOnlyMemory<byte> data)
     {
-        try
-        {
-            var json = Encoding.UTF8.GetString(data.Span);
-            _logger.LogTrace("[JSON] Parsing message: {Json}", json);
-
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
-            // Extract message type
-            if (!root.TryGetProperty("type", out var typeElement))
+            try
             {
-                _logger.LogWarning("[JSON] Message missing 'type' property");
-                return null;
-            }
+                _logger.LogTrace("[JSON] Parsing message bytes: {ByteCount}", data.Length);
 
-            var typeStr = typeElement.GetString();
-            if (string.IsNullOrEmpty(typeStr))
-            {
-                _logger.LogWarning("[JSON] Message has empty 'type' property");
-                return null;
-            }
+                using var doc = JsonDocument.Parse(data);
+                var root = doc.RootElement;
 
-            // Parse MessageType from snake_case
-            var messageType = ParseMessageType(typeStr);
-            if (messageType == null)
-            {
-                _logger.LogWarning("[JSON] Unknown message type: {Type}", typeStr);
-                return null;
-            }
+                // Extract message type
+                if (!root.TryGetProperty("type", out var typeElement))
+                {
+                    _logger.LogWarning("[JSON] Message missing 'type' property");
+                    return null;
+                }
 
-            // Deserialize to specific message type
-            IMessage? message = messageType switch
-            {
-                MessageType.Connect => JsonSerializer.Deserialize<ConnectMessage>(json, Options),
-                MessageType.Ping => JsonSerializer.Deserialize<PingMessage>(json, Options),
-                MessageType.Pong => JsonSerializer.Deserialize<PongMessage>(json, Options),
-                MessageType.Auth => JsonSerializer.Deserialize<AuthMessage>(json, Options),
-                MessageType.AuthSuccess => JsonSerializer.Deserialize<AuthSuccessMessage>(json, Options),
-                MessageType.AuthError => JsonSerializer.Deserialize<AuthErrorMessage>(json, Options),
-                MessageType.Subscribe => JsonSerializer.Deserialize<SubscribeMessage>(json, Options),
-                MessageType.Unsubscribe => JsonSerializer.Deserialize<UnsubscribeMessage>(json, Options),
-                MessageType.SyncRequest => JsonSerializer.Deserialize<SyncRequestMessage>(json, Options),
-                MessageType.SyncResponse => JsonSerializer.Deserialize<SyncResponseMessage>(json, Options),
-                MessageType.Delta => JsonSerializer.Deserialize<DeltaMessage>(json, Options),
-                MessageType.Ack => JsonSerializer.Deserialize<AckMessage>(json, Options),
-                MessageType.AwarenessUpdate => JsonSerializer.Deserialize<AwarenessUpdateMessage>(json, Options),
-                MessageType.AwarenessSubscribe => JsonSerializer.Deserialize<AwarenessSubscribeMessage>(json, Options),
-                MessageType.AwarenessState => JsonSerializer.Deserialize<AwarenessStateMessage>(json, Options),
-                MessageType.Error => JsonSerializer.Deserialize<ErrorMessage>(json, Options),
-                _ => null
-            };
+                var typeStr = typeElement.GetString();
+                if (string.IsNullOrEmpty(typeStr))
+                {
+                    _logger.LogWarning("[JSON] Message has empty 'type' property");
+                    return null;
+                }
+
+                // Parse MessageType from snake_case
+                var messageType = ParseMessageType(typeStr);
+                if (messageType == null)
+                {
+                    _logger.LogWarning("[JSON] Unknown message type: {Type}", typeStr);
+                    return null;
+                }
+
+                // Deserialize to specific message type directly from bytes to avoid intermediate string
+                IMessage? message = messageType switch
+                {
+                    MessageType.Connect => JsonSerializer.Deserialize<ConnectMessage>(data.Span, Options),
+                    MessageType.Ping => JsonSerializer.Deserialize<PingMessage>(data.Span, Options),
+                    MessageType.Pong => JsonSerializer.Deserialize<PongMessage>(data.Span, Options),
+                    MessageType.Auth => JsonSerializer.Deserialize<AuthMessage>(data.Span, Options),
+                    MessageType.AuthSuccess => JsonSerializer.Deserialize<AuthSuccessMessage>(data.Span, Options),
+                    MessageType.AuthError => JsonSerializer.Deserialize<AuthErrorMessage>(data.Span, Options),
+                    MessageType.Subscribe => JsonSerializer.Deserialize<SubscribeMessage>(data.Span, Options),
+                    MessageType.Unsubscribe => JsonSerializer.Deserialize<UnsubscribeMessage>(data.Span, Options),
+                    MessageType.SyncRequest => JsonSerializer.Deserialize<SyncRequestMessage>(data.Span, Options),
+                    MessageType.SyncResponse => JsonSerializer.Deserialize<SyncResponseMessage>(data.Span, Options),
+                    MessageType.Delta => JsonSerializer.Deserialize<DeltaMessage>(data.Span, Options),
+                    MessageType.Ack => JsonSerializer.Deserialize<AckMessage>(data.Span, Options),
+                    MessageType.AwarenessUpdate => JsonSerializer.Deserialize<AwarenessUpdateMessage>(data.Span, Options),
+                    MessageType.AwarenessSubscribe => JsonSerializer.Deserialize<AwarenessSubscribeMessage>(data.Span, Options),
+                    MessageType.AwarenessState => JsonSerializer.Deserialize<AwarenessStateMessage>(data.Span, Options),
+                    MessageType.Error => JsonSerializer.Deserialize<ErrorMessage>(data.Span, Options),
+                    _ => null
+                };
+
 
             if (message == null)
             {

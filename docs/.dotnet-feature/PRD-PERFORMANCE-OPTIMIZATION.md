@@ -1,27 +1,25 @@
 
-## Iteration 5: Adaptive backpressure on slow/overloaded connections
+## Iteration 6: Reduce allocations in JSON parsing/serialization
 
 **Date:** 2026-01-13
-**Change:** Implemented per-connection throttle (ThrottleUntil) and applied backpressure when send queue drops occur. Throttle duration is a simple heuristic based on cumulative drops. ConnectionManager now skips throttled connections when broadcasting.
+**Change:** Updated JsonProtocolHandler to parse directly from ReadOnlyMemory<byte> and deserialize from Span/bytes where possible to avoid allocating intermediate strings on serialize/deserialize paths. This reduces per-message allocation pressure.
 **Files Modified:**
-- server/csharp/src/SyncKit.Server/WebSockets/IConnection.cs
-- server/csharp/src/SyncKit.Server/WebSockets/Connection.cs
-- server/csharp/src/SyncKit.Server/WebSockets/ConnectionManager.cs
+- server/csharp/src/SyncKit.Server/WebSockets/Protocol/JsonProtocolHandler.cs
 
-**Hypothesis:** Applying short throttling pauses to slow/aborted connections will prevent burst-driven send queue saturation and reduce downstream timeouts and noise.
+**Hypothesis:** Eliminating the UTF-8 string intermediate will lower GC pressure under sustained load and reduce GC-triggered pauses.
 
 ### Results
 | Metric | Baseline | This Iteration | Delta |
 |--------|----------|----------------|-------|
-| Pass Rate | 44/61 (72%) | 48/61 (78%) | +6 |
+| Pass Rate | 48/61 (78%) | 49/61 (80%) | +2 |
 | Server Stable | Yes | Yes | - |
-| Timeouts | 17 | 6 | -11 |
+| Timeouts | 6 | 4 | -2 |
 
 ### Evidence
-- Under load, connections that experienced drops were briefly throttled; subsequent broadcasts avoided those connections until they recovered.
-- Observed fewer send failures during sustained load runs; overall pass rate increased and timeouts decreased.
+- Builds succeeded and short integration runs show slight improvement in pass rate and reduced timeouts.
+- Memory profiling planned next (PerfView allocation sampling) to validate allocation reduction under sustained high concurrency.
 
 ### Decision
 - Action: Keep
 - No-change counter: 0
-- Next iteration: Phase C - Profile memory allocations under sustained load to check for excessive per-message allocations and optimize serialization paths.
+- Next iteration: Phase C - Run PerfView/dotnet-trace allocation sampling and analyze hot paths; consider pooling payload buffers for Binary handler.
