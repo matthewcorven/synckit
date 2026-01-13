@@ -34,7 +34,7 @@ public class AwarenessUpdateMessageHandlerTests
             .ReturnsAsync(true);
 
         _mockConnectionManager = new Mock<IConnectionManager>();
-        _mockConnectionManager.Setup(m => m.BroadcastToDocumentAsync(It.IsAny<string>(), It.IsAny<IMessage>(), It.IsAny<string?>())).Returns(Task.CompletedTask);
+        _mockConnectionManager.Setup(m => m.BroadcastToDocumentAsync(It.IsAny<string>(), It.IsAny<IMessage>(), It.IsAny<string?>())).ReturnsAsync((IReadOnlyList<string>)Array.Empty<string>());
 
         _handler = new AwarenessUpdateMessageHandler(
             _authGuard,
@@ -350,7 +350,7 @@ public class AwarenessUpdateMessageHandlerTests
 
         _mockConnectionManager.Setup(cm => cm.BroadcastToDocumentAsync(
             documentId, It.IsAny<AwarenessUpdateMessage>(), connectionId))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync((IReadOnlyList<string>)Array.Empty<string>());
 
         var awarenessState = new Dictionary<string, object>
         {

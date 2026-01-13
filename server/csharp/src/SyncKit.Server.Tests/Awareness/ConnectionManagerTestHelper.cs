@@ -53,7 +53,7 @@ public static class ConnectionManagerTestHelper
                     throw new AggregateException(errors);
                 }
 
-                return Task.CompletedTask;
+                return Task.FromResult((IReadOnlyList<string>)Array.Empty<string>());
             });
 
         return mock;
@@ -69,7 +69,7 @@ public static class ConnectionManagerTestHelper
         mock.Setup(cm => cm.BroadcastToDocumentAsync(It.IsAny<string>(), It.IsAny<IMessage>(), It.IsAny<string?>()))
             .Returns<string, IMessage, string?>((doc, msg, exclude) =>
             {
-                if (!documentSubscribers.ContainsKey(doc)) return Task.CompletedTask;
+                if (!documentSubscribers.ContainsKey(doc)) return Task.FromResult((IReadOnlyList<string>)Array.Empty<string>());
                 var errors = new List<Exception>();
 
                 foreach (var s in documentSubscribers[doc])
@@ -90,7 +90,7 @@ public static class ConnectionManagerTestHelper
                     throw new AggregateException(errors);
                 }
 
-                return Task.CompletedTask;
+                return Task.FromResult((IReadOnlyList<string>)Array.Empty<string>());
             });
 
         return mock;
