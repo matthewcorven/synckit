@@ -61,7 +61,7 @@ public interface IConnectionManager
     /// <param name="message">The message to broadcast.</param>
     /// <param name="excludeConnectionId">Optional connection ID to exclude from broadcast.</param>
     /// <returns>Task representing the async operation.</returns>
-    Task BroadcastToDocumentAsync(string documentId, Protocol.IMessage message, string? excludeConnectionId = null);
+    Task<IReadOnlyList<string>> BroadcastToDocumentAsync(string documentId, Protocol.IMessage message, string? excludeConnectionId = null);
 
     /// <summary>
     /// Closes all active connections.

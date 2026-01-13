@@ -46,4 +46,10 @@ public interface IStorageAdapter
 
     // === Maintenance (matches TS) ===
     Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Clear all storage data. Used by tests to reset server state.
+    /// Implementations should attempt to remove all documents, deltas, sessions and related state.
+    /// </summary>
+    Task ClearAllAsync(CancellationToken ct = default);
 }

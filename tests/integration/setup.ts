@@ -9,7 +9,7 @@ import { setupTestServer, teardownTestServer, restartTestServer, TestServer } fr
 import { TestClient, cleanupTestClients } from './helpers/test-client';
 import { BinaryAdapter } from './helpers/binary-adapter';
 import { clearMemoryStorage } from './helpers/memory-storage';
-import { TEST_CONFIG } from './config';
+import { TEST_CONFIG, getServerUrl } from './config';
 
 // Re-export TEST_CONFIG for test files
 export { TEST_CONFIG } from './config';
@@ -96,6 +96,15 @@ export async function cleanupEachTest(): Promise<void> {
 
   // Clear memory storage to prevent state pollution between tests
   clearMemoryStorage();
+
+  // If we're running against an external server (e.g., .NET), call its test-clear endpoint
+  if (TEST_CONFIG.server.type === 'external') {
+    try {
+      await fetch(`${getServerUrl()}/tests/clear`, { method: 'POST' });
+    } catch (err) {
+      if (TEST_CONFIG.features.verbose) console.warn('[cleanupEachTest] Failed to call external /tests/clear', err);
+    }
+  }
 
   // Clear coordinator's in-memory cache to prevent state pollution
   if (globalState.server) {

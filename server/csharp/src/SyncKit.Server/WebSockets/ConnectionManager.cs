@@ -211,12 +211,12 @@ public class ConnectionManager : IConnectionManager
     }
 
     /// <inheritdoc />
-    public Task BroadcastToDocumentAsync(string documentId, Protocol.IMessage message, string? excludeConnectionId = null)
+    public Task<IReadOnlyList<string>> BroadcastToDocumentAsync(string documentId, Protocol.IMessage message, string? excludeConnectionId = null)
     {
         var connections = GetConnectionsByDocument(documentId);
 
         var sendCount = 0;
-        var failCount = 0;
+        var failedConnections = new List<string>();
 
         foreach (var connection in connections)
         {
@@ -232,16 +232,16 @@ public class ConnectionManager : IConnectionManager
             }
             else
             {
-                failCount++;
+                failedConnections.Add(connection.Id);
                 _logger.LogWarning("Failed to send to connection {ConnectionId} (State: {State})",
                     connection.Id, connection.State);
             }
         }
 
-        if (failCount > 0)
+        if (failedConnections.Count > 0)
         {
             _logger.LogDebug("Broadcast to document {DocumentId}: {SendCount} sent, {FailCount} failed",
-                documentId, sendCount, failCount);
+                documentId, sendCount, failedConnections.Count);
         }
         else if (sendCount > 0)
         {
@@ -249,7 +249,7 @@ public class ConnectionManager : IConnectionManager
                 message.Id, documentId, sendCount);
         }
 
-        return Task.CompletedTask;
+        return Task.FromResult((IReadOnlyList<string>)failedConnections);
     }
 
     /// <inheritdoc />

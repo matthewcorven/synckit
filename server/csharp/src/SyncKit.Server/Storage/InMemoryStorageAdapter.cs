@@ -239,4 +239,14 @@ public class InMemoryStorageAdapter : IStorageAdapter
         return Task.FromResult(new CleanupResult(removedSessions.Count, 0));
     }
 
+    /// <summary>
+    /// Clear all in-memory storage data (used by tests)
+    /// </summary>
+    public Task ClearAllAsync(CancellationToken ct = default)
+    {
+        _documents.Clear();
+        _sessions.Clear();
+        return Task.CompletedTask;
+    }
+
 }

@@ -8,10 +8,11 @@ namespace SyncKit.Server.Health;
 public record HealthResponse
 {
     /// <summary>
-    /// Server status. Always "ok" when the server is healthy.
+    /// Server status. Always "healthy" when the server is healthy.
+    /// Matches the TypeScript test server's health response.
     /// </summary>
     [JsonPropertyName("status")]
-    public string Status { get; init; } = "ok";
+    public string Status { get; init; } = "healthy";
 
     /// <summary>
     /// Server version.

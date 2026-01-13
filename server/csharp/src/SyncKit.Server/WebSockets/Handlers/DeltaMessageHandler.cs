@@ -185,10 +185,62 @@ public class DeltaMessageHandler : IMessageHandler
             delta.DocumentId, JsonSerializer.Serialize(authoritativeDelta));
 
         // Broadcast to ALL subscribers (including sender for convergence)
-        await _connectionManager.BroadcastToDocumentAsync(
+        var failedDelta = await _connectionManager.BroadcastToDocumentAsync(
             delta.DocumentId,
             broadcastMessage,
             excludeConnectionId: null); // Don't exclude anyone!
+
+        if (failedDelta.Count > 0)
+        {
+            _logger.LogDebug("Delta broadcast had {Count} failed connections for document {DocumentId}", failedDelta.Count, delta.DocumentId);
+            // Schedule targeted retries for failed delta recipients
+            _ = Task.Run(async () =>
+            {
+                var retryDelays = new[] { 50, 150 };
+                var remaining = new HashSet<string>(failedDelta);
+                foreach (var d in retryDelays)
+                {
+                    await Task.Delay(d);
+                    var toRemove = new List<string>();
+                    foreach (var connId in remaining)
+                    {
+                        try
+                        {
+                            var connToRetry = _connectionManager.GetConnection(connId);
+                            if (connToRetry is not null && connToRetry.Send(broadcastMessage))
+                            {
+                                toRemove.Add(connId);
+                                _logger.LogDebug("Retry send of delta succeeded for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                            }
+                            else
+                            {
+                                _logger.LogDebug("Retry send of delta failed for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Error during retry send of delta for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                        }
+                    }
+
+                    foreach (var r in toRemove) remaining.Remove(r);
+                    if (remaining.Count == 0) break;
+                }
+
+                if (remaining.Count > 0)
+                {
+                    _logger.LogDebug("Final delta re-broadcast to document {DocumentId} to catch remaining {Count} connections", delta.DocumentId, remaining.Count);
+                    try
+                    {
+                        await _connectionManager.BroadcastToDocumentAsync(delta.DocumentId, broadcastMessage, excludeConnectionId: null);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Final delta re-broadcast failed for document {DocumentId}", delta.DocumentId);
+                    }
+                }
+            });
+        }
 
         // Publish to Redis for other instances
         if (_redis != null)
@@ -214,7 +266,8 @@ public class DeltaMessageHandler : IMessageHandler
         connection.Send(ackMessage);
 
         // Also send an immediate SYNC_RESPONSE to the sender with authoritative state
-        // This helps senders converge immediately after their write, reducing flakiness
+        // AND broadcast the SYNC_RESPONSE to all subscribers to ensure clients that
+        // missed the authoritative delta receive the full authoritative state.
         try
         {
             var fullState = await _storage.GetDocumentStateAsync(delta.DocumentId);
@@ -235,7 +288,96 @@ public class DeltaMessageHandler : IMessageHandler
                 Deltas = deltaPayloads
             };
 
+            // Broadcast authoritative full state to ALL subscribers (including sender)
+            // so that any clients that missed delta broadcasts are guaranteed to receive
+            // the authoritative state and converge quickly.
+            var failed = await _connectionManager.BroadcastToDocumentAsync(delta.DocumentId, syncResp, excludeConnectionId: null);
+
+            // Also send directly to the sender for immediate convergence acknowledgment
             connection.Send(syncResp);
+
+            // For any connections that failed to receive the broadcast (e.g., transient backpressure,
+            // short-lived disconnect), attempt multiple targeted retries with exponential backoff
+            // and a final full re-broadcast to increase chances of delivery to late/recovering clients.
+            if (failed.Count > 0)
+            {
+                _logger.LogDebug("Retrying sync_response delivery to {Count} failed connections for document {DocumentId}", failed.Count, delta.DocumentId);
+
+                _ = Task.Run(async () =>
+                {
+                    var retryDelays = new[] { 50, 150, 350, 800 };
+                    var remaining = new HashSet<string>(failed);
+
+                    foreach (var d in retryDelays)
+                    {
+                        await Task.Delay(d);
+
+                        var toRemove = new List<string>();
+                        foreach (var connId in remaining)
+                        {
+                            try
+                            {
+                                var conn = _connectionManager.GetConnection(connId);
+                                if (conn is not null && conn.Send(syncResp))
+                                {
+                                    toRemove.Add(connId);
+                                    _logger.LogDebug("Retry send of sync_response succeeded for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                                }
+                                else
+                                {
+                                    _logger.LogDebug("Retry send of sync_response failed for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Error during retry send of sync_response for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                            }
+                        }
+
+                        foreach (var r in toRemove) remaining.Remove(r);
+                        if (remaining.Count == 0) break;
+                    }
+
+                    if (remaining.Count > 0)
+                    {
+                        _logger.LogDebug("Performing final sync_response re-broadcast for document {DocumentId} to catch remaining connections", delta.DocumentId);
+                        try
+                        {
+                            var finalFailed = await _connectionManager.BroadcastToDocumentAsync(delta.DocumentId, syncResp, excludeConnectionId: null);
+
+                            if (finalFailed.Count > 0)
+                            {
+                                // Try direct sends once more to any remaining connections
+                                await Task.Delay(50);
+
+                                foreach (var connId in finalFailed)
+                                {
+                                    try
+                                    {
+                                        var conn = _connectionManager.GetConnection(connId);
+                                        if (conn is not null && conn.Send(syncResp))
+                                        {
+                                            _logger.LogDebug("Final targeted retry of sync_response succeeded for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                                        }
+                                        else
+                                        {
+                                            _logger.LogDebug("Final targeted retry of sync_response failed for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogWarning(ex, "Error during final targeted retry of sync_response for connection {ConnectionId} (document {DocumentId})", connId, delta.DocumentId);
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Final sync_response re-broadcast failed for document {DocumentId}", delta.DocumentId);
+                        }
+                    }
+                });
+            }
         }
         catch (Exception ex)
         {

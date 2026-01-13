@@ -449,4 +449,20 @@ RETURNING version, created_at, updated_at";
         var deltasDeleted = reader.GetFieldValue<int>(1);
         return new CleanupResult(sessionsDeleted, deltasDeleted);
     }
+
+    /// <summary>
+    /// Clear all storage in PostgreSQL (used by tests). This truncates core SyncKit tables.
+    /// </summary>
+    public async Task ClearAllAsync(CancellationToken ct = default)
+    {
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        await using (var cmd = conn.CreateCommand())
+        {
+            cmd.CommandText = "TRUNCATE TABLE deltas, sessions, documents, vector_clocks RESTART IDENTITY";
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
+        await tx.CommitAsync(ct);
+    }
 }

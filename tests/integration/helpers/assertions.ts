@@ -313,9 +313,23 @@ export async function measureConvergenceTime(
 export async function assertServerHealth(
   expectedStatus: 'healthy' | 'unhealthy' = 'healthy'
 ): Promise<void> {
+  // Poll until the server reports the expected status (default: 'healthy')
+  await waitFor(async () => {
+    try {
+      const response = await fetch(`http://localhost:${TEST_CONFIG.server.port}/health`);
+      if (!response.ok) return false;
+      const data = await response.json();
+      const status = (data.status || '').toString().toLowerCase();
+      return status === expectedStatus;
+    } catch (err) {
+      return false;
+    }
+  }, TEST_CONFIG.timeouts.connection);
+
+  // Final verification with an assertion so failures show up in test output
   const response = await fetch(`http://localhost:${TEST_CONFIG.server.port}/health`);
   expect(response.ok).toBe(true);
-  
   const data = await response.json();
-  expect(data.status).toBe(expectedStatus);
+  const status = (data.status || '').toString().toLowerCase();
+  expect(status).toBe(expectedStatus);
 }

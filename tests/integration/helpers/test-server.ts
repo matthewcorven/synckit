@@ -89,6 +89,21 @@ export class TestServer {
       });
     });
 
+    // Test-only endpoint to clear storage and coordinator cache
+    this.app.post('/tests/clear', async (c) => {
+      // Only allow in test runs (safety check)
+      if (process.env.ALLOW_TEST_ENDPOINTS !== 'true' && process.env.NODE_ENV !== 'test') {
+        return c.text('Not allowed', 403);
+      }
+
+      if (this.wsServer) {
+        clearMemoryStorage();
+        this.wsServer.clearCoordinatorCache();
+      }
+
+      return c.json({ status: 'ok' });
+    });
+
     // Server info endpoint
     this.app.get('/', (c) => {
       return c.json({
@@ -328,9 +343,20 @@ export async function setupTestServer(): Promise<TestServer> {
  * Teardown helper for tests (afterAll)
  */
 export async function teardownTestServer(): Promise<void> {
+  // If running against an external server, attempt to call its test-clear endpoint
+  if (TEST_CONFIG.server.type === 'external') {
+    try {
+      const url = `${getServerUrl()}/tests/clear`;
+      await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: null });
+    } catch (err) {
+      // Ignore failures - best-effort only
+      if (TEST_CONFIG.features.verbose) console.warn('[teardownTestServer] Failed to call external /tests/clear', err);
+    }
+  }
+
   await stopTestServer();
 
-  // Clear memory storage between test suites
+  // Clear memory storage between test suites (for TypeScript server)
   clearMemoryStorage();
 
   globalTestServer = null;

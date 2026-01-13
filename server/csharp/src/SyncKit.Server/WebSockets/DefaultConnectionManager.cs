@@ -15,7 +15,7 @@ internal class DefaultConnectionManager : IConnectionManager
     public IReadOnlyList<IConnection> GetConnectionsByDocument(string documentId) => Array.Empty<IConnection>();
     public IReadOnlyList<IConnection> GetConnectionsByUser(string userId) => Array.Empty<IConnection>();
     public Task RemoveConnectionAsync(string connectionId) => Task.CompletedTask;
-    public Task BroadcastToDocumentAsync(string documentId, Protocol.IMessage message, string? excludeConnectionId = null) => Task.CompletedTask;
+    public Task<IReadOnlyList<string>> BroadcastToDocumentAsync(string documentId, Protocol.IMessage message, string? excludeConnectionId = null) => Task.FromResult((IReadOnlyList<string>)Array.Empty<string>());
     public Task CloseAllAsync(WebSocketCloseStatus status, string description) => Task.CompletedTask;
     public int ConnectionCount => 0;
 }
