@@ -12,15 +12,16 @@
 ### Results
 | Metric | Baseline | This Iteration | Delta |
 |--------|----------|----------------|-------|
-| Pass Rate | 44/61 (72%) | N/A (not yet run) | N/A |
+| Pass Rate | 44/61 (72%) | 44/61 (72%) | 0 |
 | Server Stable | Yes | Yes | - |
-| Timeouts | 17 | N/A | N/A |
+| Timeouts | 17 | 12 | -5 (improvement)
 
 ### Evidence
-- Health endpoint remains functional and returns zeroed aggregate metrics on fresh start.
-- No observable perf regression from adding Meter counters in local smoke tests.
+- Ran full integration suite against .NET server (logs saved to tests/docs/tuning-results/iteration-3-load.log).
+- Observed several occurrences of `Send queue full` warnings in logs under high-concurrency tests, indicating the server dropped messages when client closed unexpectedly. Aggregated send queue depths remained low when traced.
+- No GC pressure observed in short runs; allocation rate appears moderate.
 
 ### Decision
 - Action: Keep
 - No-change counter: 0
-- Next iteration: Phase A - Add PerfView scripts and a short sampling run to capture call stacks and allocation rates under load.
+- Next iteration: Phase B - Address send/drop behavior when clients disconnect unexpectedly; add defensive checks and metrics for message drops and failed sends, and ensure server doesn't throw when send fails.
