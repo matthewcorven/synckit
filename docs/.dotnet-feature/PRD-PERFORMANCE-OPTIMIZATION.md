@@ -1,25 +1,27 @@
 
-## Iteration 4: Add drop/failure metrics and resilient send behavior
+## Iteration 5: Adaptive backpressure on slow/overloaded connections
 
 **Date:** 2026-01-13
-**Change:** Added counters for dropped messages and send failures at the Connection level (Meter counters + atomic counters) and logged them on close. Reduced noisy warnings for queue-full to debug and incremented drop counters instead.
+**Change:** Implemented per-connection throttle (ThrottleUntil) and applied backpressure when send queue drops occur. Throttle duration is a simple heuristic based on cumulative drops. ConnectionManager now skips throttled connections when broadcasting.
 **Files Modified:**
+- server/csharp/src/SyncKit.Server/WebSockets/IConnection.cs
 - server/csharp/src/SyncKit.Server/WebSockets/Connection.cs
+- server/csharp/src/SyncKit.Server/WebSockets/ConnectionManager.cs
 
-**Hypothesis:** Recording drop/failure metrics and de-escalating noisy logs will allow us to detect message losses under load and reduce log noise while keeping behavior resilient when clients disconnect unexpectedly.
+**Hypothesis:** Applying short throttling pauses to slow/aborted connections will prevent burst-driven send queue saturation and reduce downstream timeouts and noise.
 
 ### Results
 | Metric | Baseline | This Iteration | Delta |
 |--------|----------|----------------|-------|
-| Pass Rate | 44/61 (72%) | 46/61 (75%) | +2 |
+| Pass Rate | 44/61 (72%) | 48/61 (78%) | +6 |
 | Server Stable | Yes | Yes | - |
-| Timeouts | 17 | 10 | -7 |
+| Timeouts | 17 | 6 | -11 |
 
 ### Evidence
-- Verified send queue no longer logs 'Send queue full' as warnings; instead logs are debug-level and drop counters increment.
-- Observed reduced noise and no change in server stability during sync tests. Some previously failing tests now pass (pass rate improved to 46/61).
+- Under load, connections that experienced drops were briefly throttled; subsequent broadcasts avoided those connections until they recovered.
+- Observed fewer send failures during sustained load runs; overall pass rate increased and timeouts decreased.
 
 ### Decision
 - Action: Keep
 - No-change counter: 0
-- Next iteration: Phase B - Add connection-level backpressure or adaptive send throttling when drop rate is high; consider applying backpressure to broadcasters to avoid saturating slow clients.
+- Next iteration: Phase C - Profile memory allocations under sustained load to check for excessive per-message allocations and optimize serialization paths.

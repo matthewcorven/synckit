@@ -218,10 +218,18 @@ public class ConnectionManager : IConnectionManager
         var sendCount = 0;
         var failedConnections = new List<string>();
 
+        // Adaptive backpressure: if a connection is throttled, skip sending to it
         foreach (var connection in connections)
         {
             if (excludeConnectionId != null && connection.Id == excludeConnectionId)
                 continue;
+
+            if (connection.ThrottleUntil.HasValue && connection.ThrottleUntil.Value > DateTime.UtcNow)
+            {
+                _logger.LogDebug("Skipping throttled connection {ConnectionId} until {Until}", connection.Id, connection.ThrottleUntil.Value);
+                failedConnections.Add(connection.Id);
+                continue;
+            }
 
             _logger.LogDebug("Attempting to send to connection {ConnectionId} (State: {State})",
                 connection.Id, connection.State);

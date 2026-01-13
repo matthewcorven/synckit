@@ -160,4 +160,10 @@ public interface IConnection : IAsyncDisposable
     /// Event raised when a message is received from the client.
     /// </summary>
     event EventHandler<Protocol.IMessage>? MessageReceived;
+
+    /// <summary>
+    /// If set to a future time, the connection should be treated as throttled and
+    /// should not accept more outgoing messages until the time has passed.
+    /// </summary>
+    DateTime? ThrottleUntil { get; set; }
 }

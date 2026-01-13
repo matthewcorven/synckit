@@ -45,6 +45,15 @@ public class Connection : IConnection
     // Diagnostics for dropped sends and send failures
     private long _messagesDropped;
     private long _sendFailures;
+
+    // Backpressure control - throttle outgoing messages for this connection until ThrottleUntil
+    private DateTime? _throttleUntil;
+
+    public DateTime? ThrottleUntil
+    {
+        get => _throttleUntil;
+        set => _throttleUntil = value;
+    }
     // Expose lightweight diagnostic properties for health aggregation
     public long MessagesEnqueued => Interlocked.Read(ref _messagesEnqueued);
     public long MessagesSent => Interlocked.Read(ref _messagesSent);
@@ -318,11 +327,17 @@ public class Connection : IConnection
             }
             else
             {
-                // Record drop metrics and log at debug level (too noisy at warn under load)
+                // Record drop metrics and apply backpressure to slow connections
                 Interlocked.Increment(ref _messagesDropped);
                 _droppedCounter.Add(1);
-                _logger.LogDebug("Send queue full for connection {ConnectionId}, dropping message {MessageId}",
+                _logger.LogDebug("Send queue full for connection {ConnectionId}, dropping message {MessageId}; applying backpressure",
                     Id, message.Id);
+
+                // Set throttle period proportional to current drop rate (simple heuristic)
+                var drops = Interlocked.Read(ref _messagesDropped);
+                var throttleMs = Math.Min(1000, 50 + (int)Math.Min(950, drops * 5)); // 50ms base + 5ms per drop, capped at 1s
+                ThrottleUntil = DateTime.UtcNow.AddMilliseconds(throttleMs);
+
                 return false;
             }
         }
