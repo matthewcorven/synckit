@@ -39,7 +39,12 @@ public class Connection : IConnection
     private readonly Counter<long> _enqueuedCounter;
     private readonly Counter<long> _sentCounter;
     private readonly Counter<long> _receivedCounter;
+    private readonly Counter<long> _droppedCounter;
+    private readonly Counter<long> _sendFailCounter;
 
+    // Diagnostics for dropped sends and send failures
+    private long _messagesDropped;
+    private long _sendFailures;
     // Expose lightweight diagnostic properties for health aggregation
     public long MessagesEnqueued => Interlocked.Read(ref _messagesEnqueued);
     public long MessagesSent => Interlocked.Read(ref _messagesSent);
@@ -113,7 +118,8 @@ public class Connection : IConnection
         _enqueuedCounter = s_meter.CreateCounter<long>("connection.messages.enqueued", "messages", "Messages enqueued to connection send queue");
         _sentCounter = s_meter.CreateCounter<long>("connection.messages.sent", "messages", "Messages successfully sent to client");
         _receivedCounter = s_meter.CreateCounter<long>("connection.messages.received", "messages", "Messages received from client");
-
+        _droppedCounter = s_meter.CreateCounter<long>("connection.messages.dropped", "messages", "Messages dropped due to full queue or closed socket");
+        _sendFailCounter = s_meter.CreateCounter<long>("connection.messages.sendfail", "messages", "Messages failed to send due to WebSocket errors");
         // Start background send loop
         _sendTask = ProcessSendQueueAsync(_cts.Token);
     }
@@ -312,7 +318,10 @@ public class Connection : IConnection
             }
             else
             {
-                _logger.LogWarning("Send queue full for connection {ConnectionId}, dropping message {MessageId}",
+                // Record drop metrics and log at debug level (too noisy at warn under load)
+                Interlocked.Increment(ref _messagesDropped);
+                _droppedCounter.Add(1);
+                _logger.LogDebug("Send queue full for connection {ConnectionId}, dropping message {MessageId}",
                     Id, message.Id);
                 return false;
             }
@@ -353,6 +362,9 @@ public class Connection : IConnection
                 }
                 catch (WebSocketException ex)
                 {
+                    // Count send failure and continue (do not crash entire processor)
+                    Interlocked.Increment(ref _sendFailures);
+                    _sendFailCounter.Add(1);
                     _logger.LogDebug(ex, "WebSocket exception sending message to connection {ConnectionId}", Id);
                     break; // Stop processing on WebSocket error
                 }
@@ -363,8 +375,11 @@ public class Connection : IConnection
                 }
                 catch (Exception ex)
                 {
+                    // Unexpected error - count and continue processing
+                    Interlocked.Increment(ref _sendFailures);
+                    _sendFailCounter.Add(1);
                     _logger.LogError(ex, "Unexpected error sending message to connection {ConnectionId}", Id);
-                    // Continue processing other messages
+                    // Continue with next message
                 }
             }
         }
@@ -528,10 +543,12 @@ public class Connection : IConnection
         var enqueued = Interlocked.Read(ref _messagesEnqueued);
         var sent = Interlocked.Read(ref _messagesSent);
         var received = Interlocked.Read(ref _messagesReceived);
+        var dropped = Interlocked.Read(ref _messagesDropped);
+        var sendFails = Interlocked.Read(ref _sendFailures);
         // Note: UnboundedChannel does not support .Count - omit queue depth for unbounded channels
         _logger.LogInformation(
-            "Connection {ConnectionId} closing: Enqueued={Enqueued}, Sent={Sent}, Received={Received}",
-            Id, enqueued, sent, received);
+            "Connection {ConnectionId} closing: Enqueued={Enqueued}, Sent={Sent}, Received={Received}, Dropped={Dropped}, SendFails={SendFails}",
+            Id, enqueued, sent, received, dropped, sendFails);
 
         // Complete the send queue writer to signal no more messages
         _sendQueue.Writer.Complete();
