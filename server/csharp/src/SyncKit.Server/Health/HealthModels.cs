@@ -61,4 +61,37 @@ public record HealthStats
     /// </summary>
     [JsonPropertyName("memoryUsage")]
     public long MemoryUsage { get; init; }
+
+    /// <summary>
+    /// GC collection counts for each generation at time of health check.
+    /// </summary>
+    [JsonPropertyName("gcGen0Collections")]
+    public int GcGen0Collections { get; init; }
+
+    [JsonPropertyName("gcGen1Collections")]
+    public int GcGen1Collections { get; init; }
+
+    [JsonPropertyName("gcGen2Collections")]
+    public int GcGen2Collections { get; init; }
+
+    /// <summary>
+    /// ThreadPool statistics.
+    /// </summary>
+    [JsonPropertyName("threadPoolAvailableWorkerThreads")]
+    public int ThreadPoolAvailableWorkerThreads { get; init; }
+
+    [JsonPropertyName("threadPoolAvailableCompletionPortThreads")]
+    public int ThreadPoolAvailableCompletionPortThreads { get; init; }
+
+    [JsonPropertyName("threadPoolMaxWorkerThreads")]
+    public int ThreadPoolMaxWorkerThreads { get; init; }
+
+    [JsonPropertyName("threadPoolMaxCompletionPortThreads")]
+    public int ThreadPoolMaxCompletionPortThreads { get; init; }
+
+    /// <summary>
+    /// Total CPU time (ms) used by the process.
+    /// </summary>
+    [JsonPropertyName("processCpuTotalMs")]
+    public double ProcessCpuTotalMs { get; init; }
 }

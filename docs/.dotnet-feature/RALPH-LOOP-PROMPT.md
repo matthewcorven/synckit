@@ -1,0 +1,1 @@
+Optimize SyncKit .NET server (baseline: 44/61 tests pass) to ≥90% pass rate through iterative improvements. Each iteration: make ONE change, test, document in docs/.dotnet-feature/PRD-PERFORMANCE-OPTIMIZATION.md, decide (keep/revert). Follow phases A-F in PRD. Stop when: 5 no-improvements OR ≥55/61 pass OR server unstable

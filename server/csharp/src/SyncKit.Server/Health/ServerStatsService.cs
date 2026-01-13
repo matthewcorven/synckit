@@ -72,11 +72,29 @@ public class ServerStatsService : IServerStatsService
     /// <inheritdoc />
     public HealthStats GetStats()
     {
-        return new HealthStats
+        var stats = new HealthStats
         {
             Connections = _connectionCount,
             Documents = _documentCount,
-            MemoryUsage = GetMemoryUsage()
+            MemoryUsage = GetMemoryUsage(),
+            GcGen0Collections = GC.CollectionCount(0),
+            GcGen1Collections = GC.CollectionCount(1),
+            GcGen2Collections = GC.CollectionCount(2)
+        };
+
+        ThreadPool.GetAvailableThreads(out var worker, out var io);
+        ThreadPool.GetMaxThreads(out var maxWorker, out var maxIo);
+
+        // Convert CPU times to milliseconds (Process.TotalProcessorTime is TimeSpan)
+        var cpuTotalMs = Process.GetCurrentProcess().TotalProcessorTime.TotalMilliseconds;
+
+        return stats with
+        {
+            ThreadPoolAvailableWorkerThreads = worker,
+            ThreadPoolAvailableCompletionPortThreads = io,
+            ThreadPoolMaxWorkerThreads = maxWorker,
+            ThreadPoolMaxCompletionPortThreads = maxIo,
+            ProcessCpuTotalMs = cpuTotalMs
         };
     }
 
