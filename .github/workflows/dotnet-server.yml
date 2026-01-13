@@ -149,6 +149,15 @@ jobs:
         run: |
           docker version
 
+      - name: Install diagnostics CLI (dotnet-trace, dotnet-counters)
+        run: |
+          # Install dotnet trace and counters as dotnet global tools for profiling in CI
+          export DOTNET_TOOL_DIR="$HOME/.dotnet/tools"
+          mkdir -p "$DOTNET_TOOL_DIR"
+          dotnet tool install --global dotnet-trace --version 6.0.0 || true
+          dotnet tool install --global dotnet-counters --version 6.0.0 || true
+          echo "DOTNET tool path: $DOTNET_TOOL_DIR"
+
       - name: Restore dependencies
         run: dotnet restore SyncKit.Server.sln
 
@@ -176,6 +185,14 @@ jobs:
       - name: Verify Docker available
         run: |
           docker version
+
+      - name: Install diagnostics CLI (dotnet-trace, dotnet-counters)
+        run: |
+          export DOTNET_TOOL_DIR="$HOME/.dotnet/tools"
+          mkdir -p "$DOTNET_TOOL_DIR"
+          dotnet tool install --global dotnet-trace --version 6.0.0 || true
+          dotnet tool install --global dotnet-counters --version 6.0.0 || true
+          echo "DOTNET tool path: $DOTNET_TOOL_DIR"
 
       - name: Setup bun (for tests)
         uses: oven-sh/setup-bun@v2
