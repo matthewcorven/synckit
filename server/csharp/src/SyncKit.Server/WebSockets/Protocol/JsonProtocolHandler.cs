@@ -116,10 +116,9 @@ public class JsonProtocolHandler : IProtocolHandler
         {
             _logger.LogTrace("[JSON] Serializing {Type} message with ID {Id}", message.Type, message.Id);
 
-            var json = JsonSerializer.Serialize(message, message.GetType(), Options);
-            var bytes = Encoding.UTF8.GetBytes(json);
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(message, message.GetType(), Options);
 
-            _logger.LogTrace("[JSON] Serialized to {ByteCount} bytes: {Json}", bytes.Length, json);
+            _logger.LogTrace("[JSON] Serialized to {ByteCount} bytes", bytes.Length);
             return bytes;
         }
         catch (Exception ex)
