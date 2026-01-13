@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Net.WebSockets;
 using System.Threading.Channels;
+using System.Diagnostics.Metrics;
 using SyncKit.Server.WebSockets.Protocol;
 
 namespace SyncKit.Server.WebSockets;
@@ -28,16 +29,23 @@ public class Connection : IConnection
     private readonly Channel<(IMessage message, WebSocketMessageType messageType, ReadOnlyMemory<byte> data)> _sendQueue;
     private readonly Task _sendTask;
 
-    // Diagnostics: atomic counters for message send/receive tracking (low-overhead)
+        // Diagnostics: atomic counters for message send/receive tracking (low-overhead)
     private long _messagesEnqueued;
     private long _messagesSent;
     private long _messagesReceived;
+
+    // Meter and counters for runtime telemetry (low-overhead EventCounters replacement)
+    private static readonly Meter s_meter = new("SyncKit.Connection", "1.0");
+    private readonly Counter<long> _enqueuedCounter;
+    private readonly Counter<long> _sentCounter;
+    private readonly Counter<long> _receivedCounter;
 
     // Expose lightweight diagnostic properties for health aggregation
     public long MessagesEnqueued => Interlocked.Read(ref _messagesEnqueued);
     public long MessagesSent => Interlocked.Read(ref _messagesSent);
     public long MessagesReceived => Interlocked.Read(ref _messagesReceived);
     public int SendQueueDepth => _sendQueue.Reader.Count; // best-effort reader count
+
 
     /// <inheritdoc />
     public string Id { get; }
@@ -100,6 +108,11 @@ public class Connection : IConnection
                 SingleReader = true,
                 SingleWriter = false
             });
+
+        // Create low-cost counters for telemetry
+        _enqueuedCounter = s_meter.CreateCounter<long>("connection.messages.enqueued", "messages", "Messages enqueued to connection send queue");
+        _sentCounter = s_meter.CreateCounter<long>("connection.messages.sent", "messages", "Messages successfully sent to client");
+        _receivedCounter = s_meter.CreateCounter<long>("connection.messages.received", "messages", "Messages received from client");
 
         // Start background send loop
         _sendTask = ProcessSendQueueAsync(_cts.Token);
@@ -179,6 +192,9 @@ public class Connection : IConnection
         }
         finally
         {
+            // Update received counters for health/metrics
+            Interlocked.Increment(ref _messagesReceived);
+            _receivedCounter.Add(1);
             State = ConnectionState.Disconnected;
         }
     }
@@ -289,6 +305,7 @@ public class Connection : IConnection
             if (_sendQueue.Writer.TryWrite((message, messageType, data)))
             {
                 Interlocked.Increment(ref _messagesEnqueued);
+                _enqueuedCounter.Add(1);
                 _logger.LogTrace("Queued message {MessageType} {MessageId} for connection {ConnectionId} ({ByteCount} bytes)",
                     message.Type, message.Id, Id, data.Length);
                 return true;
@@ -329,6 +346,7 @@ public class Connection : IConnection
 
                     await _webSocket.SendAsync(data, messageType, true, cancellationToken);
                     Interlocked.Increment(ref _messagesSent);
+                    _sentCounter.Add(1);
 
                     _logger.LogTrace("Sent message {MessageType} {MessageId} to connection {ConnectionId} ({ByteCount} bytes)",
                         message.Type, message.Id, Id, data.Length);

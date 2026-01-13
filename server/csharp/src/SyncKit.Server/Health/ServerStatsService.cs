@@ -58,9 +58,52 @@ public class ServerStatsService : IServerStatsService
     private int _connectionCount;
     private int _documentCount;
 
+    private static readonly System.Diagnostics.Metrics.Meter s_meter = new("SyncKit.Server", "1.0");
+
+    // Observable gauges for external monitoring
+    private readonly System.Diagnostics.Metrics.ObservableGauge<long>? _memGaugeRegistration;
+    private readonly System.Diagnostics.Metrics.ObservableGauge<int>? _sendQueueGaugeRegistration;
+
     public ServerStatsService()
     {
         _uptimeStopwatch = Stopwatch.StartNew();
+
+        // Register a low-overhead observable gauge for managed memory
+        try
+        {
+            _memGaugeRegistration = s_meter.CreateObservableGauge<long>(
+                "server.memory.usage",
+                () => GC.GetTotalMemory(forceFullCollection: false),
+                unit: "bytes",
+                description: "Managed heap memory usage in bytes");
+
+            _sendQueueGaugeRegistration = s_meter.CreateObservableGauge<int>(
+                "server.sendqueue.depth",
+                () =>
+                {
+                    try
+                    {
+                        var provider = Program.ServiceProvider;
+                        var connManager = provider?.GetService<SyncKit.Server.WebSockets.IConnectionManager>();
+                        if (connManager is SyncKit.Server.WebSockets.ConnectionManager cm)
+                        {
+                            return cm.GetAllConnections().Sum(c => c is SyncKit.Server.WebSockets.Connection conn ? conn.SendQueueDepth : 0);
+                        }
+                    }
+                    catch
+                    {
+                        // best-effort
+                    }
+
+                    return 0;
+                },
+                unit: "messages",
+                description: "Aggregated send queue depth across all active connections");
+        }
+        catch
+        {
+            // Metrics registration is best-effort; do not fail construction if metrics aren't available
+        }
     }
 
     /// <inheritdoc />

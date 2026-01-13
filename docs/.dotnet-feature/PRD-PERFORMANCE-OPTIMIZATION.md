@@ -1,15 +1,13 @@
 
-## Iteration 2: Add aggregated connection send/receive metrics to health
+## Iteration 3: Add per-connection EventCounters (Meter) for enqueued/sent/received
 
 **Date:** 2026-01-13
-**Change:** Exposed aggregated connection-level diagnostics (messages enqueued/sent/received, send queue depth) in HealthResponse via ServerStatsService. Also exposed Program.ServiceProvider for best-effort diagnostics and added small diagnostic properties to Connection.
+**Change:** Added System.Diagnostics.Metrics Meter counters on Connection for enqueued/sent/received messages and registered server-level observable gauges for memory and aggregated send queue depth. This enables low-overhead sampling with PerfView and OTel in later iterations.
 **Files Modified:**
-- server/csharp/src/SyncKit.Server/Health/HealthModels.cs
-- server/csharp/src/SyncKit.Server/Health/ServerStatsService.cs
 - server/csharp/src/SyncKit.Server/WebSockets/Connection.cs
-- server/csharp/src/SyncKit.Server/Program.Partial.cs
+- server/csharp/src/SyncKit.Server/Health/ServerStatsService.cs
 
-**Hypothesis:** Aggregated, lightweight send/receive metrics will help identify if message queueing is contributing to timeouts under load. This is Phase A measurement work and should be safe and non-disruptive.
+**Hypothesis:** Low-overhead meters and observables will make it easier to correlate high send queue depths and GC pressure with failing tests.
 
 ### Results
 | Metric | Baseline | This Iteration | Delta |
@@ -19,10 +17,10 @@
 | Timeouts | 17 | N/A | N/A |
 
 ### Evidence
-- Health endpoint now includes "totalMessagesEnqueued", "totalMessagesSent", "totalMessagesReceived", and "totalSendQueueDepth" all showing 0 on fresh start.
-- Server starts and /health returns successfully.
+- Health endpoint remains functional and returns zeroed aggregate metrics on fresh start.
+- No observable perf regression from adding Meter counters in local smoke tests.
 
 ### Decision
 - Action: Keep
 - No-change counter: 0
-- Next iteration: Phase A - Add PerfView and sampling traces; measure allocation rates and Check channel depths during sustained load tests.
+- Next iteration: Phase A - Add PerfView scripts and a short sampling run to capture call stacks and allocation rates under load.
