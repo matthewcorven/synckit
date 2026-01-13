@@ -504,10 +504,10 @@ public class Connection : IConnection
         var enqueued = Interlocked.Read(ref _messagesEnqueued);
         var sent = Interlocked.Read(ref _messagesSent);
         var received = Interlocked.Read(ref _messagesReceived);
-        var queueDepth = _sendQueue.Reader.Count;
+        // Note: UnboundedChannel does not support .Count - omit queue depth for unbounded channels
         _logger.LogInformation(
-            "Connection {ConnectionId} closing: Enqueued={Enqueued}, Sent={Sent}, Received={Received}, QueueDepth={QueueDepth}",
-            Id, enqueued, sent, received, queueDepth);
+            "Connection {ConnectionId} closing: Enqueued={Enqueued}, Sent={Sent}, Received={Received}",
+            Id, enqueued, sent, received);
 
         // Complete the send queue writer to signal no more messages
         _sendQueue.Writer.Complete();

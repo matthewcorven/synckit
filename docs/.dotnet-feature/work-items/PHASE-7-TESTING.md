@@ -18,18 +18,18 @@ The .NET server includes lightweight, low-overhead diagnostics to help troublesh
 | `Enqueued` | Messages queued for send | `Connection.Send()` |
 | `Sent` | Messages successfully sent over WebSocket | `Connection.ProcessSendQueueAsync()` |
 | `Received` | Messages successfully parsed from client | `Connection.HandleMessageAsync()` |
-| `QueueDepth` | Pending items in send queue at disconnect | `Channel.Reader.Count` |
 
 These counters are logged **once per connection** at disconnect (log level: Information):
 
 ```
-Connection conn-abc123 closing: Enqueued=1500, Sent=1500, Received=800, QueueDepth=0
+Connection conn-abc123 closing: Enqueued=1500, Sent=1500, Received=800
 ```
 
 **Interpreting the output:**
 - `Enqueued > Sent` → Messages were dropped or connection closed before drain.
-- `QueueDepth > 0` at close → Backpressure; consider increasing send queue capacity or investigating slow clients.
 - `Sent ≈ Received` (on echo tests) → Healthy round-trip.
+
+**Note:** Queue depth is not tracked for unbounded channels (current implementation uses `UnboundedChannel` for send queue).
 
 ### External Monitoring (zero code changes)
 

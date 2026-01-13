@@ -171,7 +171,7 @@ Protocol and message shapes are documented in the repository protocol specs (`pr
 The server logs per-connection metrics on disconnect (at log level `Information`):
 
 ```
-Connection conn-abc123 closing: Enqueued=1500, Sent=1500, Received=800, QueueDepth=0
+Connection conn-abc123 closing: Enqueued=1500, Sent=1500, Received=800
 ```
 
 | Metric | Meaning |
@@ -179,11 +179,10 @@ Connection conn-abc123 closing: Enqueued=1500, Sent=1500, Received=800, QueueDep
 | **Enqueued** | Messages queued for send |
 | **Sent** | Messages successfully sent over WebSocket |
 | **Received** | Messages successfully parsed from client |
-| **QueueDepth** | Pending send queue items at disconnect |
 
 **Troubleshooting tips:**
 - `Enqueued > Sent` → Messages may have been dropped or connection closed early.
-- `QueueDepth > 0` at close → Backpressure detected; check for slow clients or increase send queue capacity.
+- `Sent ≈ Received` (for echo/roundtrip tests) → Healthy message flow.
 
 For runtime metrics (CPU, heap, GC) without code changes, use `dotnet-counters`:
 

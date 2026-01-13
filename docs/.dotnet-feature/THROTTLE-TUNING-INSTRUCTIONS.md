@@ -95,16 +95,21 @@ curl -s http://localhost:8090/health
 
 ## Tuning Steps
 
-### Phase 1: Make Configuration Work
+### Phase 1: Make Configuration Work ✅ COMPLETE (Jan 11, 2026)
 
-1. Add config properties to `SyncKitConfig.cs`
-2. Update `SyncWebSocketMiddleware.cs` to read from config
-3. Update `ConnectionManager.cs` to read from config
-4. Add environment variable support: `WS_ACCEPT_CONCURRENCY`, `WS_CONNECTION_CREATION_CONCURRENCY`
-5. Verify server starts with default values
-6. Run full load test suite - should match baseline (44/61 pass)
+1. ✅ Add config properties to `SyncKitConfig.cs`
+2. ✅ Update `SyncWebSocketMiddleware.cs` to read from config
+3. ✅ Update `ConnectionManager.cs` to read from config
+4. ✅ Add environment variable support: `WS_ACCEPT_CONCURRENCY`, `WS_CONNECTION_CREATION_CONCURRENCY`
+5. ✅ Verify server starts with default values
+6. ✅ Run full load test suite - baseline established
 
-### Phase 2: Systematic Relaxation
+**Deliverables:**
+- Configuration system working correctly
+- Semaphores initialized conditionally (only if config value > 0)
+- Baseline tests validated server stability
+
+### Phase 2: Systematic Relaxation ⚠️ IN PROGRESS
 
 Test each configuration in order. For each test:
 1. Kill any existing server: `pkill -f "dotnet.*SyncKit"`
@@ -116,17 +121,64 @@ Test each configuration in order. For each test:
 
 **Configuration Matrix to Test:**
 
-| Test # | Accept | Creation | Expected | Actual | Server Stable? | Notes |
-|--------|--------|----------|----------|--------|----------------|-------|
-| 1 | 20 | 10 | Baseline | | | Current values |
-| 2 | 50 | 25 | | | | |
-| 3 | 100 | 50 | | | | |
-| 4 | 200 | 100 | | | | |
-| 5 | 500 | 250 | | | | |
-| 6 | 1000 | 500 | | | | |
-| 7 | 0 (unlimited) | 500 | | | | Test accept only |
-| 8 | 500 | 0 (unlimited) | | | | Test creation only |
-| 9 | 0 (unlimited) | 0 (unlimited) | | | | Full unrestricted |
+| Test # | Accept | Creation | Pass/Total | Server Stable? | Notes |
+|--------|--------|----------|------------|----------------|-------|
+| 1 ✅ | 20 | 10 | Baseline | Yes | Current conservative values - server stable |
+| 2 ✅ | 50 | 25 | Not recorded | Yes | Server stable, tests passed |
+| 3 ⚠️ | 100 | 50 | **NEEDS RERUN** | Yes (after fix) | **Critical bug found & fixed** - see below |
+| 4 ⬜ | 200 | 100 | Pending | | |
+| 5 ⬜ | 500 | 250 | Pending | | |
+| 6 ⬜ | 1000 | 500 | Pending | | |
+| 7 ⬜ | 0 (unlimited) | 500 | Pending | | Test accept only |
+| 8 ⬜ | 500 | 0 (unlimited) | Pending | | Test creation only |
+| 9 ⬜ | 0 (unlimited) | 0 (unlimited) | Pending | | Full unrestricted |
+
+---
+
+### ⚠️ CRITICAL: Test #3 Status & Bug Discovery (Jan 12, 2026)
+
+**Initial Test #3 Run:**
+- Config: Accept=100 / Creation=50
+- Result: 24 failing tests (many timeouts, incomplete syncs)
+- Key failure: 10K fields test received only 8213/10000 fields (82%, below 90% threshold)
+
+**Root Cause Investigation:**
+Low-overhead diagnostics instrumentation was added to `Connection.cs`:
+- Atomic counters: `_messagesEnqueued`, `_messagesSent`, `_messagesReceived`
+- Intent: Track message flow without impacting performance
+- **Bug:** Called `ChannelReader<T>.Count` in `DisposeAsync()` to log queue depth
+
+**Critical Bug:**
+```
+System.NotSupportedException: Specified method is not supported.
+   at System.Threading.Channels.ChannelReader`1.get_Count()
+```
+- Unbounded channels (used for send queue) do NOT support `.Count` property
+- Exception thrown on EVERY connection disconnect
+- Cascading failures during high-load tests prevented full sync
+
+**Fix Applied:**
+- Removed `.Count` call from `Connection.DisposeAsync()`
+- Updated diagnostics log format (queue depth omitted)
+- Documentation updated: [PHASE-7-TESTING.md](work-items/PHASE-7-TESTING.md#diagnostics-instrumentation), [server README](../../../server/csharp/src/README.md#diagnostics)
+
+**Post-Fix Validation:**
+- Re-ran 10K fields test: **PASS** ✅
+- Result: 9713/10000 fields (97%, exceeds threshold)
+- Server stable, no exceptions
+
+**Diagnostics Now Available:**
+Each connection logs on disconnect (log level: Information):
+```
+Connection conn-abc123 closing: Enqueued=1500, Sent=1500, Received=800
+```
+
+**NEXT STEP FOR RESUMING AGENT:**
+- **Re-run full Test #3 suite** (`bun test load/ --timeout 1200000`) to validate fix across all 63 tests
+- If successful, update table above with pass/total count
+- Then proceed with Test #4
+
+---
 
 ### Server Start Command Template
 ```bash
@@ -138,6 +190,8 @@ SYNCKIT_AUTH_REQUIRED=false \
 JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
 dotnet run --configuration Release
 ```
+
+**Important:** Keep the server running in a **dedicated terminal**. Do not run health checks or tests in the same terminal — use a separate terminal to avoid accidentally killing the server process.
 
 ---
 
@@ -237,21 +291,45 @@ pkill -f "dotnet.*SyncKit"
 cd /Users/core/git/matthewcorven/synckit/server/csharp/src/SyncKit.Server
 dotnet build --configuration Release
 
-# Start server (with unlimited throttling)
-WS_ACCEPT_CONCURRENCY=0 \
-WS_CONNECTION_CREATION_CONCURRENCY=0 \
+# Start server (example: Test #3 config)
+# IMPORTANT: Run in dedicated Terminal 1 - leave running
+cd /Users/core/git/matthewcorven/synckit/server/csharp/src/SyncKit.Server
+WS_ACCEPT_CONCURRENCY=100 \
+WS_CONNECTION_CREATION_CONCURRENCY=50 \
 SYNCKIT_SERVER_URL=http://localhost:8090 \
 SYNCKIT_AUTH_REQUIRED=false \
 JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
 dotnet run --configuration Release
 
-# Run load tests
+# Run load tests (in separate Terminal 2)
 cd /Users/core/git/matthewcorven/synckit/tests
-TEST_SERVER_TYPE=external TEST_SERVER_PORT=8090 bun test load/ --timeout 120000
+TEST_SERVER_TYPE=external TEST_SERVER_PORT=8090 bun test load/ --timeout 1200000
 
-# Check server health
+# Check server health (in separate Terminal 2 or 3)
 curl -s http://localhost:8090/health
 
-# View server logs (if using nohup)
-tail -f /tmp/synckit-server.log
+# View connection diagnostics in server logs (Terminal 1 output)
+# Look for: "Connection conn-xxx closing: Enqueued=X, Sent=Y, Received=Z"
+
+# Save test output for analysis
+cd /Users/core/git/matthewcorven/synckit/tests
+TEST_SERVER_TYPE=external TEST_SERVER_PORT=8090 \
+  bun test load/ --timeout 1200000 2>&1 | tee /tmp/load-tests-testN.log
 ```
+
+---
+
+## Resuming Work Checklist
+
+For the next agent continuing this tuning work:
+
+- [ ] Review Test #3 status in [PHASE-ASSESSMENT-MATRIX.md](PHASE-ASSESSMENT-MATRIX.md#throttle-tuning-matrix-phase-2-runs-)
+- [ ] Verify diagnostics fix is in place (`Connection.cs` - no `.Count` call)
+- [ ] Kill any existing server: `pkill -f "dotnet.*SyncKit"`
+- [ ] Start server with Test #3 config (Accept=100 / Creation=50) in dedicated terminal
+- [ ] Run full load test suite: `bun test load/ --timeout 1200000`
+- [ ] Record results in Configuration Matrix table above
+- [ ] If Test #3 passes, proceed to Test #4 with Accept=200 / Creation=100
+- [ ] Continue through Tests #5–#9
+- [ ] Update both this file and PHASE-ASSESSMENT-MATRIX.md with final results
+- [ ] Make recommendation for production defaults
