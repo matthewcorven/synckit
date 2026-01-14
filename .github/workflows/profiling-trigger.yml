@@ -1,0 +1,52 @@
+name: Profiling Trigger
+
+on:
+  pull_request_target:
+    types: [labeled]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  label-check:
+    name: Check label and dispatch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check event is label addition
+        if: github.event.pull_request != null
+        run: |
+          echo "PR #${{ github.event.pull_request.number }} labeled with '${{ github.event.label.name }}'"
+          if [ "${{ github.event.label.name }}" != "perf/profile" ]; then
+            echo "Label is not 'perf/profile'; exiting"
+            exit 0
+          fi
+
+      - name: Ensure actor is collaborator
+        run: |
+          ACTOR=${{ github.event.sender.login }}
+          echo "Label added by $ACTOR"
+          # Quick check using GitHub REST API (requires GITHUB_TOKEN)
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/collaborators/$ACTOR")
+          if echo "$RESPONSE" | jq -e '.permission' >/dev/null 2>&1; then
+            echo "$ACTOR is a collaborator"
+          else
+            echo "$ACTOR is not a collaborator; aborting dispatch"
+            exit 1
+          fi
+
+      - name: Dispatch profiling job
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "Dispatching profiling-run workflow for PR #${PR_NUMBER} at sha ${PR_SHA}"
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/profiling-run.yml/dispatches" \
+            -d "{ \"ref\": \"refs/heads/${{ github.head_ref || github.ref }}\", \"inputs\": {\"pr_number\": \"${PR_NUMBER}\", \"pr_sha\": \"${PR_SHA}\"}}" \
+            || (echo "Dispatch failed" && exit 1)

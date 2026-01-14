@@ -1,0 +1,127 @@
+name: Profiling Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number (optional)'
+        required: false
+      pr_sha:
+        description: 'PR head sha (optional)'
+        required: false
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  profile:
+    name: Run profiler and collect artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.pr_sha || github.ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Install dotnet-trace & dotnet-counters
+        run: |
+          export DOTNET_TOOL_DIR="$HOME/.dotnet/tools"
+          mkdir -p "$DOTNET_TOOL_DIR"
+          dotnet tool install --global dotnet-trace --version 9.0.661903 || true
+          dotnet tool install --global dotnet-counters --version 9.0.661903 || true
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          echo "Installed tools:"
+          dotnet-trace --version || true
+          dotnet-counters --version || true
+
+      - name: Verify required tool versions
+        run: |
+          VTRACE=$(dotnet-trace --version 2>/dev/null || true)
+          VCOUNTERS=$(dotnet-counters --version 2>/dev/null || true)
+          echo "dotnet-trace: $VTRACE"
+          echo "dotnet-counters: $VCOUNTERS"
+          if [[ "$VTRACE" != *"9.0.661903"* ]]; then
+            echo "dotnet-trace version mismatch (need 9.0.661903)"
+            exit 1
+          fi
+          if [[ "$VCOUNTERS" != *"9.0.661903"* ]]; then
+            echo "dotnet-counters version mismatch (need 9.0.661903)"
+            exit 1
+          fi
+
+      - name: Build server
+        run: |
+          dotnet restore SyncKit.Server.sln
+          dotnet build SyncKit.Server.sln --no-restore --configuration Release
+
+      - name: Prepare artifacts directory
+        run: mkdir -p artifacts
+
+      - name: Start server
+        run: |
+          cd server/csharp/src/SyncKit.Server
+          SYNCKIT_SERVER_URL=http://localhost:8090 SYNCKIT_AUTH_REQUIRED=false JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' dotnet run > "${{ github.workspace }}/artifacts/server-${{ github.run_id }}.log" 2>&1 &
+          echo $! > "${{ github.workspace }}/artifacts/server.pid"
+          cd -
+
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..30}; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8090/health || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Server ready"
+              break
+            fi
+            echo "Waiting for server... ($i/30)"
+            sleep 1
+          done
+
+      - name: Start profiling collectors (120s)
+        run: |
+          PID=$(cat "${{ github.workspace }}/artifacts/server.pid")
+          echo "Server PID: $PID"
+
+          # Start counters in background
+          timeout 120s dotnet-counters collect --process-id $PID System.Runtime --format Json --output "${{ github.workspace }}/artifacts/counters-${{ github.run_id }}.json" &
+          COUNTERS_PID=$!
+
+          # Start trace collection
+          dotnet-trace collect --process-id $PID --format NetTrace --providers "Microsoft-Windows-DotNETRuntime:0x1:5" --duration 00:02:00 -o "${{ github.workspace }}/artifacts/trace-${{ github.run_id }}.nettrace" &
+          TRACE_PID=$!
+
+          # Run load generator (burst then sustained)
+          bash tests/scripts/profile-load.sh --burst-conns 200 --burst-duration 10 --sustain-conns 100 --sustain-duration 120 --sustain-interval-ms 50 --payload-bytes 256 || true
+
+          # Wait for trace/counters to finish
+          wait $TRACE_PID || true
+          wait $COUNTERS_PID || true
+
+      - name: Convert trace to Speedscope
+        run: |
+          if command -v dotnet-trace >/dev/null; then
+            dotnet-trace convert "${{ github.workspace }}/artifacts/trace-${{ github.run_id }}.nettrace" --format Speedscope -o "${{ github.workspace }}/artifacts/trace-${{ github.run_id }}.speedscope.json" || true
+          fi
+
+      - name: Collect health snapshot
+        run: curl -s http://localhost:8090/health -o "${{ github.workspace }}/artifacts/health-${{ github.run_id }}.json" || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: profiling-artifacts-${{ github.run_id }}
+          path: artifacts/**
+          retention-days: 7
+
+      - name: Stop server
+        run: |
+          PID=$(cat "${{ github.workspace }}/artifacts/server.pid")
+          kill $PID || true
+          sleep 1

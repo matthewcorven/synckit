@@ -1,25 +1,24 @@
 
-## Iteration 6: Reduce allocations in JSON parsing/serialization
+## Iteration 7: Add CI support for diagnostic tooling
 
 **Date:** 2026-01-13
-**Change:** Updated JsonProtocolHandler to parse directly from ReadOnlyMemory<byte> and deserialize from Span/bytes where possible to avoid allocating intermediate strings on serialize/deserialize paths. Also switched to JsonSerializer.SerializeToUtf8Bytes for serialization to avoid UTF8 encoding allocations.
+**Change:** Updated .github/workflows/dotnet-server.yml to install dotnet-trace and dotnet-counters as global dotnet tools so profiling can be executed in CI runs.
 **Files Modified:**
-- server/csharp/src/SyncKit.Server/WebSockets/Protocol/JsonProtocolHandler.cs
+- .github/workflows/dotnet-server.yml
 
-**Hypothesis:** Eliminating the UTF-8 string intermediate will lower GC pressure under sustained load and reduce GC-triggered pauses.
+**Hypothesis:** Having diagnostic tools available in CI will enable automated allocation sampling and traces during integration runs and help catch allocation regressions earlier.
 
 ### Results
 | Metric | Baseline | This Iteration | Delta |
 |--------|----------|----------------|-------|
-| Pass Rate | 48/61 (78%) | 49/61 (80%) | +2 |
-| Server Stable | Yes | Yes | - |
-| Timeouts | 6 | 4 | -2 |
+| Pass Rate | 49/61 (80%) | N/A (CI change) | N/A |
+| Server Stable | N/A | N/A | N/A |
+| Timeouts | N/A | N/A | N/A |
 
 ### Evidence
-- dotnet-counters and dotnet-trace are not available in the environment; attempted to run allocation profiling but collectors were not found. Saved run logs to tests/docs/tuning-results/iteration-6-run.log.
-- Build succeeded and short integration runs show slight improvement in pass rate and reduced timeouts.
+- Workflow updated to install dotnet-trace and dotnet-counters; will validate on next CI run.
 
 ### Decision
 - Action: Keep
 - No-change counter: 0
-- Next iteration: Phase C - ensure we can run allocation profiling (install dotnet-trace/dotnet-counters) in CI or local environment; consider pooling JSON serializer or reduce allocation hotspots in Binary handler payload construction.
+- Next iteration: Phase C - Run CI with profiling enabled to collect allocation traces; added label-gated profiling workflow and local profiling scripts to run 120s traces and upload artifacts (see new workflows and tests/scripts).
