@@ -1,0 +1,2 @@
+# Ignore perf results JSON (auto-generated)
+*.json

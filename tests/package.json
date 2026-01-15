@@ -11,7 +11,11 @@
     "test:storage": "bun test integration/storage/",
     "test:sync": "bun test integration/sync/",
     "test:offline": "bun test integration/offline/",
-    "test:watch": "bun test --watch"
+    "test:watch": "bun test --watch",
+    "perf:discover": "bun run perf/capture-all.ts",
+    "perf:discover:csharp": "SERVER_TYPE=csharp SERVER_PORT=8090 bun run perf/capture-all.ts",
+    "perf:update-table": "bun run perf/update-perf-table.ts",
+    "perf:full": "bun run perf:discover && bun run perf:update-table"
   },
   "dependencies": {
     "hono": "^4.0.0",
