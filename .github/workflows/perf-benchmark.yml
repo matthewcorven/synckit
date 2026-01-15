@@ -51,6 +51,12 @@ jobs:
         with:
           bun-version: 'latest'
 
+      - name: Verify Bun installation
+        run: |
+          echo "bun version:"; bun -v || true
+          echo "which bun:"; which bun || true
+          echo "try bun --version:"; bun --version || true
+
       - name: Print system info
         run: |
           echo "=== uname ==="; uname -a
@@ -75,7 +81,7 @@ jobs:
           path: diagnostics/bun-install.log
 
       - name: Smoke test (push only): start TS server and run quick connection discovery
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && success()
         run: |
           set -euo pipefail
           mkdir -p diagnostics
@@ -106,6 +112,13 @@ jobs:
         with:
           name: smoke-logs
           path: diagnostics/smoke-connections.log
+
+      - name: Upload diagnostics (final)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-diagnostics-final
+          path: diagnostics/**
 
 
       - name: Run perf benchmark (starts server + captures metrics)
