@@ -153,7 +153,7 @@ jobs:
     name: Smoke test (push only)
     needs: diagnostics
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && needs.diagnostics.result == 'success'
+    if: "github.event_name == 'push' && needs.diagnostics.result == 'success'"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
