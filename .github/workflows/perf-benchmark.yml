@@ -21,11 +21,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Bun (required for tests)
+      - name: Diagnostics - collect environment info
+        continue-on-error: true
         run: |
-          curl -fsSL https://bun.sh/install | bash -s -- -y
-          echo "BUN_INSTALL_DIR=$HOME/.bun/bin" >> $GITHUB_ENV
-          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+          mkdir -p diagnostics
+          uname -a > diagnostics/uname.txt || true
+          lscpu > diagnostics/lscpu.txt || true
+          free -h > diagnostics/free.txt || true
+          df -h > diagnostics/df.txt || true
+          cat /etc/os-release > diagnostics/os-release.txt || true
+          echo "=== BUN ===" > diagnostics/bun.txt
+          bun -v >> diagnostics/bun.txt 2>&1 || true
+          echo "=== node ===" > diagnostics/node.txt
+          node -v >> diagnostics/node.txt 2>&1 || true
+          echo "=== tests dir listing ===" > diagnostics/tests-ls.txt
+          ls -la tests >> diagnostics/tests-ls.txt || true
+          cat tests/package.json > diagnostics/tests-package.json || true
+          env | sort > diagnostics/env.txt || true
+
+      - name: Upload diagnostics artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-diagnostics
+          path: diagnostics/*
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
 
       - name: Print system info
         run: |
