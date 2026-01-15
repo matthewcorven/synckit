@@ -58,9 +58,21 @@ jobs:
           echo "=== free ==="; free -h || true
           echo "=== df ==="; df -h .
 
-      - name: Install test deps
-        run: bun install
-        working-directory: tests
+      - name: Install test deps (capture logs)
+        run: |
+          mkdir -p diagnostics
+          echo "=== bun -v ===" > diagnostics/bun-install.log 2>&1
+          bun -v >> diagnostics/bun-install.log 2>&1 || true
+          echo "=== bun install (tests) ===" >> diagnostics/bun-install.log 2>&1
+          (cd tests && bun install) >> diagnostics/bun-install.log 2>&1 || true
+          tail -n 200 diagnostics/bun-install.log || true
+
+      - name: Upload bun install logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bun-install-logs
+          path: diagnostics/bun-install.log
 
       - name: Run perf benchmark (starts server + captures metrics)
         run: |
