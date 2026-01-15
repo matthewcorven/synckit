@@ -7,7 +7,7 @@ This document summarizes performance discovery benchmarks for SyncKit server imp
 <!-- PERF_ENV_START -->
 | Server | OS | CPU | RAM (GB) | Runtime | Captured |
 |--------|----|-----|----------|---------|----------|
-| TypeScript | — | — | — | — | — |
+| TypeScript | macOS 25.2.0 | Apple M4 Max (16 cores) | 128 | Bun 1.3.5 | 2026-01-15T13:32:48.532Z |
 | C# | — | — | — | — | — |
 <!-- PERF_ENV_END -->
 
@@ -16,13 +16,13 @@ This document summarizes performance discovery benchmarks for SyncKit server imp
 <!-- PERF_TABLE_START -->
 | Metric | TypeScript | C# | Unit |
 |--------|------------|-----|------|
-| Max Concurrent Connections | — | — | connections |
-| Max Ops/Sec (Single Client) | — | — | ops/sec |
-| Max Ops/Sec (Aggregate) | — | — | ops/sec |
-| P95 Latency | — | — | ms |
-| Memory Growth | — | — | MB/min |
+| Max Concurrent Connections | 5,001 | — | connections |
+| Max Ops/Sec (Single Client) | 1,000 | — | ops/sec |
+| Max Ops/Sec (Aggregate) | 2,000 | — | ops/sec |
+| P95 Latency | 55 | — | ms |
+| Memory Growth | -1.28 | — | MB/min |
 
-*Last updated: —*
+*Last updated: 2026-01-15T13:32:48.532Z*
 <!-- PERF_TABLE_END -->
 
 ## Configuration Limits (Manual)

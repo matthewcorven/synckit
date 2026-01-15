@@ -36,8 +36,18 @@ export async function runOpsMeasurement(options: OpsMeasurementOptions): Promise
 
   receivers.forEach(receiver => {
     receiver.onDelta(message => {
-      const delta = message.delta ?? {};
-      for (const [field] of Object.entries(delta)) {
+      // Handle both SDK format (field/value) and delta object format
+      let field: string | undefined;
+      if (message.field) {
+        field = message.field;
+      } else if (message.delta) {
+        const keys = Object.keys(message.delta);
+        if (keys.length > 0) {
+          field = keys[0];
+        }
+      }
+
+      if (field) {
         const timestamp = sentAt.get(field);
         if (timestamp && !converged.has(field)) {
           const latency = Date.now() - timestamp;

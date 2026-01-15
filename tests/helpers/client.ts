@@ -14,8 +14,13 @@ export interface DeltaMessage {
   id: string;
   timestamp: number;
   documentId: string;
-  delta: Record<string, unknown>;
-  vectorClock: Record<string, number>;
+  // Server sends SDK format: field/value
+  field?: string;
+  value?: unknown;
+  // Client can also receive delta object format
+  delta?: Record<string, unknown>;
+  vectorClock?: Record<string, number>;
+  clock?: Record<string, number>;
 }
 
 export type IncomingMessage =
@@ -63,12 +68,20 @@ export class PerfClient {
 
       this.ws?.on('open', () => {
           this.connected = true;
-          this.send({
-            type: MessageType.AUTH,
-            id: createMessageId(),
-            timestamp: Date.now(),
-            token: this.token,
-          });
+          // If we have a token, send AUTH and wait for response
+          // If no token (auth disabled mode), just resolve immediately
+          if (this.token) {
+            this.send({
+              type: MessageType.AUTH,
+              id: createMessageId(),
+              timestamp: Date.now(),
+              token: this.token,
+            });
+          } else {
+            // Auth disabled - server auto-authenticates on connection
+            clearTimeout(timeout);
+            resolve();
+          }
         });
 
       this.ws?.on('error', (err) => {

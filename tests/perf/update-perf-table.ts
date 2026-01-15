@@ -127,7 +127,10 @@ function buildEnvironment(latest: Record<'typescript' | 'csharp', PerfResult | n
 
 async function updateDocument(): Promise<void> {
   const results = await loadResults();
+  console.log(`Found ${results.length} result files`);
   const latest = latestByType(results);
+  console.log(`Latest TypeScript: ${latest.typescript?.timestamp || 'none'}`);
+  console.log(`Latest C#: ${latest.csharp?.timestamp || 'none'}`);
 
   const docPath = path.resolve(process.cwd(), '../docs/architecture/SERVER_PERFORMANCE.md');
   const content = await readFile(docPath, 'utf8');
@@ -135,10 +138,25 @@ async function updateDocument(): Promise<void> {
   const updatedTable = buildTable(latest);
   const updatedEnv = buildEnvironment(latest);
 
-  const withEnv = content.replace(new RegExp(`${PERF_ENV_START}[\s\S]*?${PERF_ENV_END}`), updatedEnv);
-  const withTable = withEnv.replace(new RegExp(`${PERF_TABLE_START}[\s\S]*?${PERF_TABLE_END}`), updatedTable);
+  // Use simpler string-based replacement
+  const envStartIdx = content.indexOf(PERF_ENV_START);
+  const envEndIdx = content.indexOf(PERF_ENV_END) + PERF_ENV_END.length;
+  const tableStartIdx = content.indexOf(PERF_TABLE_START);
+  const tableEndIdx = content.indexOf(PERF_TABLE_END) + PERF_TABLE_END.length;
 
-  await writeFile(docPath, withTable);
+  let updated = content;
+  if (envStartIdx !== -1 && envEndIdx > envStartIdx) {
+    updated = updated.substring(0, envStartIdx) + updatedEnv + updated.substring(envEndIdx);
+  }
+  
+  // Re-find indices after first replacement
+  const newTableStartIdx = updated.indexOf(PERF_TABLE_START);
+  const newTableEndIdx = updated.indexOf(PERF_TABLE_END) + PERF_TABLE_END.length;
+  if (newTableStartIdx !== -1 && newTableEndIdx > newTableStartIdx) {
+    updated = updated.substring(0, newTableStartIdx) + updatedTable + updated.substring(newTableEndIdx);
+  }
+
+  await writeFile(docPath, updated);
   console.log(`Updated ${docPath}`);
 }
 

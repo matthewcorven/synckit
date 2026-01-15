@@ -7,8 +7,19 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/.." && pwd)
 SERVER_TYPE=${1:-typescript}
 SERVER_PORT=${SERVER_PORT:-}
 
+# Ensure port is free before starting
+ensure_port_free() {
+  local port=$1
+  if lsof -ti:"$port" >/dev/null 2>&1; then
+    echo "Port $port is in use. Attempting to free it..."
+    lsof -ti:"$port" | xargs kill -9 2>/dev/null || true
+    sleep 1
+  fi
+}
+
 if [[ "$SERVER_TYPE" == "csharp" ]]; then
   SERVER_PORT=${SERVER_PORT:-8090}
+  ensure_port_free "$SERVER_PORT"
   echo "Starting C# server on port ${SERVER_PORT}..."
   (
     cd "${ROOT_DIR}/server/csharp/src/SyncKit.Server"
@@ -21,6 +32,7 @@ if [[ "$SERVER_TYPE" == "csharp" ]]; then
 else
   SERVER_TYPE="typescript"
   SERVER_PORT=${SERVER_PORT:-8080}
+  ensure_port_free "$SERVER_PORT"
   echo "Starting TypeScript server on port ${SERVER_PORT}..."
   (
     cd "${ROOT_DIR}/server/typescript"

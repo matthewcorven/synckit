@@ -1,0 +1,62 @@
+name: Perf Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_type:
+        description: 'Server type to benchmark (typescript | csharp)'
+        required: false
+        default: 'typescript'
+  push:
+    branches:
+      - feature/11-dotnet-server
+
+jobs:
+  perf:
+    name: Perf tests on default runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Bun (required for tests)
+        run: |
+          curl -fsSL https://bun.sh/install | bash -s -- -y
+          echo "BUN_INSTALL_DIR=$HOME/.bun/bin" >> $GITHUB_ENV
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+
+      - name: Print system info
+        run: |
+          echo "=== uname ==="; uname -a
+          echo "=== lscpu ==="; lscpu || true
+          echo "=== free ==="; free -h || true
+          echo "=== df ==="; df -h .
+
+      - name: Install test deps
+        run: bun install
+        working-directory: tests
+
+      - name: Run perf benchmark (starts server + captures metrics)
+        run: |
+          bash run-perf-benchmark.sh ${{ github.event.inputs.server_type }}
+        working-directory: tests
+        env:
+          SERVER_PORT: 8080
+          PERF_MAX_CONNECTIONS: 5000
+
+      - name: Upload perf results
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-results
+          path: tests/results/*.json
+
+      - name: Upload updated SERVER_PERFORMANCE.md
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-performance-md
+          path: docs/architecture/SERVER_PERFORMANCE.md
+
+      - name: Show artifacts location
+        run: echo "Artifacts uploaded: perf-results and server-performance-md"
