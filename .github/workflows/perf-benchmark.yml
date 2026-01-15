@@ -12,11 +12,9 @@ on:
       - feature/11-dotnet-server
 
 jobs:
-  perf:
-    name: Perf tests on default runner
+  diagnostics:
+    name: Diagnostics + deps
     runs-on: ubuntu-latest
-    timeout-minutes: 180
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,7 +28,7 @@ jobs:
           free -h > diagnostics/free.txt || true
           df -h > diagnostics/df.txt || true
           cat /etc/os-release > diagnostics/os-release.txt || true
-          echo "=== BUN ===" > diagnostics/bun.txt
+          echo "=== BUN (pre-setup) ===" > diagnostics/bun.txt
           bun -v >> diagnostics/bun.txt 2>&1 || true
           echo "=== node ===" > diagnostics/node.txt
           node -v >> diagnostics/node.txt 2>&1 || true
@@ -38,13 +36,6 @@ jobs:
           ls -la tests >> diagnostics/tests-ls.txt || true
           cat tests/package.json > diagnostics/tests-package.json || true
           env | sort > diagnostics/env.txt || true
-
-      - name: Upload diagnostics artifact
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: perf-diagnostics
-          path: diagnostics/*
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -55,14 +46,6 @@ jobs:
         run: |
           echo "bun version:"; bun -v || true
           echo "which bun:"; which bun || true
-          echo "try bun --version:"; bun --version || true
-
-      - name: Print system info
-        run: |
-          echo "=== uname ==="; uname -a
-          echo "=== lscpu ==="; lscpu || true
-          echo "=== free ==="; free -h || true
-          echo "=== df ==="; df -h .
 
       - name: Install test deps (capture logs)
         run: |
@@ -80,8 +63,23 @@ jobs:
           name: bun-install-logs
           path: diagnostics/bun-install.log
 
-      - name: Smoke test (push only): start TS server and run quick connection discovery
-        if: github.event_name == 'push' && success()
+      - name: Upload diagnostics (final)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-diagnostics-final
+          path: diagnostics/**
+
+  smoke:
+    name: Smoke test (push only)
+    needs: diagnostics
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && needs.diagnostics.result == 'success'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Smoke test: start TS server and run quick connection discovery
         run: |
           set -euo pipefail
           mkdir -p diagnostics
@@ -113,12 +111,46 @@ jobs:
           name: smoke-logs
           path: diagnostics/smoke-connections.log
 
-      - name: Upload diagnostics (final)
-        if: always()
+  perf:
+    name: Perf (manual dispatch only)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 180
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      - name: Install test deps
+        run: bun install
+        working-directory: tests
+
+      - name: Run perf benchmark (starts server + captures metrics)
+        run: |
+          bash run-perf-benchmark.sh ${{ github.event.inputs.server_type }}
+        working-directory: tests
+        env:
+          SERVER_PORT: 8080
+          PERF_MAX_CONNECTIONS: 5000
+
+      - name: Upload perf results
         uses: actions/upload-artifact@v4
         with:
-          name: perf-diagnostics-final
-          path: diagnostics/**
+          name: perf-results
+          path: tests/results/*.json
+
+      - name: Upload updated SERVER_PERFORMANCE.md
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-performance-md
+          path: docs/architecture/SERVER_PERFORMANCE.md
+
+      - name: Show artifacts location
+        run: echo "Artifacts uploaded: perf-results and server-performance-md"
 
 
       - name: Run perf benchmark (starts server + captures metrics)
