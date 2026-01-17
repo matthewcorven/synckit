@@ -49,14 +49,17 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Waiting for server health..."
-for i in {1..30}; do
+for i in {1..60}; do
   if curl -s "http://localhost:${SERVER_PORT}/health" >/dev/null 2>&1; then
     echo "Server is healthy."
     break
   fi
+  echo "  Waiting for health... ($i/60)"
   sleep 1
-  if [[ $i -eq 30 ]]; then
+  if [[ $i -eq 60 ]]; then
     echo "Server did not become healthy in time."
+    echo "Checking if server process is still running..."
+    ps aux | grep -E "(dotnet|bun)" | grep -v grep || echo "No server process found"
     exit 1
   fi
   done
