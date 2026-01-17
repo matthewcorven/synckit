@@ -1,6 +1,10 @@
 # ci: revalidate workflow - touch
 name: "Perf Benchmark (fixed)"
 
+permissions:
+  contents: write
+  actions: read
+
 on:
   workflow_dispatch:
     inputs:
@@ -259,6 +263,41 @@ jobs:
         with:
           name: server-performance-md
           path: docs/architecture/SERVER_PERFORMANCE.md
+
+      - name: Commit updated SERVER_PERFORMANCE.md
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          
+          # Check if SERVER_PERFORMANCE.md was updated
+          if git diff --quiet docs/architecture/SERVER_PERFORMANCE.md; then
+            echo "ℹ️ No changes to SERVER_PERFORMANCE.md - skipping commit"
+            exit 0
+          fi
+          
+          echo "📊 Changes detected in SERVER_PERFORMANCE.md:"
+          git diff docs/architecture/SERVER_PERFORMANCE.md
+          
+          # Stage and commit
+          git add docs/architecture/SERVER_PERFORMANCE.md
+          git commit -m "docs(perf): update SERVER_PERFORMANCE.md [${{ github.event.inputs.server_type }}]
+          
+          Automated update from perf benchmark run.
+          
+          Run ID: ${{ github.run_id }}
+          Server: ${{ github.event.inputs.server_type }}
+          Branch: ${{ github.ref_name }}
+          Actor: ${{ github.actor }}"
+          
+          # Push to the same branch
+          git push origin HEAD:${{ github.ref_name }}
+          echo "✅ Committed and pushed SERVER_PERFORMANCE.md update"
 
       - name: Show artifacts location
         run: echo "Artifacts uploaded - perf-results and server-performance-md"
