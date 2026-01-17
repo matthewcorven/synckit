@@ -7,7 +7,7 @@ This document summarizes performance discovery benchmarks for SyncKit server imp
 <!-- PERF_ENV_START -->
 | Server | OS | CPU | RAM (GB) | Runtime | Captured |
 |--------|----|-----|----------|---------|----------|
-| TypeScript | linux 6.11.0-1018-azure | AMD EPYC 7763 64-Core Processor (4 cores) | 16 | Bun 1.3.6 | 2026-01-17T15:37:49.881Z |
+| TypeScript | linux 6.11.0-1018-azure | Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz (4 cores) | 16 | Bun 1.3.6 | 2026-01-17T21:53:14.057Z |
 | C# | — | — | — | — | — |
 <!-- PERF_ENV_END -->
 
@@ -16,13 +16,13 @@ This document summarizes performance discovery benchmarks for SyncKit server imp
 <!-- PERF_TABLE_START -->
 | Metric | TypeScript | C# | Unit |
 |--------|------------|-----|------|
-| Max Concurrent Connections | 5,001 | — | connections |
+| Max Concurrent Connections | 30,001 | — | connections |
 | Max Ops/Sec (Single Client) | 1,000 | — | ops/sec |
 | Max Ops/Sec (Aggregate) | 2,000 | — | ops/sec |
-| P95 Latency | 54 | — | ms |
-| Memory Growth | 3.91 | — | MB/min |
+| P95 Latency | 51 | — | ms |
+| Memory Growth | 3.95 | — | MB/min |
 
-*Last updated: 2026-01-17T15:37:49.881Z*
+*Last updated: 2026-01-17T21:53:14.056Z*
 <!-- PERF_TABLE_END -->
 
 ## Configuration Limits (Manual)
