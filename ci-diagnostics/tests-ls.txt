@@ -1,18 +1,18 @@
 === tests dir listing ===
 total 72
-drwxr-xr-x 10 runner runner 4096 Jan 17 22:35 .
-drwxr-xr-x 16 runner runner 4096 Jan 17 22:35 ..
--rw-r--r--  1 runner runner 4710 Jan 17 22:35 README.md
-drwxr-xr-x  2 runner runner 4096 Jan 17 22:35 binary
--rw-r--r--  1 runner runner  111 Jan 17 22:35 bunfig.toml
-drwxr-xr-x  2 runner runner 4096 Jan 17 22:35 chaos
-drwxr-xr-x  2 runner runner 4096 Jan 17 22:35 diagnostics
-drwxr-xr-x  2 runner runner 4096 Jan 17 22:35 helpers
-drwxr-xr-x  6 runner runner 4096 Jan 17 22:35 integration
-drwxr-xr-x  2 runner runner 4096 Jan 17 22:35 load
--rw-r--r--  1 runner runner 1133 Jan 17 22:35 package.json
-drwxr-xr-x  2 runner runner 4096 Jan 17 22:35 perf
-drwxr-xr-x  2 runner runner 4096 Jan 17 22:35 results
--rwxr-xr-x  1 runner runner 4105 Jan 17 22:35 run-against-csharp.sh
--rw-r--r--  1 runner runner 1799 Jan 17 22:35 run-perf-benchmark.sh
--rw-r--r--  1 runner runner  649 Jan 17 22:35 tsconfig.json
+drwxr-xr-x 10 runner runner 4096 Jan 17 22:38 .
+drwxr-xr-x 16 runner runner 4096 Jan 17 22:38 ..
+-rw-r--r--  1 runner runner 4710 Jan 17 22:38 README.md
+drwxr-xr-x  2 runner runner 4096 Jan 17 22:38 binary
+-rw-r--r--  1 runner runner  111 Jan 17 22:38 bunfig.toml
+drwxr-xr-x  2 runner runner 4096 Jan 17 22:38 chaos
+drwxr-xr-x  2 runner runner 4096 Jan 17 22:38 diagnostics
+drwxr-xr-x  2 runner runner 4096 Jan 17 22:38 helpers
+drwxr-xr-x  6 runner runner 4096 Jan 17 22:38 integration
+drwxr-xr-x  2 runner runner 4096 Jan 17 22:38 load
+-rw-r--r--  1 runner runner 1133 Jan 17 22:38 package.json
+drwxr-xr-x  2 runner runner 4096 Jan 17 22:38 perf
+drwxr-xr-x  2 runner runner 4096 Jan 17 22:38 results
+-rwxr-xr-x  1 runner runner 4105 Jan 17 22:38 run-against-csharp.sh
+-rw-r--r--  1 runner runner 1879 Jan 17 22:38 run-perf-benchmark.sh
+-rw-r--r--  1 runner runner  649 Jan 17 22:38 tsconfig.json
