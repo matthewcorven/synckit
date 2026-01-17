@@ -159,7 +159,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Smoke test: start TS server and run quick connection discovery
+      - name: Smoke test to start TS server and run quick connection discovery
         run: |
           set -euo pipefail
           mkdir -p diagnostics
@@ -230,4 +230,4 @@ jobs:
           path: docs/architecture/SERVER_PERFORMANCE.md
 
       - name: Show artifacts location
-        run: echo "Artifacts uploaded: perf-results and server-performance-md"
+        run: echo "Artifacts uploaded - perf-results and server-performance-md"
