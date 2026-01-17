@@ -12,6 +12,10 @@ on:
         description: 'Server type to benchmark (typescript | csharp)'
         required: false
         default: 'typescript'
+      max_connections:
+        description: 'Max connections ceiling for perf test'
+        required: false
+        default: '5000'
   push:
     branches:
       - feature/11-dotnet-server
@@ -250,7 +254,7 @@ jobs:
         working-directory: tests
         env:
           SERVER_PORT: ${{ github.event.inputs.server_type == 'csharp' && '8090' || '8080' }}
-          PERF_MAX_CONNECTIONS: 5000
+          PERF_MAX_CONNECTIONS: ${{ github.event.inputs.max_connections }}
 
       - name: Upload perf results
         uses: actions/upload-artifact@v4
