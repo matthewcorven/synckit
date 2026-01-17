@@ -23,10 +23,11 @@ if [[ "$SERVER_TYPE" == "csharp" ]]; then
   echo "Starting C# server on port ${SERVER_PORT}..."
   (
     cd "${ROOT_DIR}/server/csharp/src/SyncKit.Server"
+    ASPNETCORE_URLS="http://localhost:${SERVER_PORT}" \
     SYNCKIT_SERVER_URL="http://localhost:${SERVER_PORT}" \
     SYNCKIT_AUTH_REQUIRED=false \
     JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
-    dotnet run --no-build
+    dotnet run --configuration Release --no-build
   ) &
   SERVER_PID=$!
 else
