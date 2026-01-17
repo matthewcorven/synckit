@@ -220,16 +220,32 @@ jobs:
         with:
           bun-version: 'latest'
 
+      - name: Setup .NET (for C# server)
+        if: ${{ github.event.inputs.server_type == 'csharp' }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build C# server
+        if: ${{ github.event.inputs.server_type == 'csharp' }}
+        run: dotnet build --configuration Release
+        working-directory: server/csharp/src/SyncKit.Server
+
       - name: Install test deps
         run: bun install
         working-directory: tests
+
+      - name: Install TypeScript server deps (for typescript)
+        if: ${{ github.event.inputs.server_type != 'csharp' }}
+        run: bun install
+        working-directory: server/typescript
 
       - name: Run perf benchmark (starts server + captures metrics)
         run: |
           bash run-perf-benchmark.sh ${{ github.event.inputs.server_type }}
         working-directory: tests
         env:
-          SERVER_PORT: 8080
+          SERVER_PORT: ${{ github.event.inputs.server_type == 'csharp' && '8090' || '8080' }}
           PERF_MAX_CONNECTIONS: 5000
 
       - name: Upload perf results

@@ -14,6 +14,8 @@ set -euo pipefail
 GITHUB_TOKEN=${GITHUB_TOKEN:-}
 OWNER_REPO="${OWNER_REPO:-matthewcorven/synckit}"
 WORKFLOW_PATH=".github/workflows/perf-benchmark.yml"
+# Cached workflow ID for matthewcorven/synckit perf-benchmark workflow
+WORKFLOW_ID="${WORKFLOW_ID:-223929473}"
 
 die(){ echo "❌ ERROR: $*" >&2; exit 1; }
 info(){ echo "ℹ️  $*"; }
@@ -52,6 +54,11 @@ determine_repo(){
 }
 
 get_workflow_id(){
+  # If WORKFLOW_ID is already set, use it
+  if [[ -n "$WORKFLOW_ID" ]]; then
+    echo "$WORKFLOW_ID"
+    return
+  fi
   local resp
   resp=$(api_get "https://api.github.com/repos/$OWNER_REPO/actions/workflows/$WORKFLOW_PATH")
   echo "$resp" | jq -r '.id // empty'
