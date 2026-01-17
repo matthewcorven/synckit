@@ -1,4 +1,4 @@
-name: Perf Benchmark
+name: Perf Benchmark (fixed)
 
 on:
   workflow_dispatch:
@@ -207,30 +207,6 @@ jobs:
       - name: Install test deps
         run: bun install
         working-directory: tests
-
-      - name: Run perf benchmark (starts server + captures metrics)
-        run: |
-          bash run-perf-benchmark.sh ${{ github.event.inputs.server_type }}
-        working-directory: tests
-        env:
-          SERVER_PORT: 8080
-          PERF_MAX_CONNECTIONS: 5000
-
-      - name: Upload perf results
-        uses: actions/upload-artifact@v4
-        with:
-          name: perf-results
-          path: tests/results/*.json
-
-      - name: Upload updated SERVER_PERFORMANCE.md
-        uses: actions/upload-artifact@v4
-        with:
-          name: server-performance-md
-          path: docs/architecture/SERVER_PERFORMANCE.md
-
-      - name: Show artifacts location
-        run: echo "Artifacts uploaded: perf-results and server-performance-md"
-
 
       - name: Run perf benchmark (starts server + captures metrics)
         run: |
