@@ -1,5 +1,5 @@
 # ci: revalidate workflow - touch
-name: Perf Benchmark (fixed)
+name: "Perf Benchmark (fixed)"
 
 on:
   workflow_dispatch:
@@ -159,13 +159,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      - name: Install test dependencies
+        run: bun install
+        working-directory: tests
+
+      - name: Install server dependencies
+        run: bun install
+        working-directory: server/typescript
+
       - name: Smoke test to start TS server and run quick connection discovery
+        working-directory: tests
         run: |
           set -euo pipefail
           mkdir -p diagnostics
           echo "Starting TypeScript server (smoke mode)..."
-          (cd server/typescript && PORT=8080 HOST=0.0.0.0 SYNCKIT_AUTH_REQUIRED=false bun src/index.ts) &
-          echo $! > diagnostics/server.pid
+          (cd ../server/typescript && PORT=8080 HOST=0.0.0.0 SYNCKIT_AUTH_REQUIRED=false bun src/index.ts) &
+          SERVER_PID=$!
+          echo $SERVER_PID > diagnostics/server.pid
 
           echo "Waiting for health..."
           for i in {1..30}; do
@@ -182,14 +197,14 @@ jobs:
           PERF_MAX_CONNECTIONS=200 SERVER_PORT=8080 SYNCKIT_SERVER_URL=http://localhost:8080 bun run perf/discover-max-connections.ts 2>&1 | tee diagnostics/smoke-connections.log || true
 
           echo "Killing server..."
-          kill "$(cat diagnostics/server.pid)" >/dev/null 2>&1 || true
+          kill "$SERVER_PID" >/dev/null 2>&1 || true
 
       - name: Upload smoke logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: smoke-logs
-          path: diagnostics/smoke-connections.log
+          path: tests/diagnostics/smoke-connections.log
 
   perf:
     name: Perf (manual dispatch only)
