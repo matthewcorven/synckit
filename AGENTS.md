@@ -167,6 +167,34 @@ Or use VS Code tasks: `Cmd+Shift+P` → "Tasks: Run Task" → "Health Check"
 
 ---
 
+## Performance Testing
+
+Performance benchmarks measure max connections, throughput, latency, and memory stability.
+
+📖 **Full instructions:** [docs/architecture/SERVER_PERFORMANCE.md](docs/architecture/SERVER_PERFORMANCE.md)
+
+### Quick Reference
+
+```bash
+# Local: Run perf benchmark for C# server
+cd tests && bun install
+PERF_MAX_CONNECTIONS=30000 ./run-perf-benchmark.sh csharp
+
+# GitHub Actions: Trigger workflow
+gh repo set-default matthewcorven/synckit
+gh workflow run perf-benchmark.yml \
+  --ref feature/11-dotnet-server-perf \
+  -f server_type=csharp \
+  -f max_connections=30000
+```
+
+**Key notes:**
+- The `--ref` flag is required—it specifies the branch with the `workflow_dispatch` trigger
+- Results are saved to `tests/results/` and auto-update `SERVER_PERFORMANCE.md`
+- Expected duration: 15-45 minutes locally
+
+---
+
 ## Reference Implementation
 
 When implementing the .NET server, refer to the TypeScript server as the canonical reference:
