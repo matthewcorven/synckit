@@ -35,7 +35,7 @@
 _(Move current task here while working)_
 
 ### 📋 Next Up
-- [ ] **NEXT →** Verify SERVER_PERFORMANCE.md was updated (failed: C# column not found; 2026-01-18 rerun)
+- [ ] **NEXT →** Verify SERVER_PERFORMANCE.md was updated (failed: C# column not found; reconfirmed 2026-01-18)
 - [ ] Stage all changes for final commit
 
 ### 🚫 Blocked
@@ -86,6 +86,7 @@ grep -A 10 "C# (.NET" /Users/core/git/matthewcorven/synckit/docs/architecture/SE
 ### New Signs (append here)
 - 2026-01-18: `./run-perf-benchmark.sh` permission denied (exit 126). Fix: `chmod +x tests/run-perf-benchmark.sh`.
 - 2026-01-18: `grep -A 10 "C# (.NET"` returned "C# column not found" (no C# column in SERVER_PERFORMANCE.md; reconfirmed on rerun). Fix: rerun perf benchmark or update perf table.
+- 2026-01-18: Verification rerun still returned "C# column not found" (exit 0). Fix: rerun perf benchmark or update perf table.
 
 ---
 
