@@ -16,13 +16,13 @@ This document summarizes performance discovery benchmarks for SyncKit server imp
 <!-- PERF_TABLE_START -->
 | Metric | TypeScript | C# | Unit |
 |--------|------------|-----|------|
-| Max Concurrent Connections | 5,001 | 501 | connections |
+| Max Concurrent Connections | 5,001 | 501* | connections |
 | Max Ops/Sec (Single Client) | 1,000 | 1,000 | ops/sec |
 | Max Ops/Sec (Aggregate) | 2,000 | 1,529 | ops/sec |
 | P95 Latency | 55 | 1,465 | ms |
 | Memory Growth | -1.28 | -0.29 | MB/min |
 
-*Last updated: 2026-01-15T13:32:48.532Z*
+*Last updated: 2026-01-18T00:51:08.984Z*
 <!-- PERF_TABLE_END -->
 
 ## Configuration Limits (Manual)

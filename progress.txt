@@ -1,0 +1,3 @@
+# Prompt
+
+Noting macOS benchmark cap at 501 connections. Need Linux CI for higher counts.
