@@ -1,7 +1,7 @@
 # PRD: C# Server Performance Testing
 
 > **Status:** In Progress  
-> **Last Updated:** 2026-01-17  
+> **Last Updated:** 2026-01-18  
 > **Branch:** `feature/11-dotnet-server-perf`  
 > **Loop Compatible:** Yes (RALPH Loop - read, act, update, exit)
 
@@ -32,7 +32,7 @@ _(Move current task here while working)_
 - [ ] Commit final results to branch
 
 ### 🚫 Blocked
-- [ ] Verify server health on port 8090 — curl failed (connection refused); start server and retry.
+- [ ] Verify server health on port 8090 — curl: (7) Failed to connect to localhost port 8090; start server and retry.
 
 ---
 
