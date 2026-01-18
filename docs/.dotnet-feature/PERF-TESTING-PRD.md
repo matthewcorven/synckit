@@ -7,6 +7,20 @@
 
 ---
 
+## 🎯 Primary Goal
+
+**Execute C# server performance testing at the SAME 30,000 concurrent connections target as TypeScript.**
+
+The TypeScript server achieved **30,001 max connections**. The C# server must be tested at the identical 30,000 connection ceiling to provide an apples-to-apples comparison. This is non-negotiable for valid performance benchmarking.
+
+| Baseline | Target | Command |
+|----------|--------|---------|
+| TypeScript: 30,001 connections | C#: **30,000 connections** | `PERF_MAX_CONNECTIONS=30000 ./run-perf-benchmark.sh csharp` |
+
+**Agent Directive:** Always run benchmarks with `PERF_MAX_CONNECTIONS=30000`. Any results below this target must be re-run or documented with clear explanation of platform limitations.
+
+---
+
 ## 0. Progress Tracker
 
 > **RALPH LOOP INSTRUCTIONS:** Each iteration:
@@ -123,6 +137,8 @@ cat /Users/core/git/matthewcorven/synckit/tests/results/perf-csharp-*.json | gre
 
 ### 3.1 Full Benchmark (PRIMARY - use this)
 
+**⚠️ ALWAYS use 30,000 connections to match TypeScript baseline:**
+
 ```bash
 cd /Users/core/git/matthewcorven/synckit/tests && PERF_MAX_CONNECTIONS=30000 ./run-perf-benchmark.sh csharp
 ```
@@ -158,9 +174,16 @@ grep -A 10 "C# (.NET" /Users/core/git/matthewcorven/synckit/docs/architecture/SE
 
 ### 4.1 Goal
 
-**Complete C# server performance testing at 30,000 max concurrent connections** to match TypeScript baseline.
+**Execute C# server performance testing at the SAME 30,000 concurrent connections target as TypeScript.**
 
-### 4.2 TypeScript Baseline
+This is the critical success metric:
+- TypeScript achieved **30,001 connections** in its benchmark
+- C# **MUST** be tested at the same **30,000 connection ceiling**
+- Results below 30,000 are invalid for comparison unless platform-limited (see Sign #5)
+
+**Why 30,000?** This is the established baseline from the TypeScript implementation. Testing at lower thresholds (e.g., 500, 5,000) produces invalid comparisons and must be re-run at the full 30,000 target.
+
+### 4.2 TypeScript Baseline (30,000 Connections)
 
 | Metric | TypeScript | C# Target |
 |--------|------------|-----------|
@@ -172,25 +195,31 @@ grep -A 10 "C# (.NET" /Users/core/git/matthewcorven/synckit/docs/architecture/SE
 
 ### 4.3 Validated Smoke Test (500 connections)
 
+**⚠️ NOTE:** The 500-connection smoke test was for initial validation only. It does NOT satisfy the 30,000 target requirement.
+
 ```
-Max Connections: 501 ✓
+Max Connections: 501 ✓ (smoke test only - must re-run at 30,000)
 Ops/sec: 1,000 single, 1,529 aggregate ✓
 ```
+
+**Action Required:** Re-run benchmark with `PERF_MAX_CONNECTIONS=30000` to achieve valid comparison data.
 
 ---
 
 ## 5. Environment Variables
 
-| Variable | Value | Set By |
-|----------|-------|--------|
-| `PERF_MAX_CONNECTIONS` | `30000` | Command line |
-| `SERVER_TYPE` | `csharp` | Script (from arg) |
-| `SERVER_PORT` | `8090` | Script default |
-| `SYNCKIT_SERVER_URL` | `http://0.0.0.0:8090` | Script |
-| `SYNCKIT_AUTH_REQUIRED` | `false` | Script |
-| `JWT_SECRET` | `test-secret-...` | Script |
+| Variable | Value | Set By | Notes |
+|----------|-------|--------|-------|
+| `PERF_MAX_CONNECTIONS` | **`30000`** | Command line | **REQUIRED: Must be 30,000 to match TypeScript** |
+| `SERVER_TYPE` | `csharp` | Script (from arg) | |
+| `SERVER_PORT` | `8090` | Script default | |
+| `SYNCKIT_SERVER_URL` | `http://0.0.0.0:8090` | Script | |
+| `SYNCKIT_AUTH_REQUIRED` | `false` | Script | |
+| `JWT_SECRET` | `test-secret-...` | Script | |
 
 All environment variables are set automatically by `run-perf-benchmark.sh`.
+
+**⚠️ CRITICAL:** Never omit `PERF_MAX_CONNECTIONS=30000`. The default may be lower and will produce invalid comparison results.
 
 ---
 
