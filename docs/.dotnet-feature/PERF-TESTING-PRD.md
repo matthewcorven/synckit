@@ -25,7 +25,8 @@
 _(Move current task here while working)_
 
 ### 📋 Next Up
-- [ ] **NEXT →** Run full perf benchmark (automated script handles server lifecycle)
+- [ ] **NEXT →** Fix benchmark script permissions (chmod +x tests/run-perf-benchmark.sh)
+- [ ] Run full perf benchmark (automated script handles server lifecycle)
 - [ ] Verify results file exists and contains valid data
 - [ ] Verify SERVER_PERFORMANCE.md was updated
 - [ ] Stage all changes for final commit
@@ -37,29 +38,23 @@ _(none)_
 
 ## 0.1 Current Task Details
 
-**Task:** Run full perf benchmark
+**Task:** Fix benchmark script permissions
 
-**Why This Works Autonomously:** The `run-perf-benchmark.sh` script handles EVERYTHING:
-- Starts C# server as background process
-- Waits for health check automatically
-- Runs all perf discovery phases
-- Updates SERVER_PERFORMANCE.md
-- Cleans up server on exit
+**Why This Works Autonomously:** The benchmark script must be executable before the automated flow can run.
 
 **Command:**
 ```bash
-cd /Users/core/git/matthewcorven/synckit/tests && PERF_MAX_CONNECTIONS=30000 ./run-perf-benchmark.sh csharp
+cd /Users/core/git/matthewcorven/synckit/tests && chmod +x ./run-perf-benchmark.sh
 ```
 
 **Success Condition:** 
 - Exit code 0
-- File `tests/results/perf-csharp-*.json` exists
-- `docs/architecture/SERVER_PERFORMANCE.md` contains C# column
+- `tests/run-perf-benchmark.sh` is executable (`ls -l` shows `x` bits)
 
 **On Success:** 
 1. Move task to Completed
-2. Set NEXT → to "Verify results file exists"
-3. Commit: `git add -A && git commit -m "perf: C# benchmark complete"`
+2. Set NEXT → to "Run full perf benchmark"
+3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: fix benchmark script permissions"`
 
 **On Failure:**
 1. Check exit code and error output
@@ -83,7 +78,7 @@ cd /Users/core/git/matthewcorven/synckit/tests && PERF_MAX_CONNECTIONS=30000 ./r
 | 6 | Script not executable | Missing chmod | Run: `chmod +x tests/run-perf-benchmark.sh` |
 
 ### New Signs (append here)
-_(Add new failure patterns as discovered)_
+- 2026-01-18: `./run-perf-benchmark.sh` permission denied (exit 126). Fix: `chmod +x tests/run-perf-benchmark.sh`.
 
 ---
 
