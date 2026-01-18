@@ -21,13 +21,13 @@
 - [x] Verify run-perf-benchmark.sh has correct flags  
 - [x] Build C# server in Release mode
 - [x] Fix benchmark script permissions (chmod +x tests/run-perf-benchmark.sh)
+- [x] Run full perf benchmark (automated script handles server lifecycle)
 
 ### 🔄 In Progress
 _(Move current task here while working)_
 
 ### 📋 Next Up
-- [ ] **NEXT →** Run full perf benchmark (automated script handles server lifecycle)
-- [ ] Verify results file exists and contains valid data
+- [ ] **NEXT →** Verify results file exists and contains valid data
 - [ ] Verify SERVER_PERFORMANCE.md was updated
 - [ ] Stage all changes for final commit
 
@@ -38,29 +38,28 @@ _(none)_
 
 ## 0.1 Current Task Details
 
-**Task:** Run full perf benchmark
+**Task:** Verify results file exists and contains valid data
 
-**Why This Works Autonomously:** The script manages server lifecycle, health checks, test phases, and docs updates.
+**Why This Works Autonomously:** The benchmark writes results to `tests/results/` and the command below validates the file contents.
 
 **Command:**
 ```bash
-cd /Users/core/git/matthewcorven/synckit/tests && PERF_MAX_CONNECTIONS=30000 ./run-perf-benchmark.sh csharp
+ls -la /Users/core/git/matthewcorven/synckit/tests/results/perf-csharp-*.json && cat /Users/core/git/matthewcorven/synckit/tests/results/perf-csharp-*.json | head -50
 ```
 
 **Success Condition:** 
 - Exit code 0
-- Script completes all phases without error
+- Results file exists and contains JSON data
 
 **On Success:** 
 1. Move task to Completed
-2. Set NEXT → to "Verify results file exists and contains valid data"
-3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: run full perf benchmark"`
+2. Set NEXT → to "Verify SERVER_PERFORMANCE.md was updated"
+3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: verify perf results"`
 
 **On Failure:**
 1. Check exit code and error output
 2. Add error details to Signs section
-3. If build issue: add rebuild task to Next Up
-4. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: benchmark failed - [reason]"`
+3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: results verification failed - [reason]"`
 
 ---
 
