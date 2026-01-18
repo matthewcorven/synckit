@@ -253,6 +253,7 @@ jobs:
           bash run-perf-benchmark.sh ${{ github.event.inputs.server_type }}
         working-directory: tests
         env:
+          SERVER_TYPE: ${{ github.event.inputs.server_type }}
           SERVER_PORT: ${{ github.event.inputs.server_type == 'csharp' && '8090' || '8080' }}
           PERF_MAX_CONNECTIONS: ${{ github.event.inputs.max_connections }}
 
