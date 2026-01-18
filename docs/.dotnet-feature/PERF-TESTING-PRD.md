@@ -1,3 +1,10 @@
+# Context
+
+## progress.txt
+
+
+# Prompt
+
 # PRD: C# Server Performance Testing
 
 > **Status:** In Progress  
@@ -28,7 +35,7 @@
 _(Move current task here while working)_
 
 ### 📋 Next Up
-- [ ] **NEXT →** Verify SERVER_PERFORMANCE.md was updated
+- [ ] **NEXT →** Verify SERVER_PERFORMANCE.md was updated (failed: C# column not found)
 - [ ] Stage all changes for final commit
 
 ### 🚫 Blocked
@@ -78,6 +85,7 @@ grep -A 10 "C# (.NET" /Users/core/git/matthewcorven/synckit/docs/architecture/SE
 
 ### New Signs (append here)
 - 2026-01-18: `./run-perf-benchmark.sh` permission denied (exit 126). Fix: `chmod +x tests/run-perf-benchmark.sh`.
+- 2026-01-18: `grep -A 10 "C# (.NET"` returned "C# column not found" (no C# column in SERVER_PERFORMANCE.md). Fix: rerun perf benchmark or update perf table.
 
 ---
 
@@ -211,3 +219,4 @@ The script (`tests/run-perf-benchmark.sh csharp`) does:
 6. **Cleans up** server process on exit (trap handler)
 
 This is why the PRD uses the automated script instead of manual server management - it works autonomously without needing persistent terminals across RALPH Loop iterations.
+
