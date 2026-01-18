@@ -22,13 +22,13 @@
 - [x] Build C# server in Release mode
 - [x] Fix benchmark script permissions (chmod +x tests/run-perf-benchmark.sh)
 - [x] Run full perf benchmark (automated script handles server lifecycle)
+- [x] Verify results file exists and contains valid data
 
 ### 🔄 In Progress
 _(Move current task here while working)_
 
 ### 📋 Next Up
-- [ ] **NEXT →** Verify results file exists and contains valid data
-- [ ] Verify SERVER_PERFORMANCE.md was updated
+- [ ] **NEXT →** Verify SERVER_PERFORMANCE.md was updated
 - [ ] Stage all changes for final commit
 
 ### 🚫 Blocked
@@ -38,28 +38,28 @@ _(none)_
 
 ## 0.1 Current Task Details
 
-**Task:** Verify results file exists and contains valid data
+**Task:** Verify SERVER_PERFORMANCE.md was updated
 
-**Why This Works Autonomously:** The benchmark writes results to `tests/results/` and the command below validates the file contents.
+**Why This Works Autonomously:** The benchmark updates the performance table, and the command below validates the C# column exists.
 
 **Command:**
 ```bash
-ls -la /Users/core/git/matthewcorven/synckit/tests/results/perf-csharp-*.json && cat /Users/core/git/matthewcorven/synckit/tests/results/perf-csharp-*.json | head -50
+grep -A 10 "C# (.NET" /Users/core/git/matthewcorven/synckit/docs/architecture/SERVER_PERFORMANCE.md || echo "C# column not found"
 ```
 
 **Success Condition:** 
 - Exit code 0
-- Results file exists and contains JSON data
+- C# column is present in SERVER_PERFORMANCE.md
 
 **On Success:** 
 1. Move task to Completed
-2. Set NEXT → to "Verify SERVER_PERFORMANCE.md was updated"
-3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: verify perf results"`
+2. Set NEXT → to "Stage all changes for final commit"
+3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: verify perf docs"`
 
 **On Failure:**
 1. Check exit code and error output
 2. Add error details to Signs section
-3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: results verification failed - [reason]"`
+3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: docs verification failed - [reason]"`
 
 ---
 
