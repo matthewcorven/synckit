@@ -32,7 +32,7 @@ _(Move current task here while working)_
 - [ ] Commit final results to branch
 
 ### 🚫 Blocked
-_(none currently)_
+- [ ] Verify server health on port 8090 — curl failed (connection refused); start server and retry.
 
 ---
 
