@@ -215,24 +215,49 @@ ArrayPool<byte>.Shared.Return(rentedBuffer);
 2. `Encoding.UTF8.GetByteCount()` + `GetBytes()` is two-pass
 3. `span.ToArray()` allocates again instead of returning rented buffer
 
-**Recommendation:** Use source-generated serializers and pooled buffers:
+**Recommendation:** Use source-generated serializers, pooled buffers, and span-based parsing:
 ```csharp
 // Use source generators for zero-reflection serialization
-[JsonSourceGenerationOptions(WriteIndented = false)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    GenerationMode = JsonSourceGenerationMode.Default
+)]
 [JsonSerializable(typeof(DeltaMessage))]
 [JsonSerializable(typeof(AckMessage))]
+[JsonSerializable(typeof(SyncResponseMessage))]
 // ... all message types
 public partial class SyncKitJsonContext : JsonSerializerContext { }
 
 // Serialize directly to pooled buffer
 public ReadOnlyMemory<byte> Serialize(IMessage message) {
-    using var buffer = new PooledByteBufferWriter(initialCapacity: 256);
-    JsonSerializer.Serialize(buffer, message, SyncKitJsonContext.Default.GetTypeInfo(message.GetType()));
-    return buffer.WrittenMemory; // Returns slice, no copy
+    var bufferWriter = new ArrayBufferWriter<byte>(256);
+    
+    // Write header directly to span
+    var headerSpan = bufferWriter.GetSpan(HeaderSize);
+    headerSpan[0] = (byte)GetTypeCode(message);
+    BinaryPrimitives.WriteInt64BigEndian(headerSpan.Slice(1), message.Timestamp);
+    bufferWriter.Advance(HeaderSize);
+    
+    // Serialize JSON directly to buffer (no intermediate string)
+    using var jsonWriter = new Utf8JsonWriter(bufferWriter);
+    JsonSerializer.Serialize(jsonWriter, message, SyncKitJsonContext.Default.GetTypeInfo(message.GetType()));
+    
+    return bufferWriter.WrittenMemory;
+}
+
+// Parse directly from UTF-8 bytes (no string allocation)
+public IMessage? Parse(ReadOnlyMemory<byte> data) {
+    var span = data.Span;
+    var payloadSpan = span.Slice(HeaderSize);
+    
+    // Use Utf8JsonReader directly on bytes - avoids Encoding.UTF8.GetString()
+    var reader = new Utf8JsonReader(payloadSpan);
+    return JsonSerializer.Deserialize<DeltaMessage>(ref reader, SyncKitJsonContext.Default.DeltaMessage);
 }
 ```
 
-**Estimated Impact:** 20-30% reduction in GC pressure
+**Estimated Impact:** 30-50% reduction in serialization time, 20-30% reduction in GC pressure
 
 ---
 
@@ -324,7 +349,38 @@ public void ApplyDelta(StoredDelta delta) {
 
 ## 3. Medium-Impact Improvements
 
-### 3.1 🔸 ACK Tracking Not Implemented
+### 3.1 🔸 ValueTask for Synchronous Completions
+
+**Current C# Implementation:**
+```csharp
+// Excessive await points for synchronous in-memory operations
+await _storage.SaveDeltaAsync(deltaEntry);  // Async for in-memory
+var currentState = await _storage.GetDocumentStateAsync(delta.DocumentId);  // Async for in-memory
+await _connectionManager.BroadcastToDocumentAsync(...);  // Async but Send() is sync
+```
+
+**Problem:** Each `await` creates state machine overhead even when the operation completes synchronously (in-memory storage).
+
+**Recommendation:** Use `ValueTask` to short-circuit:
+```csharp
+// IStorageAdapter.cs - change interface
+public interface IStorageAdapter {
+    ValueTask<DeltaEntry> SaveDeltaAsync(DeltaEntry delta, CancellationToken ct = default);
+    ValueTask<Dictionary<string, object?>> GetDocumentStateAsync(string documentId, CancellationToken ct = default);
+}
+
+// InMemoryStorageAdapter.cs - return synchronously
+public ValueTask<DeltaEntry> SaveDeltaAsync(DeltaEntry delta, CancellationToken ct = default) {
+    var stored = SaveDeltaCore(delta);  // Synchronous
+    return new ValueTask<DeltaEntry>(stored);  // No state machine allocation
+}
+```
+
+**Estimated Impact:** 15-20% latency reduction in hot paths
+
+---
+
+### 3.2 🔸 ACK Tracking Not Implemented
 
 **TypeScript Implementation:**
 ```typescript
@@ -380,7 +436,34 @@ public class AckTracker {
 
 ---
 
-### 3.2 🔸 Vector Clock Uses `long` Instead of `BigInt`
+### 3.3 🔸 Object Pooling for Messages
+
+**Problem:** `DeltaMessage`, `AckMessage`, and other message types are allocated for every incoming/outgoing message, creating GC pressure under high load.
+
+**Recommendation:** Pool frequently-allocated message objects:
+```csharp
+public static class MessagePool {
+    private static readonly ObjectPool<DeltaMessage> _deltaPool = 
+        new DefaultObjectPool<DeltaMessage>(new DeltaMessagePolicy(), 1000);
+    
+    public static DeltaMessage RentDelta() => _deltaPool.Get();
+    public static void ReturnDelta(DeltaMessage msg) {
+        msg.Reset();  // Clear fields for reuse
+        _deltaPool.Return(msg);
+    }
+}
+
+private class DeltaMessagePolicy : IPooledObjectPolicy<DeltaMessage> {
+    public DeltaMessage Create() => new DeltaMessage();
+    public bool Return(DeltaMessage obj) => true;
+}
+```
+
+**Estimated Impact:** 10-15% GC reduction under sustained load
+
+---
+
+### 3.4 🔸 Vector Clock Uses `long` Instead of `BigInt`
 
 **TypeScript Implementation:**
 ```typescript
@@ -407,7 +490,7 @@ public long Get(string clientId) => _entries.GetValueOrDefault(clientId, 0);
 
 ---
 
-### 3.3 🔸 Connection ID Format Difference
+### 3.5 🔸 Connection ID Format Difference
 
 **TypeScript:**
 ```typescript
@@ -430,7 +513,7 @@ var connectionId = $"conn-{Interlocked.Increment(ref _connectionCounter)}";
 
 ---
 
-### 3.4 🔸 Health Check Response Format Mismatch
+### 3.6 🔸 Health Check Response Format Mismatch
 
 **TypeScript:**
 ```typescript
@@ -535,7 +618,9 @@ connection.sendError('Permission denied', { documentId });
 | **P1** | JSON Source Generators | 1-2 days | 20-30% GC |
 | **P1** | Sequential Broadcast | 0.5 days | 5-10% latency |
 | **P2** | Lock-free State | 2-3 days | 10-20% throughput |
+| **P1** | ValueTask Hot Paths | 0.5 days | 15-20% latency |
 | **P2** | ACK Tracking | 2-3 days | Reliability |
+| **P2** | Object Pooling | 1-2 days | 10-15% GC |
 | **P3** | Minor polish items | 1-2 days | Consistency |
 
 ### Quick Wins (< 1 hour each)
@@ -588,3 +673,11 @@ The C# server is functionally complete but has performance gaps primarily due to
 Addressing these two items should bring C# performance within 2x of TypeScript, which is acceptable for enterprise deployments where .NET ecosystem benefits outweigh raw performance.
 
 The excellent memory stability in C# is a notable advantage for long-running production deployments.
+
+---
+
+## Related Documents
+
+- [Performance Optimization Plan](./PERFORMANCE_OPTIMIZATION_PLAN.md) — Detailed .NET-specific optimization techniques (serialization, lock-free structures, async pipeline)
+- [Server Performance Benchmarks](../architecture/SERVER_PERFORMANCE.md) — Current benchmark results
+- [TypeScript Server Reference](./TYPESCRIPT_SERVER_REFERENCE.md) — Protocol and architecture reference
