@@ -119,13 +119,13 @@ dotnet run
 cd tests
 
 # Option A: Run all integration tests
-./run-against-csharp.sh
+./integration/run-against-csharp.sh
 
 # Option B: Run specific test category
-./run-against-csharp.sh sync      # Sync protocol tests
-./run-against-csharp.sh binary    # Binary protocol tests
-./run-against-csharp.sh load      # Load tests
-./run-against-csharp.sh chaos     # Chaos tests
+./integration/run-against-csharp.sh sync      # Sync protocol tests
+./integration/run-against-csharp.sh binary    # Binary protocol tests
+./integration/run-against-csharp.sh load      # Load tests
+./integration/run-against-csharp.sh chaos     # Chaos tests
 
 # Option C: Manual environment variables
 TEST_SERVER_TYPE=external TEST_SERVER_PORT=8090 bun test integration/
@@ -134,7 +134,7 @@ TEST_SERVER_TYPE=external TEST_SERVER_PORT=8090 bun test integration/
 **Alternative: Auto-managed server (single terminal)**
 ```bash
 cd tests
-./run-against-csharp.sh --with-server    # Script starts/stops server automatically
+./integration/run-against-csharp.sh --with-server    # Script starts/stops server automatically
 ```
 
 ### Quick Health Check

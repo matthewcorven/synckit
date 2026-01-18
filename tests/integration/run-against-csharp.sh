@@ -1,5 +1,5 @@
 #!/bin/bash
-# tests/run-against-csharp.sh
+# tests/integration/run-against-csharp.sh
 #
 # Run integration tests against the .NET SyncKit server.
 # 
@@ -62,7 +62,7 @@ check_server() {
 if [ "$START_SERVER" = true ]; then
     echo "Starting .NET server..."
     
-    cd "$SCRIPT_DIR/../server/csharp/src/SyncKit.Server"
+    cd "$SCRIPT_DIR/../../server/csharp/src/SyncKit.Server"
     
     export SYNCKIT_SERVER_URL="${SYNCKIT_SERVER_URL:-http://localhost:${SERVER_PORT}}"
     export SYNCKIT_AUTH_REQUIRED="${SYNCKIT_AUTH_REQUIRED:-false}"
@@ -103,7 +103,7 @@ else
     echo "✓ Server responding on port ${SERVER_PORT}"
 fi
 
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR/.."
 
 # Set test environment variables
 export TEST_SERVER_TYPE=external

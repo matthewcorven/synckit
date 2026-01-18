@@ -203,7 +203,7 @@ exit $TEST_EXIT
 
 ```bash
 #!/bin/bash
-# tests/run-against-csharp.sh
+# tests/integration/run-against-csharp.sh
 set -e
 
 # Start only PostgreSQL and Redis via Docker

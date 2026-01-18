@@ -222,7 +222,7 @@
 #### V7-01 Test Environment Setup - COMPLETED ✅
 
 **Assets Created:**
-- `tests/run-against-csharp.sh` - Test runner script for .NET server
+- `tests/integration/run-against-csharp.sh` - Test runner script for .NET server
 - Updated `tests/README.md` with .NET server testing documentation
 
 **Environment Variables Documented:**
@@ -242,10 +242,10 @@ dotnet run 2>&1 &
 
 # Terminal 2 (tests - separate terminal):
 cd tests
-./run-against-csharp.sh                # All integration tests
-./run-against-csharp.sh sync           # Just sync tests
-./run-against-csharp.sh binary         # Binary protocol tests
-./run-against-csharp.sh --with-server  # Auto-start server (single terminal)
+./integration/run-against-csharp.sh                # All integration tests
+./integration/run-against-csharp.sh sync           # Just sync tests
+./integration/run-against-csharp.sh binary         # Binary protocol tests
+./integration/run-against-csharp.sh --with-server  # Auto-start server (single terminal)
 ```
 
 #### V7-03 Integration Test Results - Initial Run ⚠️
@@ -482,14 +482,14 @@ Test environment setup has been verified:
 - [x] .NET server health endpoint responds correctly
 - [x] Integration tests can run against external server
 - [x] 247/256 tests passing (96% pass rate)
-- [x] Test runner script created (`tests/run-against-csharp.sh`)
+- [x] Test runner script created (`tests/integration/run-against-csharp.sh`)
 - [x] Environment variables documented in `tests/README.md`
 
 ### Next Steps Checklist
 
-- [ ] Run binary protocol tests: `./run-against-csharp.sh binary`
-- [ ] Run load tests: `./run-against-csharp.sh load`
-- [ ] Run chaos tests: `./run-against-csharp.sh chaos`
+- [ ] Run binary protocol tests: `./integration/run-against-csharp.sh binary`
+- [ ] Run load tests: `./integration/run-against-csharp.sh load`
+- [ ] Run chaos tests: `./integration/run-against-csharp.sh chaos`
 - [ ] Fix conflict resolution test failures
 - [ ] Increase timeouts for delayed sync tests
 - [ ] Generate test coverage report

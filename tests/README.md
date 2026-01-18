@@ -89,11 +89,11 @@ dotnet run
 
 # Then in a separate terminal,run tests:
 cd tests
-./run-against-csharp.sh              # Run all integration tests
-./run-against-csharp.sh sync         # Run only sync tests
+./integration/run-against-csharp.sh              # Run all integration tests
+./integration/run-against-csharp.sh sync         # Run only sync tests
 
 # Option 2: Let the script start the server
-./run-against-csharp.sh --with-server
+./integration/run-against-csharp.sh --with-server
 
 # Option 3: Manual environment variables
 TEST_SERVER_TYPE=external TEST_SERVER_PORT=8090 bun test integration
