@@ -94,12 +94,33 @@ export async function cleanupEachTest(): Promise<void> {
     globalState.clients = [];
   }
 
-  // Clear memory storage to prevent state pollution between tests
-  clearMemoryStorage();
+  // Clear storage based on server type
+  if (TEST_CONFIG.server.type === 'external' || TEST_CONFIG.server.type === 'csharp') {
+    // For external servers (including .NET), call the test clear endpoint
+    const clearUrl = `http://${TEST_CONFIG.server.host}:${TEST_CONFIG.server.port}/_test/clear`;
+    try {
+      const response = await fetch(clearUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (response.ok) {
+        if (TEST_CONFIG.features.verbose) {
+          console.log('[AfterEach] Cleared external server storage via /_test/clear');
+        }
+      } else {
+        console.warn(`[AfterEach] Failed to clear external server storage: ${response.status} ${response.statusText}`);
+      }
+    } catch (error: any) {
+      console.warn(`[AfterEach] Failed to call external server clear endpoint (${clearUrl}):`, error?.message || error);
+    }
+  } else {
+    // For TypeScript server, clear memory storage directly
+    clearMemoryStorage();
 
-  // Clear coordinator's in-memory cache to prevent state pollution
-  if (globalState.server) {
-    globalState.server.clearCoordinatorCache();
+    // Clear coordinator's in-memory cache to prevent state pollution
+    if (globalState.server) {
+      globalState.server.clearCoordinatorCache();
+    }
   }
 
   if (TEST_CONFIG.features.verbose) {

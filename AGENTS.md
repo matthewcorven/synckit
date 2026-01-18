@@ -189,7 +189,8 @@ When implementing the .NET server, refer to the TypeScript server as the canonic
 3. **Maintain protocol compatibility** — The .NET server must pass all existing integration tests
 4. **Use Docker Compose** for PostgreSQL and Redis dependencies
 5. **Follow existing patterns** from the TypeScript server implementation
-6. **Never run tests in the same terminal as a server process** — Servers must run in dedicated terminals; tests and health checks go in separate terminals
+6. Be aware of your current working directory before running commands so that don't use any relative paths incorrectly.
+7. **Never run tests in the same terminal foreground as a server process** — Servers must run in dedicated terminal background (or using a tool); tests and health checks go in terminal foreground.
 
 ---
 
