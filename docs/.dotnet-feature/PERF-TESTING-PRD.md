@@ -1,10 +1,3 @@
-# Context
-
-## progress.txt
-
-
-# Prompt
-
 # PRD: C# Server Performance Testing
 
 > **Status:** In Progress  
@@ -18,24 +11,25 @@
 
 > **RALPH LOOP INSTRUCTIONS:** Each iteration:
 > 1. Find the task marked `**NEXT →**`
-> 2. Execute ONLY that task's command
-> 3. Update this tracker based on result
-> 4. Commit changes to this PRD
-> 5. EXIT (do not continue)
+> 2. Execute that task's command(s) from Section 0.1
+> 3. **If it fails: FIX IT in this same iteration** (see "On Failure" actions)
+> 4. Update this tracker, commit, EXIT
 
 ### ✅ Completed
 - [x] Update Program.cs connection limits to 50,000
 - [x] Verify run-perf-benchmark.sh has correct flags  
 - [x] Build C# server in Release mode
-- [x] Fix benchmark script permissions (chmod +x tests/run-perf-benchmark.sh)
-- [x] Run full perf benchmark (automated script handles server lifecycle)
-- [x] Verify results file exists and contains valid data
+- [x] Fix benchmark script permissions
+- [x] Run full perf benchmark
+- [x] Verify results file exists
+- [x] Update SERVER_PERFORMANCE.md with C# results
 
 ### 🔄 In Progress
 _(Move current task here while working)_
 
 ### 📋 Next Up
-- [ ] **NEXT →** Verify SERVER_PERFORMANCE.md was updated (failed: C# column not found; reconfirmed 2026-01-18)
+- [ ] **NEXT →** Re-run benchmark at 30,000 connections (current results show only 501 max)
+- [ ] Verify C# achieves ≥30,000 connections
 - [ ] Stage all changes for final commit
 
 ### 🚫 Blocked
@@ -45,28 +39,38 @@ _(none)_
 
 ## 0.1 Current Task Details
 
-**Task:** Verify SERVER_PERFORMANCE.md was updated
+**Task:** Re-run benchmark at 30,000 connections
 
-**Why This Works Autonomously:** The benchmark updates the performance table, and the command below validates the C# column exists.
+**Problem Identified:** Current C# results show only 501 max connections (capped at 500 during smoke test). Need to run full benchmark at 30,000 ceiling to match TypeScript baseline.
 
 **Command:**
 ```bash
-grep -A 10 "C# (.NET" /Users/core/git/matthewcorven/synckit/docs/architecture/SERVER_PERFORMANCE.md || echo "C# column not found"
+cd /Users/core/git/matthewcorven/synckit/tests && PERF_MAX_CONNECTIONS=30000 ./run-perf-benchmark.sh csharp
 ```
 
 **Success Condition:** 
-- Exit code 0
-- C# column is present in SERVER_PERFORMANCE.md
+- Script completes without error
+- Results file shows `maxConcurrentConnections` ≥ 5,000 (significant improvement over 501)
+- If macOS limits prevent 30,000, document the actual max achieved
+
+**Verification (run after benchmark completes):**
+```bash
+cat /Users/core/git/matthewcorven/synckit/tests/results/perf-csharp-*.json | grep maxConcurrentConnections
+```
 
 **On Success:** 
-1. Move task to Completed
-2. Set NEXT → to "Stage all changes for final commit"
-3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: verify perf docs"`
+1. Run update script: `cd tests && bun run perf/update-perf-table.ts`
+2. Move task to Completed
+3. Set NEXT → to "Verify C# achieves ≥30,000 connections"
+4. Commit: `git add -A && git commit -m "perf: C# benchmark at 30K connections"`
 
-**On Failure:**
-1. Check exit code and error output
-2. Add error details to Signs section
-3. Commit: `git add docs/.dotnet-feature/PERF-TESTING-PRD.md && git commit -m "perf: docs verification failed - [reason]"`
+**On Failure - macOS socket errors:**
+1. This is expected on macOS (see Sign #5)
+2. Document the max connections achieved before errors
+3. Note that CI (Ubuntu) can achieve higher counts
+4. Commit with actual results: `git add -A && git commit -m "perf: C# benchmark - macOS max [N] connections"`
+
+**CRITICAL:** You are empowered to BOTH run commands AND update files in the same iteration. If something fails, diagnose and fix it before committing.
 
 ---
 
@@ -92,20 +96,26 @@ grep -A 10 "C# (.NET" /Users/core/git/matthewcorven/synckit/docs/architecture/SE
 
 ## 2. Iteration Template
 
-> **Autonomous Execution Flow:**
+> **Autonomous Execution Flow - ACT AND FIX:**
 
 ```
 1. READ     → Find "NEXT →" task in Section 0
-2. EXECUTE  → Run the command in Section 0.1
-3. CHECK    → Verify success condition
-4. UPDATE   → Move task appropriately, set new "NEXT →"
-5. COMMIT   → git add -A && git commit -m "perf: [result]" (local only, no push)
-6. EXIT     → STOP. Next iteration handles next task.
-
-**CONSTRAINT:** Agent cannot `git push`. All commits are local. Human pushes after loop completes.
+2. EXECUTE  → Run the command(s) in Section 0.1
+3. CHECK    → Did it succeed? Verify the success condition
+4. IF FAIL  → **FIX IT NOW** - run diagnostic commands, apply fix, re-verify
+5. UPDATE   → Move task to Completed (only after success), set new "NEXT →"
+6. COMMIT   → git add -A && git commit -m "perf: [result]" (local only)
+7. EXIT     → STOP. Next iteration handles next task.
 ```
 
-**CRITICAL:** Do NOT try to run multiple tasks. Do NOT manually start servers. The automated script handles server lifecycle.
+**KEY PRINCIPLE:** You are empowered to:
+- Run multiple commands in one iteration (execute → diagnose → fix → verify)
+- Edit files directly if needed
+- Take corrective action immediately when something fails
+
+**DO NOT** just note failures and commit - diagnose and fix them first.
+
+**CONSTRAINT:** Agent cannot `git push`. All commits are local. Human pushes after loop completes.
 
 ---
 
