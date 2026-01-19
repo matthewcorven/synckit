@@ -423,6 +423,21 @@ PERF_MAX_CONNECTIONS=30000 ./run-perf-benchmark.sh csharp 2>&1 | tee perf-final-
 
 ---
 
+## Test Execution
+
+Run all tests after each objective:
+```bash
+# Unit Tests
+cd /Users/core/git/matthewcorven/synckit/server/csharp/src/SyncKit.Server.Tests
+dotnet test --configuration Release --verbosity minimal
+
+# Integration Tests
+cd /Users/core/git/matthewcorven/synckit/tests
+./integration/run-against-csharp.sh --with-server
+```
+
+---
+
 ## Commit Convention
 
 After each objective, commit with message format:
