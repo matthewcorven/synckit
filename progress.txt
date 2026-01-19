@@ -1,3 +1,57 @@
 # Prompt
 
 Noting macOS benchmark cap at 501 connections. Need Linux CI for higher counts.
+
+---
+
+# Performance Optimization Progress
+
+## OBJECTIVE 0.1: Delta Batching Service
+Status: COMPLETED
+Agent: Claude Opus 4.5 Session
+Date: 2025-01-15
+Notes: Implemented DeltaBatchingService with 50ms coalescing window, integrated with DeltaMessageHandler, registered as hosted service. Deltas within window are merged using LWW semantics.
+Tests Passed: Yes - 730 unit tests, 256 integration tests
+
+## OBJECTIVE 0.2: LWW State Caching
+Status: COMPLETED
+Agent: Claude Opus 4.5 Session
+Date: 2025-01-15
+Notes: Added _resolvedFields cache to Document.cs. LWW resolution now happens at write-time (ApplyDelta) instead of read-time (BuildState). BuildState is now O(fields) instead of O(deltas).
+Tests Passed: Yes - 730 unit tests, 256 integration tests
+
+## OBJECTIVE 1.1: JSON Source Generators
+Status: COMPLETED
+Agent: Claude Opus 4.5 Session
+Date: 2025-01-15
+Notes: Created SyncKitJsonContext.cs with source generation for all protocol message types. Updated BinaryProtocolHandler and JsonProtocolHandler to use source-generated context. Eliminates reflection-based JSON serialization.
+Tests Passed: Yes - 730 unit tests, 256 integration tests
+
+## OBJECTIVE 1.2: Sequential Broadcast
+Status: COMPLETED
+Agent: Claude Opus 4.5 Session
+Date: 2025-01-16
+Notes: Replaced Parallel.ForEach with sequential foreach loop in ConnectionManager.BroadcastToDocument(). Connection.Send() is non-blocking (queues to channel), so parallel overhead was unnecessary.
+Tests Passed: Yes - 730 unit tests, 256 integration tests
+
+## OBJECTIVE 1.3: ValueTask for In-Memory Operations
+Status: COMPLETED
+Agent: Claude Opus 4.5 Session
+Date: 2025-01-16
+Notes: Changed IStorageAdapter interface from Task to ValueTask for all 22 async methods. Updated InMemoryStorageAdapter to return ValueTask.FromResult() and ValueTask.CompletedTask (allocation-free for synchronous completion). Updated PostgresStorageAdapter to use async ValueTask. Fixed test files to handle ValueTask mocking (.AsTask() for assertions, ValueTask.FromResult for mock Returns).
+Tests Passed: Yes - 730 unit tests, 256 integration tests
+
+## OBJECTIVE 2.1: ACK Tracking Implementation
+Status: NOT_STARTED
+
+## OBJECTIVE 2.2: Object Pooling for Messages
+Status: NOT_STARTED
+
+## OBJECTIVE 3.1: Connection ID Format Alignment
+Status: NOT_STARTED
+
+## OBJECTIVE 3.2: Health Check Response Alignment
+Status: NOT_STARTED
+
+## OBJECTIVE 3.3: Final Performance Benchmark
+Status: NOT_STARTED
