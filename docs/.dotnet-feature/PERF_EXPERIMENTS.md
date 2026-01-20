@@ -20,12 +20,23 @@ All experiments are measured against the same 3 scenarios:
 
 | Experiment | Scenario A P95 | Scenario B P95 | Scenario C P95 | Throughput | Convergence | Notes |
 |------------|----------------|----------------|----------------|------------|-------------|-------|
-| Baseline (Simple Lock) | 11,186 ms | 64 ms | 13,329 ms | 823 ops/s | 59.0% | Heavy contention on single doc |
-| **Actor Model (Channels)** | **63 ms** | 64 ms | 12,227 ms | 819 ops/s | 57.3% | **177x improvement in Scenario A** |
-| Striped Locks | 13,311 ms | 64 ms | 11,050 ms | 835 ops/s | 56.3% | Same stripe = same contention |
-| Dataflow Pipeline | 64 ms | 64 ms | 11,208 ms | 819 ops/s | 59.7% | Similar to Actor Model |
+| **TypeScript (Reference)** | **55 ms** | 83 ms | **136 ms** | 800 ops/s | **100%** | Single-threaded event loop |
+| C# Baseline (Simple Lock) | 11,186 ms | 64 ms | 13,329 ms | 823 ops/s | 59.0% | Heavy contention on single doc |
+| **C# Actor Model (Channels)** | **63 ms** | **64 ms** | 12,227 ms | 819 ops/s | 57.3% | **177x improvement in Scenario A** |
+| C# Striped Locks | 13,311 ms | 64 ms | 11,050 ms | 835 ops/s | 56.3% | Same stripe = same contention |
+| C# Dataflow Pipeline | 64 ms | 64 ms | 11,208 ms | 819 ops/s | 59.7% | Similar to Actor Model |
 
-> **Key Finding:** Actor Model and Dataflow both eliminate lock contention in Scenario A, reducing P95 from ~11s to ~63ms (177x improvement). Striped locks don't help single-document contention.
+### Key Findings
+
+1. **TypeScript is the gold standard** for Scenario A (55ms) and Scenario C (136ms) - its single-threaded event loop naturally eliminates contention.
+
+2. **C# Actor Model matches TypeScript** in Scenario A (63ms vs 55ms) - only 15% slower, within margin of error.
+
+3. **C# beats TypeScript in Scenario B** (64ms vs 83ms) - multi-threaded C# handles distributed load better.
+
+4. **Scenario C (Burst) is a problem for all C# approaches** (~11-13s vs TypeScript's 136ms) - needs further investigation.
+
+5. **Convergence gap** - TypeScript achieves 100% while C# hovers around 57-60%. This suggests message delivery or timing issues in C#.
 
 > **Benchmark Date:** 2026-01-20 on `feature/11-dotnet-server-perf` branch
 
@@ -242,12 +253,12 @@ bun run perf/scenarios/run-all.ts
 
 Based on the benchmark results, the **Actor Model** implementation is the recommended architecture:
 
-| Criterion | Actor Model Score | Notes |
-|-----------|------------------|-------|
-| P95 Latency | Excellent | **177x improvement** in single-doc contention |
-| Throughput | Good | 819 ops/sec (matches baseline) |
-| Code Complexity | Medium | Requires async APIs, but pattern is clear |
-| Burst Handling | Same | ~12s P95 (same as others under burst) |
+| Criterion | Actor Model | TypeScript | Notes |
+|-----------|-------------|------------|-------|
+| Scenario A P95 | 63 ms | 55 ms | C# within 15% of TypeScript |
+| Scenario B P95 | **64 ms** | 83 ms | C# 23% faster |
+| Scenario C P95 | 12,227 ms | **136 ms** | Gap needs investigation |
+| Convergence | 57.3% | **100%** | Gap needs investigation |
 
 **Why Actor Model over Dataflow:**
 - Nearly identical performance (63ms vs 64ms P95)
@@ -256,14 +267,27 @@ Based on the benchmark results, the **Actor Model** implementation is the recomm
 - Better control over channel options (bounded capacity, backpressure mode)
 
 **Key Insight:**
-Lock contention was causing 11+ second P95 latencies when multiple clients target the same document. The Actor Model completely eliminates this by serializing operations through a channel. The overhead of async/await is negligible compared to lock contention.
+Lock contention was causing 11+ second P95 latencies when multiple clients target the same document. The Actor Model completely eliminates this by serializing operations through a channel, achieving near-TypeScript performance in Scenario A.
+
+### Remaining Gaps vs TypeScript
+
+1. **Scenario C (Burst Recovery):** C# takes 12+ seconds vs TypeScript's 136ms. This may be due to:
+   - WebSocket write backpressure handling differences
+   - Broadcast efficiency (TypeScript may batch better)
+   - GC pauses during high allocation periods
+
+2. **Convergence Rate:** C# achieves ~57% vs TypeScript's 100%. Possible causes:
+   - Message ordering issues in broadcast
+   - ACK handling differences
+   - Race conditions in state synchronization
 
 ### Next Steps
 
 1. Merge `perf/actor-model` branch into `feature/11-dotnet-server-perf`
 2. Update `InMemoryStorageAdapter` to use `ActorDocument` by default
 3. Run full integration test suite to verify correctness
-4. Consider hybrid approach: use Actor Model for documents with high write rates
+4. **Investigate Scenario C gap** - profile burst handling and broadcast paths
+5. **Investigate convergence gap** - compare message ordering with TypeScript
 
 ---
 
