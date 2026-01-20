@@ -1,2 +1,2 @@
 === BUN (pre-setup) ===
-/home/runner/work/_temp/6e11dcbe-468e-40c5-acbd-21d8e0380c34.sh: line 8: bun: command not found
+/home/runner/work/_temp/75e057b8-3409-4f0f-8eaa-7508b6c97a9c.sh: line 8: bun: command not found
