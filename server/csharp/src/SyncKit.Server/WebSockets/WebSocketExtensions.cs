@@ -22,9 +22,21 @@ public static class WebSocketExtensions
     {
         services.AddSingleton<IConnectionManager, ConnectionManager>();
 
-        // Register in-memory storage adapter (single modern registration)
-        services.AddSingleton<Storage.InMemoryStorageAdapter>();
-        services.AddSingleton<Storage.IStorageAdapter>(sp => sp.GetRequiredService<Storage.InMemoryStorageAdapter>());
+        // Register storage adapter based on SYNCKIT_STORAGE_MODEL environment variable
+        // Options: "dataflow" for DataflowStorageAdapter, default for InMemoryStorageAdapter
+        var storageModel = Environment.GetEnvironmentVariable("SYNCKIT_STORAGE_MODEL")?.ToLowerInvariant();
+        if (storageModel == "dataflow")
+        {
+            // Dataflow: TPL Dataflow ActionBlock per document with MaxDegreeOfParallelism=1
+            services.AddSingleton<Storage.DataflowStorageAdapter>();
+            services.AddSingleton<Storage.IStorageAdapter>(sp => sp.GetRequiredService<Storage.DataflowStorageAdapter>());
+        }
+        else
+        {
+            // Default: lock-based in-memory storage
+            services.AddSingleton<Storage.InMemoryStorageAdapter>();
+            services.AddSingleton<Storage.IStorageAdapter>(sp => sp.GetRequiredService<Storage.InMemoryStorageAdapter>());
+        }
 
         // Register awareness store (in-memory for Phase 5)
         services.AddSingleton<IAwarenessStore, InMemoryAwarenessStore>();
