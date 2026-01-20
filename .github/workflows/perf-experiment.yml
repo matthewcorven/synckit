@@ -1,0 +1,170 @@
+name: "Perf Experiment"
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - 'perf/**'
+  workflow_dispatch:
+    inputs:
+      experiment_name:
+        description: 'Name for this experiment run'
+        required: false
+        default: 'manual-experiment'
+
+jobs:
+  run-experiment:
+    name: Run Perf Experiment
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build C# server
+        run: dotnet build --configuration Release
+        working-directory: server/csharp/src/SyncKit.Server
+
+      - name: Install test dependencies
+        run: bun install
+        working-directory: tests
+
+      - name: Determine experiment name
+        id: experiment
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.experiment_name }}" >> $GITHUB_OUTPUT
+          else
+            # Extract experiment name from branch (perf/actor-model -> actor-model)
+            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+            EXPERIMENT_NAME="${BRANCH_NAME#perf/}"
+            echo "name=${EXPERIMENT_NAME}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Start C# server
+        run: |
+          cd server/csharp/src/SyncKit.Server
+          ASPNETCORE_ENVIRONMENT=Production \
+          SYNCKIT_SERVER_URL="http://0.0.0.0:8090" \
+          SYNCKIT_AUTH_REQUIRED=false \
+          JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
+          dotnet run --configuration Release --no-build --no-launch-profile &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+          
+          # Wait for health
+          for i in {1..60}; do
+            if curl -s "http://localhost:8090/health" >/dev/null 2>&1; then
+              echo "Server is healthy."
+              break
+            fi
+            echo "Waiting for health... ($i/60)"
+            sleep 1
+            if [ $i -eq 60 ]; then
+              echo "Server did not become healthy in time."
+              exit 1
+            fi
+          done
+
+      - name: Run all scenarios
+        id: scenarios
+        run: |
+          cd tests
+          EXPERIMENT_NAME="${{ steps.experiment.outputs.name }}" \
+          SERVER_TYPE=csharp \
+          SERVER_PORT=8090 \
+          PERF_OUTPUT_DIR=results \
+          bun run perf/scenarios/run-all.ts 2>&1 | tee experiment-output.log
+          
+          # Extract summary for PR comment
+          SCENARIO_A_P95=$(grep "Scenario A" experiment-output.log | grep -oP '\d+(?=ms)' | tail -1 || echo "N/A")
+          SCENARIO_B_P95=$(grep "Scenario B" experiment-output.log | grep -oP '\d+(?=ms)' | tail -1 || echo "N/A")
+          SCENARIO_C_P95=$(grep "Scenario C" experiment-output.log | grep -oP '\d+(?=ms)' | tail -1 || echo "N/A")
+          
+          echo "scenario_a_p95=$SCENARIO_A_P95" >> $GITHUB_OUTPUT
+          echo "scenario_b_p95=$SCENARIO_B_P95" >> $GITHUB_OUTPUT
+          echo "scenario_c_p95=$SCENARIO_C_P95" >> $GITHUB_OUTPUT
+        working-directory: .
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -n "$SERVER_PID" ]; then
+            kill $SERVER_PID 2>/dev/null || true
+          fi
+
+      - name: Upload experiment results
+        uses: actions/upload-artifact@v4
+        with:
+          name: experiment-results-${{ steps.experiment.outputs.name }}
+          path: |
+            tests/results/experiment-*.json
+            tests/experiment-output.log
+
+      - name: Find existing PR
+        id: find-pr
+        if: github.event_name == 'push'
+        run: |
+          PR_NUMBER=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number // empty')
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post results to PR
+        if: steps.find-pr.outputs.pr_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const experimentName = '${{ steps.experiment.outputs.name }}';
+            const scenarioAP95 = '${{ steps.scenarios.outputs.scenario_a_p95 }}';
+            const scenarioBP95 = '${{ steps.scenarios.outputs.scenario_b_p95 }}';
+            const scenarioCP95 = '${{ steps.scenarios.outputs.scenario_c_p95 }}';
+            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            
+            const body = `## Performance Experiment Results: \`${experimentName}\`
+
+            | Scenario | P95 Latency |
+            |----------|-------------|
+            | A: Single-Doc Contention | ${scenarioAP95} ms |
+            | B: Multi-Doc Distribution | ${scenarioBP95} ms |
+            | C: Burst + Recovery | ${scenarioCP95} ms |
+
+            **Commit:** \`${{ github.sha }}\`
+            **Run:** [View Details](${runUrl})
+
+            ---
+            *Results auto-generated by perf-experiment workflow*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.find-pr.outputs.pr_number }},
+              body: body
+            });
+
+      - name: Job Summary
+        run: |
+          echo "## Performance Experiment: ${{ steps.experiment.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scenario | P95 Latency |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| A: Single-Doc Contention | ${{ steps.scenarios.outputs.scenario_a_p95 }} ms |" >> $GITHUB_STEP_SUMMARY
+          echo "| B: Multi-Doc Distribution | ${{ steps.scenarios.outputs.scenario_b_p95 }} ms |" >> $GITHUB_STEP_SUMMARY
+          echo "| C: Burst + Recovery | ${{ steps.scenarios.outputs.scenario_c_p95 }} ms |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts uploaded with full JSON results." >> $GITHUB_STEP_SUMMARY
