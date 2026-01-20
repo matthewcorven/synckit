@@ -64,6 +64,9 @@ if [ "$START_SERVER" = true ]; then
     
     cd "$SCRIPT_DIR/../../server/csharp/src/SyncKit.Server"
     
+    # CRITICAL: Use Production environment to disable debug logging (causes severe I/O overhead)
+    export ASPNETCORE_ENVIRONMENT=Production
+    export DOTNET_ENVIRONMENT=Production
     export SYNCKIT_SERVER_URL="${SYNCKIT_SERVER_URL:-http://localhost:${SERVER_PORT}}"
     export SYNCKIT_AUTH_REQUIRED="${SYNCKIT_AUTH_REQUIRED:-false}"
     export JWT_SECRET="${JWT_SECRET:-test-secret-key-for-integration-tests-only-32-chars}"
