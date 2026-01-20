@@ -22,9 +22,21 @@ public static class WebSocketExtensions
     {
         services.AddSingleton<IConnectionManager, ConnectionManager>();
 
-        // Register in-memory storage adapter (single modern registration)
-        services.AddSingleton<Storage.InMemoryStorageAdapter>();
-        services.AddSingleton<Storage.IStorageAdapter>(sp => sp.GetRequiredService<Storage.InMemoryStorageAdapter>());
+        // Register storage adapter based on SYNCKIT_STORAGE_MODEL environment variable
+        // Options: "striped" for StripedLockStorageAdapter, default for InMemoryStorageAdapter
+        var storageModel = Environment.GetEnvironmentVariable("SYNCKIT_STORAGE_MODEL")?.ToLowerInvariant();
+        if (storageModel == "striped")
+        {
+            // Striped locks: 64-stripe lock array for reduced contention
+            services.AddSingleton<Storage.StripedLockStorageAdapter>();
+            services.AddSingleton<Storage.IStorageAdapter>(sp => sp.GetRequiredService<Storage.StripedLockStorageAdapter>());
+        }
+        else
+        {
+            // Default: lock-based in-memory storage
+            services.AddSingleton<Storage.InMemoryStorageAdapter>();
+            services.AddSingleton<Storage.IStorageAdapter>(sp => sp.GetRequiredService<Storage.InMemoryStorageAdapter>());
+        }
 
         // Register awareness store (in-memory for Phase 5)
         services.AddSingleton<IAwarenessStore, InMemoryAwarenessStore>();
