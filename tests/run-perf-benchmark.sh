@@ -23,6 +23,8 @@ if [[ "$SERVER_TYPE" == "csharp" ]]; then
   echo "Starting C# server on port ${SERVER_PORT}..."
   (
     cd "${ROOT_DIR}/server/csharp/src/SyncKit.Server"
+    # CRITICAL: Use Production environment to disable Debug logging (causes 261x latency penalty)
+    ASPNETCORE_ENVIRONMENT=Production \
     SYNCKIT_SERVER_URL="http://0.0.0.0:${SERVER_PORT}" \
     SYNCKIT_AUTH_REQUIRED=false \
     JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
