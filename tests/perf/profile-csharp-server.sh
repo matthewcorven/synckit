@@ -107,7 +107,7 @@ SYNCKIT_AUTH_REQUIRED=false \
 JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
 Serilog__MinimumLevel__Default=Warning \
 DOTNET_gcServer=1 \
-dotnet run --configuration Release --no-build > "$RESULTS_DIR/server.log" 2>&1 &
+dotnet run --configuration Release --no-build --no-launch-profile > "$RESULTS_DIR/server.log" 2>&1 &
 
 SERVER_PID=$!
 echo "Server PID: $SERVER_PID"

@@ -235,7 +235,7 @@ ASPNETCORE_ENVIRONMENT=Production \
 SYNCKIT_SERVER_URL=http://localhost:8090 \
 SYNCKIT_AUTH_REQUIRED=false \
 JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
-dotnet run --configuration Release
+dotnet run --configuration Release --no-launch-profile
 
 # 2. Run scenarios (Terminal 2)
 cd tests
