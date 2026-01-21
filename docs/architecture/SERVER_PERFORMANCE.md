@@ -72,19 +72,24 @@ The following results were captured on GitHub Actions runners (AMD EPYC 7763, 4 
 <!-- TUNING_TABLE_START -->
 | WS_MAX_PENDING_SENDS | P95 @ 50% | P95 @ 80% | P95 @ Max | Avg Semaphore Wait | Max Pending |
 |---------------------|-----------|-----------|-----------|-------------------|-------------|
-| 50 | TBD | TBD | TBD | TBD | TBD |
-| 100 | 51ms | 160ms | 1,639ms | 15µs | 153 |
-| 200 | TBD | TBD | TBD | TBD | TBD |
-| 500 | TBD | TBD | TBD | TBD | TBD |
+| 50 | 51ms | 142ms | 1,405ms | 15,364µs | 1,200 |
+| 100 (default) | 51ms | 160ms | 1,639ms | 15µs | 153 |
+| 200 | 52ms | 181ms | 1,572ms | 2,483µs | 300 |
+| 500 | 51ms | 120ms | 1,563ms | 22µs | 226 |
 | 0 (unlimited/baseline) | 51ms | 155ms | 1,861ms | 22,720µs | 13,103 |
 <!-- TUNING_TABLE_END -->
 
-#### Recommendations
+**Key Observations:**
 
-1. **Start with the default (100)** - Provides good balance for most workloads
-2. **Monitor `SendDropped` metrics** - If you see drops in production, consider increasing the limit
-3. **Monitor P95 latency** - If latency spikes under load, consider decreasing the limit
-4. **Never use `0` in production** - Unbounded queues can cause memory exhaustion and multi-second latencies
+1. **All bounded values outperform unlimited** - The baseline (0/unlimited) has the worst P95 @ Max (1,861ms) due to unbounded task accumulation causing 22.7ms average semaphore waits.
+
+2. **50 achieves lowest P95 @ Max (1,405ms)** - But shows degraded semaphore wait under extreme load (15,364µs avg), suggesting the limit is too aggressive and causes backpressure-induced retries.
+
+3. **500 provides excellent balance** - Only 22µs avg semaphore wait with 1,563ms P95 @ Max. The higher limit absorbs burst traffic without causing contention.
+
+4. **100 (default) is conservative** - Good for memory-constrained environments but may not be optimal for high-throughput scenarios.
+
+**Recommendation:** For most production workloads on modern hardware (4+ cores, 8GB+ RAM), consider **200-500** for better burst handling. Use **50-100** only if memory is constrained or you prefer to drop messages early rather than queue them.
 
 #### Setting the Value
 
