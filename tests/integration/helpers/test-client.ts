@@ -78,7 +78,7 @@ export class TestClient {
   private syncedDocuments: Set<string> = new Set();
 
   // Offline queue - stores operations made while disconnected
-  private offlineQueue: Array<{type: string, documentId: string, data: any}> = [];
+  private offlineQueue: Array<{type: string, documentId: string, data: any, timestamp?: number}> = [];
 
   // Message callbacks
   private messageCallbacks: Map<string, (data: any) => void> = new Map();
@@ -353,11 +353,12 @@ export class TestClient {
 
         if (op.type === 'setField') {
           // Send delta directly (local state already updated during offline operation)
+          // Use the original timestamp from when the operation was queued (for correct LWW resolution)
           const { field, value } = op.data;
           this.sendMessage({
             type: 'delta',
             id: generateTestId('msg'),
-            timestamp: Date.now(),
+            timestamp: op.timestamp ?? Date.now(),
             documentId: op.documentId,
             delta: { [field]: value },
             vectorClock: {},
@@ -365,11 +366,12 @@ export class TestClient {
           await sleep(10);
         } else if (op.type === 'deleteField') {
           // Send delete delta directly (local state already updated during offline operation)
+          // Use the original timestamp from when the operation was queued (for correct LWW resolution)
           const { field } = op.data;
           this.sendMessage({
             type: 'delta',
             id: generateTestId('msg'),
-            timestamp: Date.now(),
+            timestamp: op.timestamp ?? Date.now(),
             documentId: op.documentId,
             delta: { [field]: { __deleted: true } },
             vectorClock: {},
@@ -495,10 +497,12 @@ export class TestClient {
       await sleep(10);
     } else {
       // If offline, queue the operation for later sync
+      // Store the timestamp NOW so LWW conflict resolution uses the original operation time
       this.offlineQueue.push({
         type: 'setField',
         documentId,
-        data: { field, value }
+        data: { field, value },
+        timestamp: Date.now()
       });
     }
   }
@@ -573,10 +577,12 @@ export class TestClient {
       await sleep(50);
     } else {
       // If offline, queue the operation for later sync
+      // Store the timestamp NOW so LWW conflict resolution uses the original operation time
       this.offlineQueue.push({
         type: 'deleteField',
         documentId,
-        data: { field }
+        data: { field },
+        timestamp: Date.now()
       });
     }
   }
