@@ -21,6 +21,11 @@ if [[ "$SERVER_TYPE" == "csharp" ]]; then
   SERVER_PORT=${SERVER_PORT:-8090}
   ensure_port_free "$SERVER_PORT"
   echo "Starting C# server on port ${SERVER_PORT}..."
+  # Pass through WS_MAX_PENDING_SENDS_PER_CONNECTION if set (defaults to 100 in server)
+  WS_MAX_PENDING=${WS_MAX_PENDING_SENDS_PER_CONNECTION:-}
+  if [[ -n "$WS_MAX_PENDING" ]]; then
+    echo "  WS_MAX_PENDING_SENDS_PER_CONNECTION=${WS_MAX_PENDING}"
+  fi
   (
     cd "${ROOT_DIR}/server/csharp/src/SyncKit.Server"
     # CRITICAL: Use Production environment to disable Debug logging (causes 261x latency penalty)
@@ -28,6 +33,7 @@ if [[ "$SERVER_TYPE" == "csharp" ]]; then
     SYNCKIT_SERVER_URL="http://0.0.0.0:${SERVER_PORT}" \
     SYNCKIT_AUTH_REQUIRED=false \
     JWT_SECRET='test-secret-key-for-integration-tests-only-32-chars' \
+    WS_MAX_PENDING_SENDS_PER_CONNECTION="${WS_MAX_PENDING}" \
     dotnet run --configuration Release --no-build --no-launch-profile
   ) &
   SERVER_PID=$!

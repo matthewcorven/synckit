@@ -16,6 +16,10 @@ on:
         description: 'Max connections ceiling for perf test'
         required: false
         default: '5000'
+      ws_max_pending_sends:
+        description: 'Max pending WebSocket sends per connection (C# only, 0=unlimited)'
+        required: false
+        default: '100'
   push:
     branches:
       - feature/11-dotnet-server
@@ -256,6 +260,7 @@ jobs:
           SERVER_TYPE: ${{ github.event.inputs.server_type }}
           SERVER_PORT: ${{ github.event.inputs.server_type == 'csharp' && '8090' || '8080' }}
           PERF_MAX_CONNECTIONS: ${{ github.event.inputs.max_connections }}
+          WS_MAX_PENDING_SENDS_PER_CONNECTION: ${{ github.event.inputs.ws_max_pending_sends }}
 
       - name: Upload perf results
         uses: actions/upload-artifact@v4
