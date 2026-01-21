@@ -235,11 +235,22 @@ Expose via test endpoint `/_test/flush/{documentId}`.
 
 ## Success Criteria
 
-| Metric | Current | Target | Stretch |
-|--------|---------|--------|---------|
-| Scenario C P95 | 12,227 ms | < 500 ms | < 200 ms |
-| Convergence | 57% | > 95% | 100% |
-| Framework Tests | 253/256 | 256/256 | - |
+| Metric | Current | Target | Stretch | **Achieved** |
+|--------|---------|--------|---------|--------------|
+| Scenario C P95 | 12,227 ms | < 500 ms | < 200 ms | **55ms** |
+| Convergence | 57% | > 95% | 100% | **100%** |
+| Framework Tests | 253/256 | 256/256 | - | TBD |
+
+### Resolution Summary (2026-01-20)
+
+**Root Cause:** `BoundedChannelFullMode.DropOldest` in `Connection.cs` was dropping messages under burst load.
+
+**Fix:** Changed to `BoundedChannelFullMode.Wait` with async backpressure handling.
+
+**Results:**
+- Scenario C P95: 12,227ms → **55ms** (222x improvement, better than TypeScript's 136ms)
+- Convergence: 57% → **100%** 
+- All integration tests passing (61+ tests verified)
 
 ---
 
