@@ -34,6 +34,83 @@ Document any server-side caps or configuration limits that affect performance:
 - Payload size limits
 - Storage constraints
 
+## Performance Tuning (.NET Server)
+
+The .NET server includes configurable parameters that allow operators to tune performance based on their hardware and workload characteristics.
+
+### WebSocket Backpressure Configuration
+
+**Environment Variable:** `WS_MAX_PENDING_SENDS_PER_CONNECTION`  
+**Default:** `100`  
+**Range:** `0` (unlimited) to `int.MaxValue`
+
+This setting controls the maximum number of pending WebSocket send operations per connection before backpressure is applied. When the limit is reached, new sends are dropped (with debug logging) until pending sends complete.
+
+#### How It Works
+
+The .NET WebSocket implementation requires serialized sends (only one `SendAsync` at a time per socket). The server uses a fire-and-forget pattern with a semaphore to bound the number of concurrent pending sends:
+
+```
+Client Request → Serialize → Acquire Semaphore → Queue SendAsync → Release on Complete
+                                    ↓
+                          (if semaphore full, drop message)
+```
+
+#### Configuration Tradeoffs
+
+| Value | Latency Impact | Message Loss | Memory Usage | Best For |
+|-------|---------------|--------------|--------------|----------|
+| `50` | Lowest P95 under load | Higher drop rate under burst | Lowest | Latency-sensitive apps |
+| `100` (default) | Balanced | Moderate | Moderate | General purpose |
+| `200-500` | Higher P95 under sustained load | Lower drop rate | Higher | Burst-tolerant apps |
+| `0` (unlimited) | Can spike to seconds | None | Unbounded | Testing only |
+
+#### Benchmark Results
+
+The following results were captured on GitHub Actions runners (AMD EPYC 7763, 4 cores, 16GB RAM) with 30,000 connections:
+
+<!-- TUNING_TABLE_START -->
+| WS_MAX_PENDING_SENDS | P95 @ 50% | P95 @ 80% | P95 @ Max | Avg Semaphore Wait | Max Pending |
+|---------------------|-----------|-----------|-----------|-------------------|-------------|
+| 50 | TBD | TBD | TBD | TBD | TBD |
+| 100 | 51ms | 160ms | 1,639ms | 15µs | 153 |
+| 200 | TBD | TBD | TBD | TBD | TBD |
+| 500 | TBD | TBD | TBD | TBD | TBD |
+| 0 (unlimited/baseline) | 51ms | 155ms | 1,861ms | 22,720µs | 13,103 |
+<!-- TUNING_TABLE_END -->
+
+#### Recommendations
+
+1. **Start with the default (100)** - Provides good balance for most workloads
+2. **Monitor `SendDropped` metrics** - If you see drops in production, consider increasing the limit
+3. **Monitor P95 latency** - If latency spikes under load, consider decreasing the limit
+4. **Never use `0` in production** - Unbounded queues can cause memory exhaustion and multi-second latencies
+
+#### Setting the Value
+
+**Environment variable:**
+```bash
+WS_MAX_PENDING_SENDS_PER_CONNECTION=200 dotnet run
+```
+
+**appsettings.json:**
+```json
+{
+  "SyncKit": {
+    "WsMaxPendingSendsPerConnection": 200
+  }
+}
+```
+
+**GitHub Actions workflow dispatch:**
+```bash
+gh workflow run perf-benchmark.yml \
+  --ref perf/option1-bounded-concurrency \
+  -f server_type=csharp \
+  -f max_connections=30000 \
+  -f ws_max_pending_sends=200
+```
+
 ## Running Performance Tests
 
 ### Local Execution
