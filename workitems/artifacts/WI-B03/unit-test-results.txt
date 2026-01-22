@@ -1,0 +1,3 @@
+dotnet test DogTrials.sln -v minimal
+Result: Passed
+Total: 7, Failed: 0, Succeeded: 7, Skipped: 0

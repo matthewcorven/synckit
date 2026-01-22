@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using System.Text;
+using DogTrials.Api.Data;
 using DogTrials.Api.Endpoints;
 using DogTrials.Api.Middleware;
 using DogTrials.Api.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Trace;
 
@@ -53,6 +55,9 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddDbContext<DogTrialsDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DogTrialsSql")));
 
 var app = builder.Build();
 
