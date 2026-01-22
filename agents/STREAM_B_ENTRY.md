@@ -2,7 +2,8 @@
 
 **Role:** Agent B — Platform Foundations  
 **Branch:** `feature/stream-b`  
-**Ports:** API `:5200`, Web `:4201`
+**Ports:** API `:5200`, Web `:4201`  
+**Progress File:** `agents/STREAM_B_PROGRESS.md` ← **Update this throughout your work**
 
 ---
 
@@ -13,6 +14,7 @@ Build the .NET API, database schema, auth, background processing, and Azure infr
 1. Set up your worktree: `git worktree add ../dog-trials-stream-b feature/stream-b`
 2. Use port config: API `:5200`, Web `:4201`
 3. Start with: **WI_B01_API_Scaffold.md**
+4. **Update `STREAM_B_PROGRESS.md` as you work** (see Progress Tracking below)
 
 ---
 
@@ -47,6 +49,36 @@ Build the .NET API, database schema, auth, background processing, and Azure infr
 | [WI_B25](../workitems/items/WI_B25_Secretary_Endpoints.md) | Secretary Endpoints | M5 | B15, B22 |
 | [WI_B26](../workitems/items/WI_B26_Bicep_Scaffold.md) | Bicep Scaffold | M5 | B01 |
 | [WI_B27](../workitems/items/WI_B27_Entra_External_ID.md) | Entra External ID | M5 | B26 |
+
+---
+
+## Progress Tracking Protocol
+
+**You MUST update `STREAM_B_PROGRESS.md` throughout your work:**
+
+1. **When starting an item:** Change status to `🔄 In Progress`, update "Current Focus"
+2. **When blocked:** Change status to `🚧 Blocked`, add entry to Blockers Log
+3. **When completing:** Change status to `✅ Completed`, add Session Log entry
+4. **Always:** Update "Last Updated" timestamp
+
+### Status Values
+| Status | Meaning |
+|--------|--------|
+| ⬜ Not Started | Work item not begun |
+| 🔄 In Progress | Actively working |
+| 🚧 Blocked | Waiting on dependency or issue |
+| ✅ Completed | Done, validations passed |
+
+### Session Log Format
+```
+[YYYY-MM-DD HH:MM] — <item> — <action> — <outcome>
+```
+
+### Priority: Items That Unblock Stream A
+These items should be prioritized as they enable Stream A progress:
+- **B11** (Trials Endpoints) → Unblocks A04
+- **B18** (Terms Endpoint) → Unblocks A08
+- **B25** (Secretary Endpoints) → Unblocks A11
 
 ---
 

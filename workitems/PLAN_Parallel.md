@@ -30,10 +30,11 @@ Maximize early iteration on the on-screen registration form while the platform f
 
 ## Agent Entry Points
 
-| Agent | Entry File |
-|-------|------------|
-| Agent A (UI-first) | `agents/STREAM_A_ENTRY.md` |
-| Agent B (Platform) | `agents/STREAM_B_ENTRY.md` |
+| Agent | Entry File | Progress File |
+|-------|------------|---------------|
+| Agent A (UI-first) | `agents/STREAM_A_ENTRY.md` | `agents/STREAM_A_PROGRESS.md` |
+| Agent B (Platform) | `agents/STREAM_B_ENTRY.md` | `agents/STREAM_B_PROGRESS.md` |
+| Coordinator | `agents/STREAM_COORD_ENTRY.md` | Reads both progress files |
 
 ---
 
@@ -279,3 +280,45 @@ main
 - Keep work items small enough to finish in <1 day of agent time.
 - Mark work items in-progress when starting, complete when done.
 - Update artifact links in work items as evidence is generated.
+
+---
+
+## Agent Coordination Model
+
+### Three-Agent Architecture
+
+| Agent | Role | Responsibility |
+|-------|------|----------------|
+| Agent A | UI-first | Build Angular SPA, Playwright tests |
+| Agent B | Platform | Build .NET API, DB, auth, infra |
+| Coordinator | Advisor | Status reporting, merge readiness, orchestration |
+
+### Progress Tracking
+
+Each work agent (A and B) maintains a persistent progress file:
+- `agents/STREAM_A_PROGRESS.md`
+- `agents/STREAM_B_PROGRESS.md`
+
+Agents update these files throughout their work with:
+- Work item status (Not Started → In Progress → Blocked → Completed)
+- Blocker log entries
+- Session log entries
+- Cross-stream dependency status
+
+### Coordinator Agent
+
+The Coordinator agent (`agents/STREAM_COORD_ENTRY.md`) advises the human on:
+- **Status Reporting:** Current state of both workstreams
+- **Merge Readiness:** When milestone gates are ready for integration
+- **Dependency Analysis:** Cross-stream blockers and critical path
+- **Agent Orchestration:** When to start/stop/pause agent workstreams
+- **Risk Detection:** Divergence from DAG or blocked paths
+
+### Status Values
+
+| Status | Icon | Meaning |
+|--------|------|--------|
+| Not Started | ⬜ | Work item not begun |
+| In Progress | 🔄 | Actively working |
+| Blocked | 🚧 | Waiting on dependency or issue |
+| Completed | ✅ | Done, all validations passed |

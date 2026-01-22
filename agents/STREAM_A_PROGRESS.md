@@ -1,0 +1,93 @@
+# Stream A Progress Tracker
+
+**Workstream:** UI-first (Agent A)  
+**Branch:** `feature/stream-a`  
+**Last Updated:** _Not started_  
+**Current Focus:** —
+
+---
+
+## Status Legend
+| Status | Meaning |
+|--------|---------|
+| ⬜ Not Started | Work item not begun |
+| 🔄 In Progress | Actively working |
+| 🚧 Blocked | Waiting on dependency or issue |
+| ✅ Completed | Done, validations passed |
+
+---
+
+## Configuration Items
+
+| ID | Name | Status | Notes |
+|----|------|--------|-------|
+| CFG01 | Worktree + Port Config | ⬜ Not Started | |
+
+---
+
+## Stream A Work Items
+
+| ID | Name | Status | Blocked By | Notes |
+|----|------|--------|------------|-------|
+| A01 | Angular Scaffold | ⬜ Not Started | CFG01 | |
+| A02 | Material + Layout | ⬜ Not Started | A01 | |
+| A03 | Routing + Auth Guards | ⬜ Not Started | A02 | |
+| A04 | Trial Selection | ⬜ Not Started | A03, B11* | *Can mock until B11 ready |
+| A05 | Registration Form | ⬜ Not Started | A04 | |
+| A06 | Dog + Handler Fields | ⬜ Not Started | A05 | |
+| A07 | Grid Cells | ⬜ Not Started | A06 | |
+| A08 | Terms Modal | ⬜ Not Started | A07, B18* | *Can mock until B18 ready |
+| A09 | Validation Summary | ⬜ Not Started | A08 | |
+| A10 | Submit + Confirmation | ⬜ Not Started | A09 | |
+| A11 | Secretary Layout | ⬜ Not Started | A03, B25* | *Can mock until B25 ready |
+| A12 | Entry List View | ⬜ Not Started | A11 | |
+| A13 | Entry Detail View | ⬜ Not Started | A12 | |
+| A14 | PDF Download | ⬜ Not Started | A13 | |
+| A15 | Mocks Folder | ⬜ Not Started | A01 | Optional |
+
+---
+
+## Milestone Progress
+
+| Milestone | Status | Stream A Items | Notes |
+|-----------|--------|----------------|-------|
+| M0 | ⬜ Not Started | A01 | Smoke test |
+| M1 | ⬜ Not Started | A03 | Auth guards |
+| M2 | ⬜ Not Started | A04-A07 | Form + draft |
+| M3 | ⬜ Not Started | A08-A10 | Submit flow |
+| M5 | ⬜ Not Started | A11-A14 | Secretary portal |
+
+---
+
+## Blockers Log
+
+_Record any blockers encountered during work._
+
+| Date | Item | Blocker | Resolution | Resolved |
+|------|------|---------|------------|----------|
+| | | | | |
+
+---
+
+## Cross-Stream Dependencies
+
+| Stream A Item | Depends On | Status | Can Mock? |
+|---------------|------------|--------|-----------|
+| A04 | B11 (Trials API) | ⬜ Not Started | Yes |
+| A08 | B18 (Terms API) | ⬜ Not Started | Yes |
+| A11 | B25 (Secretary API) | ⬜ Not Started | Yes |
+
+---
+
+## Session Log
+
+_Append entries as work progresses._
+
+```
+[YYYY-MM-DD HH:MM] — <item> — <action taken> — <outcome>
+```
+
+<!-- Example:
+[2026-01-22 10:30] — A01 — Started Angular scaffold — In progress
+[2026-01-22 11:45] — A01 — Completed, tests pass — ✅
+-->

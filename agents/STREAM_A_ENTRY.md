@@ -2,7 +2,8 @@
 
 **Role:** Agent A — UI-First Iteration  
 **Branch:** `feature/stream-a`  
-**Ports:** API `:5100`, Web `:4200`
+**Ports:** API `:5100`, Web `:4200`  
+**Progress File:** `agents/STREAM_A_PROGRESS.md` ← **Update this throughout your work**
 
 ---
 
@@ -13,6 +14,7 @@ Build the Angular SPA with pixel-accurate form representation and Playwright E2E
 1. Set up your worktree: `git worktree add ../dog-trials-stream-a feature/stream-a`
 2. Use port config: API `:5100`, Web `:4200`
 3. Start with: **WI_A01_Angular_Scaffold.md**
+4. **Update `STREAM_A_PROGRESS.md` as you work** (see Progress Tracking below)
 
 ---
 
@@ -35,6 +37,30 @@ Build the Angular SPA with pixel-accurate form representation and Playwright E2E
 | [WI_A13](../workitems/items/WI_A13_Secretary_Detail.md) | Secretary Detail | M5 | A12 |
 | [WI_A14](../workitems/items/WI_A14_Playwright_Baseline.md) | Playwright Baseline | M0 | A01, B02 |
 | [WI_A15](../workitems/items/WI_A15_Mocks_Folder.md) | Mocks Folder | M1 | A01 |
+
+---
+
+## Progress Tracking Protocol
+
+**You MUST update `STREAM_A_PROGRESS.md` throughout your work:**
+
+1. **When starting an item:** Change status to `🔄 In Progress`, update "Current Focus"
+2. **When blocked:** Change status to `🚧 Blocked`, add entry to Blockers Log
+3. **When completing:** Change status to `✅ Completed`, add Session Log entry
+4. **Always:** Update "Last Updated" timestamp
+
+### Status Values
+| Status | Meaning |
+|--------|--------|
+| ⬜ Not Started | Work item not begun |
+| 🔄 In Progress | Actively working |
+| 🚧 Blocked | Waiting on dependency or issue |
+| ✅ Completed | Done, validations passed |
+
+### Session Log Format
+```
+[YYYY-MM-DD HH:MM] — <item> — <action> — <outcome>
+```
 
 ---
 
