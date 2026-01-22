@@ -7,6 +7,9 @@ import { TrialSummaryDto } from '../../trials/trial.types';
 const mockTrial: TrialSummaryDto = {
   trialId: 'trial-123',
   name: 'Mock Trial',
+  organizationName: 'Australian Shepherd Club of America',
+  sportName: 'Stock Dog',
+  formName: 'Trial Entry Form',
   formTemplate: {
     organizationCode: 'ASCA',
     sportCode: 'StockDog',
@@ -32,7 +35,19 @@ describe('RegistrationLayoutComponent', () => {
 
     const formBuilder = TestBed.inject(FormBuilder);
     const form = formBuilder.group({
-      dog: formBuilder.group({}),
+      entryNumber: [{ value: '', disabled: true }],
+      dog: formBuilder.group({
+        ascaRegistrationNumber: [''],
+        breed: [''],
+        registeredName: [''],
+        callName: [''],
+        dob: [null],
+        color: [''],
+        sex: [''],
+        sire: [''],
+        dam: [''],
+        breeders: ['']
+      }),
       contact: formBuilder.group({
         ownerAddress: formBuilder.group({}),
         junior: formBuilder.group({})
@@ -57,9 +72,9 @@ describe('RegistrationLayoutComponent', () => {
     expect(order).toEqual([
       'app-dog-section',
       'app-contact-section',
-      'app-emergency-fees-section',
       'app-upper-grid-section',
-      'app-lower-grid-section'
+      'app-lower-grid-section',
+      'app-emergency-fees-section'
     ]);
   });
 });

@@ -9,6 +9,9 @@ import { TrialSummaryDto } from '../trials/trial.types';
 const mockTrial: TrialSummaryDto = {
   trialId: 'trial-123',
   name: 'Mock Trial',
+  organizationName: 'Australian Shepherd Club of America',
+  sportName: 'Stock Dog',
+  formName: 'Trial Entry Form',
   formTemplate: {
     organizationCode: 'ASCA',
     sportCode: 'StockDog',
@@ -52,6 +55,7 @@ describe('RegistrationPageComponent', () => {
     fixture.detectChanges();
 
     const component = fixture.componentInstance;
+    expect(component.form.get('entryNumber')).toBeTruthy();
     expect(component.form.get('dog')).toBeTruthy();
     expect(component.form.get('contact')).toBeTruthy();
     expect(component.form.get('emergencyContact')).toBeTruthy();

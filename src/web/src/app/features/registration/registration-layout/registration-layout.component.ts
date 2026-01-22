@@ -65,7 +65,7 @@ import { LowerGridSectionComponent } from '../sections/lower-grid-section.compon
       <mat-divider></mat-divider>
 
       <form class="registration-form" [formGroup]="form">
-        <app-dog-section [group]="dogGroup"></app-dog-section>
+        <app-dog-section [group]="dogGroup" [entryNumber]="entryNumber"></app-dog-section>
         <app-contact-section [group]="contactGroup"></app-contact-section>
         <section class="section-block">
           <div class="section-title">Class Selections</div>
@@ -233,6 +233,15 @@ export class RegistrationLayoutComponent {
 
   get contactGroup(): FormGroup {
     return this.form.get('contact') as FormGroup;
+  }
+
+  get entryNumber(): string | null {
+    const control = this.form.get('entryNumber');
+    if (!control) {
+      return null;
+    }
+    const value = control.value as string | null;
+    return value && value.trim().length > 0 ? value : null;
   }
 
   get emergencyGroup(): FormGroup {

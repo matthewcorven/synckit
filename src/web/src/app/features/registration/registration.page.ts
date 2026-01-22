@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RegistrationLayoutComponent } from './registration-layout/registration-layout.component';
@@ -52,7 +52,19 @@ export class RegistrationPageComponent implements OnInit {
     private readonly formBuilder: FormBuilder
   ) {
     this.form = this.formBuilder.group({
-      dog: this.formBuilder.group({}),
+      entryNumber: [{ value: '', disabled: true }],
+      dog: this.formBuilder.group({
+        ascaRegistrationNumber: [''],
+        breed: ['', Validators.required],
+        registeredName: [''],
+        callName: ['', Validators.required],
+        dob: [null, Validators.required],
+        color: [''],
+        sex: ['', Validators.required],
+        sire: [''],
+        dam: [''],
+        breeders: ['']
+      }),
       contact: this.formBuilder.group({
         ownerAddress: this.formBuilder.group({}),
         junior: this.formBuilder.group({})

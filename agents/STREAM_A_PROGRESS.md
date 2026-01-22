@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-22 17:45  
-**Current Focus:** A04 — Trial Selection
+**Last Updated:** 2026-01-22 18:50  
+**Current Focus:** A05 — Contact Fields
 
 ---
 
@@ -32,9 +32,9 @@
 | A01 | Angular Scaffold | ✅ Completed | CFG01 | |
 | A02 | Material + Layout | ✅ Completed | A01 | UI + unit tests + Playwright smoke (unauth) |
 | A03 | Form Layout | ✅ Completed | A02 | Layout aligned to PDF; grids updated |
-| A04 | Trial Selection | 🔄 In Progress | A03, B11* | *Can mock until B11 ready |
-| A05 | Registration Form | ⬜ Not Started | A04 | |
-| A06 | Dog + Handler Fields | ⬜ Not Started | A05 | |
+| A04 | Dog Fields | ✅ Completed | A03 | |
+| A05 | Contact Fields | ⬜ Not Started | A04 | |
+| A06 | Emergency + Fees | ⬜ Not Started | A05 | |
 | A07 | Grid Cells | ⬜ Not Started | A06 | |
 | A08 | Terms Modal | ⬜ Not Started | A07, B18* | *Can mock until B18 ready |
 | A09 | Validation Summary | ⬜ Not Started | A08 | |
@@ -97,6 +97,8 @@ _Append entries as work progresses._
 [2026-01-22 16:35] — A03 — Header/detail spacing + labeled placeholders — 🔄
 [2026-01-22 16:45] — A03 — Panel borders + refreshed layout screenshot — 🔄
 [2026-01-22 17:45] — A03 — Completed PDF-aligned layout + grids + screenshots — ✅
+[2026-01-22 18:10] — A04 — Started dog fields implementation — 🔄
+[2026-01-22 18:50] — A04 — Completed dog fields + tests + Playwright trace — ✅
 ```
 
 <!-- Example:

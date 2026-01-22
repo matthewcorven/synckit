@@ -1,67 +1,101 @@
 import { Component, Input } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { NgIf } from '@angular/common';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatRadioModule } from '@angular/material/radio';
 
 @Component({
   selector: 'app-dog-section',
   standalone: true,
-  imports: [MatCardModule, MatRadioModule],
+  imports: [
+    NgIf,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatIconModule,
+    MatRadioModule
+  ],
   template: `
     <section class="section">
       <div class="section__header">Dog Information</div>
-      <mat-card class="section__body form-panel">
-        <div class="placeholder-grid">
-          <!-- Row 1: Registration # + Breed -->
-          <div class="placeholder-item">
-            <div class="field-label">Registration/Tracking # (ASCA)</div>
-            <div class="placeholder-field"></div>
-          </div>
-          <div class="placeholder-item">
-            <div class="field-label">Breed</div>
-            <div class="placeholder-field"></div>
-          </div>
-          <!-- Row 2: Registered Name -->
-          <div class="placeholder-item wide">
-            <div class="field-label">Registered Name</div>
-            <div class="placeholder-field"></div>
-          </div>
-          <!-- Row 3: DOB + Color -->
-          <div class="placeholder-item">
-            <div class="field-label">Date of Birth</div>
-            <div class="placeholder-field"></div>
-          </div>
-          <div class="placeholder-item">
-            <div class="field-label">Color</div>
-            <div class="placeholder-field"></div>
-          </div>
-          <!-- Row 4: Call Name + Sex -->
-          <div class="placeholder-item">
-            <div class="field-label">Call Name</div>
-            <div class="placeholder-field"></div>
-          </div>
-          <div class="placeholder-item">
-            <div class="field-label">Sex</div>
-            <mat-radio-group class="radio-group" aria-label="Dog sex">
-              <mat-radio-button value="male">Male</mat-radio-button>
-              <mat-radio-button value="female">Female</mat-radio-button>
+      <mat-card class="section__body form-panel" [formGroup]="group">
+        <div class="dog-grid">
+          <mat-form-field class="wide" appearance="outline" *ngIf="entryNumber">
+            <mat-label>Entry #</mat-label>
+            <input matInput [value]="entryNumber" readonly />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>ASCA Registration #</mat-label>
+            <input matInput formControlName="ascaRegistrationNumber" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Breed</mat-label>
+            <input matInput formControlName="breed" required />
+            <mat-error *ngIf="showRequiredError('breed')">Breed is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="wide" appearance="outline">
+            <mat-label>Registered Name</mat-label>
+            <input matInput formControlName="registeredName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Call Name</mat-label>
+            <input matInput formControlName="callName" required />
+            <mat-error *ngIf="showRequiredError('callName')">Call Name is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Date of Birth</mat-label>
+            <input matInput [matDatepicker]="dobPicker" formControlName="dob" required />
+            <mat-datepicker-toggle matIconSuffix [for]="dobPicker"></mat-datepicker-toggle>
+            <mat-datepicker #dobPicker></mat-datepicker>
+            <mat-error *ngIf="showRequiredError('dob')">Date of Birth is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Color</mat-label>
+            <input matInput formControlName="color" />
+          </mat-form-field>
+
+          <div class="sex-field">
+            <label class="radio-label">Sex</label>
+            <mat-radio-group
+              class="radio-group"
+              formControlName="sex"
+              required
+              aria-label="Dog sex"
+            >
+              <mat-radio-button value="Male">Male</mat-radio-button>
+              <mat-radio-button value="Female">Female</mat-radio-button>
             </mat-radio-group>
+            <div class="field-error" *ngIf="showRequiredError('sex')">Sex is required.</div>
           </div>
-          <!-- Row 5: Sire -->
-          <div class="placeholder-item wide">
-            <div class="field-label">Sire</div>
-            <div class="placeholder-field"></div>
-          </div>
-          <!-- Row 6: Dam -->
-          <div class="placeholder-item wide">
-            <div class="field-label">Dam</div>
-            <div class="placeholder-field"></div>
-          </div>
-          <!-- Row 7: Breeder(s) -->
-          <div class="placeholder-item wide">
-            <div class="field-label">Breeder(s)</div>
-            <div class="placeholder-field"></div>
-          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Sire</mat-label>
+            <input matInput formControlName="sire" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Dam</mat-label>
+            <input matInput formControlName="dam" />
+          </mat-form-field>
+
+          <mat-form-field class="wide" appearance="outline">
+            <mat-label>Breeder(s)</mat-label>
+            <input matInput formControlName="breeders" />
+          </mat-form-field>
         </div>
       </mat-card>
     </section>
@@ -92,23 +126,32 @@ import { MatRadioModule } from '@angular/material/radio';
         box-shadow: none;
       }
 
-      .placeholder-grid {
+      .dog-grid {
         display: grid;
-        gap: 10px;
+        gap: 12px;
         grid-template-columns: repeat(2, 1fr);
+        align-items: start;
       }
 
-      .placeholder-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+      .dog-grid mat-form-field {
+        width: 100%;
       }
 
-      .placeholder-item.wide {
+      .wide {
         grid-column: 1 / -1;
       }
 
-      .field-label {
+      .sex-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--mat-sys-outline-variant);
+        background: var(--mat-sys-surface);
+      }
+
+      .radio-label {
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -118,17 +161,22 @@ import { MatRadioModule } from '@angular/material/radio';
       .radio-group {
         display: flex;
         gap: 16px;
+        flex-wrap: wrap;
       }
 
-      .placeholder-field {
-        height: 36px;
-        border-radius: 6px;
-        background: var(--mat-sys-surface-variant);
-        opacity: 0.7;
+      .field-error {
+        font-size: 12px;
+        color: var(--mat-sys-error);
       }
     `
   ]
 })
 export class DogSectionComponent {
   @Input() group!: FormGroup;
+  @Input() entryNumber?: string | null;
+
+  showRequiredError(controlName: string): boolean {
+    const control = this.group?.get(controlName);
+    return !!control && control.hasError('required') && (control.dirty || control.touched);
+  }
 }
