@@ -263,6 +263,530 @@ public sealed class EntriesEndpointsTests
         Assert.Equal("application/problem+json", resp.Content.Headers.ContentType?.MediaType);
     }
 
+    [Fact]
+    public async Task GetEntry_ReturnsEntryDetail_WhenOwner()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            var selectionsJson = JsonSerializer.Serialize(new
+            {
+                upper = new[] { new { row = "Sheep", col = "STD", value = "X" } },
+                lower = Array.Empty<object>()
+            });
+
+            var entry = new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Draft,
+                DogBreed = "Australian Shepherd",
+                DogCallName = "Ranger",
+                DogDob = new DateOnly(2021, 4, 10),
+                ContactEmail = "handler@example.com",
+                ContactOwners = "Owner One",
+                ContactStreet = "123 Main St",
+                ContactCity = "Bryan",
+                ContactState = "TX",
+                ContactZip = "77801",
+                TotalEntryFees = 25m,
+                FeesCurrency = "USD",
+                EmergencyName = "Emergency Contact",
+                EmergencyPhone = "555-111-2222",
+                SelectionsJson = selectionsJson,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            context.Entries.Add(entry);
+            context.Notifications.Add(new Notification
+            {
+                NotificationId = Guid.NewGuid(),
+                EntryId = entryId,
+                RecipientType = RecipientType.Handler,
+                Status = NotificationStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/entries/{entryId}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        Assert.Equal(entryId, root.GetProperty("entryId").GetGuid());
+        Assert.Equal(trialId, root.GetProperty("trial").GetProperty("trialId").GetGuid());
+        Assert.Equal("Australian Shepherd", root.GetProperty("dog").GetProperty("breed").GetString());
+        Assert.Equal("handler@example.com", root.GetProperty("contact").GetProperty("email").GetString());
+        Assert.Equal("Queued", root.GetProperty("processing").GetProperty("pdfStatus").GetString());
+        Assert.Equal(1, root.GetProperty("processing").GetProperty("emailNotifications").GetArrayLength());
+        Assert.Equal(1, root.GetProperty("selections").GetProperty("upper").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task GetEntry_ReturnsForbidden_WhenNotOwner()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var owner = await context.Users.SingleAsync();
+            var otherUser = new User
+            {
+                UserId = Guid.NewGuid(),
+                ExternalSubject = Guid.NewGuid().ToString("N"),
+                Email = "other@example.com",
+                Role = UserRole.Handler,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            entryId = Guid.NewGuid();
+            context.Users.Add(otherUser);
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = otherUser.UserId,
+                Status = EntryStatus.Draft,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+
+            Assert.NotEqual(owner.UserId, otherUser.UserId);
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/entries/{entryId}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetEntry_ReturnsNotFound_WhenMissing()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/entries/{Guid.NewGuid()}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateEntry_UpdatesFields_WhenDraftAndEtagMatches()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        string etag;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            var entry = new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Draft,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            context.Entries.Add(entry);
+            await context.SaveChangesAsync();
+
+            etag = $"\"{Convert.ToBase64String(entry.RowVersion)}\"";
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/entries/{entryId}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Headers.TryAddWithoutValidation("If-Match", etag);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new { dog = new { callName = "Ranger", breed = "Australian Shepherd" } }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.ETag is not null);
+
+        await using var verify = CreateContext(connectionString);
+        var updated = await verify.Entries.FindAsync(entryId);
+        Assert.NotNull(updated);
+        Assert.Equal("Ranger", updated!.DogCallName);
+        Assert.Equal("Australian Shepherd", updated.DogBreed);
+        Assert.NotNull(updated.UpdatedAtUtc);
+    }
+
+    [Fact]
+    public async Task UpdateEntry_ReturnsConflict_WhenSubmitted()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Submitted,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/entries/{entryId}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new { dog = new { callName = "Ranger" } }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateEntry_ReturnsForbidden_WhenNotOwner()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var otherUser = new User
+            {
+                UserId = Guid.NewGuid(),
+                ExternalSubject = Guid.NewGuid().ToString("N"),
+                Email = "other@example.com",
+                Role = UserRole.Handler,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            context.Users.Add(otherUser);
+            await context.SaveChangesAsync();
+
+            entryId = Guid.NewGuid();
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = otherUser.UserId,
+                Status = EntryStatus.Draft,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/entries/{entryId}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new { dog = new { callName = "Ranger" } }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateEntry_ReturnsPreconditionFailed_WhenEtagMismatch()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Draft,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/entries/{entryId}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Headers.TryAddWithoutValidation("If-Match", "\"invalid-etag\"");
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new { dog = new { callName = "Ranger" } }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.PreconditionFailed, response.StatusCode);
+    }
+
 
     private static WebApplicationFactory<Program> CreateFactory(string connectionString)
     {

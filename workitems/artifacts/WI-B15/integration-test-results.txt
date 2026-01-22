@@ -1,0 +1,3 @@
+Integration tests included: get entry detail as owner, forbidden when not owner, not found when missing.
+All integration scenarios exercised in `EntriesEndpointsTests` passed.
+Test run timestamp: 2026-01-22T21:46Z

@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 21:30  
-**Current Focus:** B13 Form Metadata — ✅ Completed
+**Last Updated:** 2026-01-22 21:52  
+**Current Focus:** B16 Update Entry — ✅ Completed
 
 ---
 
@@ -44,8 +44,8 @@
 | B12 | Registration Metadata | ✅ Completed | B11 | Implemented endpoint, seeding, telemetry, tests |
 | B13 | Form Metadata | ✅ Completed | B11 | Implemented endpoint, tests, telemetry |
 | B14 | Create Draft | ✅ Completed | B06, B08 | Endpoint, tests, telemetry implemented |
-| B15 | Get Entry | ⬜ Not Started | B14 | |
-| B16 | Update Entry | ⬜ Not Started | B15 | |
+| B15 | Get Entry | ✅ Completed | B14 | Endpoint, DTO mapping, tests |
+| B16 | Update Entry | ✅ Completed | B15 | Endpoint, ETag concurrency, tests |
 | B17 | Update Selections | ⬜ Not Started | B15 | |
 | B18 | Terms Endpoint | ⬜ Not Started | B01 | Unblocks A08 |
 | B19 | Submit Endpoint | ⬜ Not Started | B07, B16, B17 | |
@@ -119,7 +119,10 @@ _Append entries as work progresses._
 [2026-01-22 21:24] — B12 — Added telemetry span tag `trial.id` and test asserting it — ✅
 [2026-01-22 21:21] — B12 — Added tests for seeding idempotency and parsing — ✅
 [2026-01-22 21:27] — B13 — Implemented form metadata endpoint, tests, and telemetry span test — ✅
-[2026-01-22 22:16] — B14 — Implemented Create Draft endpoint, added tests, all tests green — ✅```
+[2026-01-22 22:16] — B14 — Implemented Create Draft endpoint, added tests, all tests green — ✅
+[2026-01-22 21:50] — B15 — Implemented get entry endpoint + DTO mapping + tests — ✅
+[2026-01-22 21:52] — B16 — Implemented update entry endpoint + ETag handling + tests — ✅
+```
 
 <!-- Example:
 [2026-01-22 10:30] — B01 — Started API scaffold — In progress

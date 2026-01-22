@@ -1,0 +1,3 @@
+Integration tests included: update draft succeeds, submitted entry returns 409, other user returns 403, ETag mismatch returns 412.
+All integration scenarios exercised in `EntriesEndpointsTests` passed.
+Test run timestamp: 2026-01-22T21:51Z
