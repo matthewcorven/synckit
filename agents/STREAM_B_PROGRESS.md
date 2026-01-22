@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 14:01  
-**Current Focus:** B03 Trials Entity
+**Last Updated:** 2026-01-22 14:18  
+**Current Focus:** B04 TrialCounters Entity
 
 ---
 
@@ -33,7 +33,7 @@
 | B01 | API Scaffold | ✅ Completed | CFG01 | |
 | B02 | TestAuth Endpoint | ✅ Completed | B01 | TestAuth endpoint + JWT validation + tests |
 | B03 | Trials Entity | ✅ Completed | B01 | EF Core entity + migration + tests |
-| B04 | Correlation Headers | ⬜ Not Started | B02, B03 | |
+| B04 | TrialCounters Entity | ✅ Completed | B03 | EF Core entity + migration + allocator + tests |
 | B05 | DbContext Scaffold | ⬜ Not Started | B01 | |
 | B06 | Entries Entity | ⬜ Not Started | B05 | |
 | B07 | DB Constraints | ⬜ Not Started | B06 | |
@@ -102,6 +102,7 @@ _Append entries as work progresses._
 [2026-01-22 13:36] — B01 — Ran API + tests (health, x-support-id) — ✅
 [2026-01-22 13:52] — B02 — Implemented TestAuth endpoint + tests — ✅
 [2026-01-22 14:01] — B03 — Added Trials entity + EF Core migration + tests — ✅
+[2026-01-22 14:18] — B04 — Added TrialCounters entity + migration + allocator + tests — ✅
 ```
 
 <!-- Example:

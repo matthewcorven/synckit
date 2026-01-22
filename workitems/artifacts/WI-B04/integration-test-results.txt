@@ -1,0 +1,3 @@
+Integration tests for TrialCounters rely on DOGTRIALS_TEST_SQL.
+DOGTRIALS_TEST_SQL not set; SQL-backed integration tests were skipped.
+Run `dotnet test` with DOGTRIALS_TEST_SQL to execute FK/check constraint and concurrency tests.

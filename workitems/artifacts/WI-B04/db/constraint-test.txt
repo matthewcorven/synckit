@@ -1,0 +1,2 @@
+DB constraint verification not executed. DOGTRIALS_TEST_SQL not set.
+Expected constraint: CK_TrialCounters_NextSequenceNumber_Positive ([NextSequenceNumber] >= 1).

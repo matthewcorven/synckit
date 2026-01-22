@@ -19,4 +19,5 @@ public sealed class Trial
     public bool IsActive { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
+    public TrialCounter? Counter { get; set; }
 }

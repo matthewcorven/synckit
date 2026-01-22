@@ -1,0 +1,2 @@
+DB verification not executed. DOGTRIALS_TEST_SQL not set.
+Expected table: TrialCounters with PK TrialId, FK to Trials, NextSequenceNumber int NOT NULL.
