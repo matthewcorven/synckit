@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-22 14:10  
-**Current Focus:** A02 — Material + Layout
+**Last Updated:** 2026-01-22 15:25  
+**Current Focus:** A02 — Trial Selection UI
 
 ---
 
@@ -30,7 +30,7 @@
 | ID | Name | Status | Blocked By | Notes |
 |----|------|--------|------------|-------|
 | A01 | Angular Scaffold | ✅ Completed | CFG01 | |
-| A02 | Material + Layout | ⬜ Not Started | A01 | |
+| A02 | Material + Layout | ✅ Completed | A01 | UI + unit tests + Playwright smoke (unauth) |
 | A03 | Routing + Auth Guards | ⬜ Not Started | A02 | |
 | A04 | Trial Selection | ⬜ Not Started | A03, B11* | *Can mock until B11 ready |
 | A05 | Registration Form | ⬜ Not Started | A04 | |
@@ -42,7 +42,7 @@
 | A11 | Secretary Layout | ⬜ Not Started | A03, B25* | *Can mock until B25 ready |
 | A12 | Entry List View | ⬜ Not Started | A11 | |
 | A13 | Entry Detail View | ⬜ Not Started | A12 | |
-| A14 | PDF Download | ⬜ Not Started | A13 | |
+| A14 | Playwright Baseline | ✅ Completed | A01 | Unauthenticated smoke tests set up |
 | A15 | Mocks Folder | ⬜ Not Started | A01 | Optional |
 
 ---
@@ -87,6 +87,9 @@ _Append entries as work progresses._
 [YYYY-MM-DD HH:MM] — <item> — <action taken> — <outcome>
 [2026-01-22 13:40] — A01 — Started Angular scaffold — In progress
 [2026-01-22 14:10] — A01 — Angular scaffold completed — ✅
+[2026-01-22 15:10] — A02 — Trial selection UI + unit tests — ✅ (E2E pending)
+[2026-01-22 15:25] — A02 — Playwright smoke tests (unauth) — ✅
+[2026-01-22 15:25] — A14 — Playwright baseline (unauth) — ✅
 ```
 
 <!-- Example:

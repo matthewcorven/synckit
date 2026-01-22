@@ -47,14 +47,14 @@ Build the trial selection page where handlers choose which trial to enter.
 - Navigation occurs on card click
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A02/unit-test-results.txt`
+- [../artifacts/WI-A02/unit-test-results.txt](../artifacts/WI-A02/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
 - Mock service integration test
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A02/integration-test-results.txt`
+- [../artifacts/WI-A02/integration-test-results.txt](../artifacts/WI-A02/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -62,7 +62,7 @@ Build the trial selection page where handlers choose which trial to enter.
 - Click trial, verify navigation to /register/{id}
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A02/playwright/trial-selection-trace.zip`
+- [../artifacts/WI-A02/playwright/trial-selection-trace.zip](../artifacts/WI-A02/playwright/trial-selection-trace.zip)
 
 ### DB verification
 **Artifact requirements**

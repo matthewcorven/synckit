@@ -3,48 +3,37 @@
 **Owner:** Agent A (UI-First)  
 **Status:** Proposed  
 **Milestone:** M0  
-**Dependencies:** A01, B02  
+**Dependencies:** A01  
 **Artifacts folder (recommended):** `../artifacts/WI-A14/`
 
 ## Goal
-Set up Playwright testing infrastructure with TestAuth helper and baseline smoke tests.
+Set up Playwright testing infrastructure with unauthenticated baseline smoke tests.
 
 ## Scope
 ### In
 - Playwright project setup in `src/tests/e2e/`
 - `playwright.config.ts` configuration
-- TestAuth helper (`loginAs(role)`)
-- Smoke test: app boots and displays
-- Test fixtures for common setup
+- Smoke test: app boots and displays (unauthenticated)
 - CI-ready configuration
 
 ### Out
 - Feature-specific tests (added in each work item)
-- TestAuth endpoint (see B02)
+- TestAuth endpoint + helpers (added after B02)
 
 ## Implementation notes
 - Playwright config:
   - Base URL from environment
   - Stream A: `http://localhost:4200`
   - Stream B: `http://localhost:4201`
-- TestAuth helper:
-  - Calls `POST /api/testauth/token`
-  - Sets headers: `X-Test-Auth-Secret`, `X-Test-Role`
-  - Stores token for subsequent requests
-  - Clears storage between tests
 - Test structure:
   - `tests/smoke.spec.ts` — Basic app loading
-  - `tests/auth.spec.ts` — TestAuth flow verification
-  - `fixtures/` — Reusable test setup
-  - `helpers/` — Utility functions
+  - (auth tests added after B02)
 
 ## Acceptance criteria
 - [ ] Playwright runs with `npx playwright test`
-- [ ] `loginAs('Handler')` returns valid token
-- [ ] `loginAs('Secretary')` returns valid token
 - [ ] Smoke test passes (app loads)
 - [ ] Tests generate trace files
-- [ ] Configuration works for both streams
+- [ ] Configuration works for Stream A
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -64,12 +53,11 @@ Set up Playwright testing infrastructure with TestAuth helper and baseline smoke
 ### E2E (BDD, Playwright)
 **Artifact requirements**
 - Smoke test passes
-- TestAuth helper works
 - Trace files generated
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A14/playwright/smoke-trace.zip`
-- `../artifacts/WI-A14/playwright/test-results.txt`
+- [../artifacts/WI-A14/playwright/smoke-trace.zip](../artifacts/WI-A14/playwright/smoke-trace.zip)
+- [../artifacts/WI-A14/playwright/test-results.txt](../artifacts/WI-A14/playwright/test-results.txt)
 
 ### DB verification
 **Artifact requirements**
@@ -88,7 +76,7 @@ Set up Playwright testing infrastructure with TestAuth helper and baseline smoke
 - N/A
 
 ## Risks / Questions
-- Ensure TestAuth endpoint (B02) is ready before full testing
+- Add TestAuth endpoint (B02) before authenticated tests
 - Parallel test execution considerations
 
 ## Project Structure
@@ -98,12 +86,7 @@ src/tests/e2e/
 ├── package.json
 ├── tests/
 │   ├── smoke.spec.ts
-│   ├── auth.spec.ts
 │   └── (feature tests added later)
-├── fixtures/
-│   └── test-fixtures.ts
-├── helpers/
-│   └── auth-helper.ts
 └── .env.example
 ```
 
@@ -138,47 +121,17 @@ export default defineConfig({
 });
 ```
 
-### helpers/auth-helper.ts
-```typescript
-import { APIRequestContext } from '@playwright/test';
-
-export interface TestAuthConfig {
-  secret: string;
-  apiUrl: string;
-}
-
-export async function loginAs(
-  request: APIRequestContext,
-  role: 'Handler' | 'Secretary',
-  config: TestAuthConfig
-): Promise<string> {
-  const response = await request.post(`${config.apiUrl}/api/testauth/token`, {
-    headers: {
-      'X-Test-Auth-Secret': config.secret,
-      'X-Test-Role': role,
-    },
-  });
-
-  if (!response.ok()) {
-    throw new Error(`TestAuth failed: ${response.status()}`);
-  }
-
-  const data = await response.json();
-  return data.accessToken;
-}
-```
-
 ### tests/smoke.spec.ts
 ```typescript
 import { test, expect } from '@playwright/test';
 
 test('app loads successfully', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle(/Dog Trials/);
+  await expect(page.locator('.app-title').first()).toHaveText('Dog Trials');
 });
 
 test('navigation to trials page', async ({ page }) => {
   await page.goto('/trials');
-  await expect(page.locator('h1')).toContainText('Trials');
+  await expect(page.locator('mat-card-title', { hasText: 'Trials' }).first()).toBeVisible();
 });
 ```

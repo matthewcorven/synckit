@@ -1,0 +1,6 @@
+[2026-01-22 09:05] Playwright smoke tests — npx playwright test
+Result: PASSED
+
+Summary:
+- 2 tests passed (chromium)
+- Traces generated in test-results/
