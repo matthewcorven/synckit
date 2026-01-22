@@ -1,10 +1,14 @@
 # WI-B13: Form Metadata
 
 **Owner:** Agent B (Platform)  
-**Status:** Proposed  
+**Status:** Completed  
 **Milestone:** M2  
 **Dependencies:** B11  
-**Artifacts folder (recommended):** `../artifacts/WI-B13/`
+**Artifacts folder (recommended):** `../artifacts/WI-B13/`  
+
+**Artifacts produced:**
+- `../artifacts/WI-B13/unit-test-results.txt`
+- `../artifacts/WI-B13/integration-test-results.txt`
 
 ## Goal
 Implement the form template metadata endpoint for direct form lookup.
@@ -27,11 +31,11 @@ Implement the form template metadata endpoint for direct form lookup.
 - Future: Store templates in database
 
 ## Acceptance criteria
-- [ ] Endpoint returns form metadata
-- [ ] Response includes grid structure
-- [ ] Disabled cells match PRD spec
-- [ ] 404 for unknown form template
-- [ ] Authentication required
+- [x] Endpoint returns form metadata
+- [x] Response includes grid structure
+- [x] Disabled cells match PRD spec
+- [x] 404 for unknown form template
+- [x] Authentication required
 
 ## Test Plan
 ### Unit tests (TDD)
