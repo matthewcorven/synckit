@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 22:20
-**Current Focus:** B17 Update Selections — ✅ Completed
+**Last Updated:** 2026-01-22 22:50
+**Current Focus:** B18 Terms Endpoint — ✅ Completed
 
 ---
 
@@ -47,7 +47,7 @@
 | B15 | Get Entry | ✅ Completed | B14 | Endpoint, DTO mapping, tests |
 | B16 | Update Entry | ✅ Completed | B15 | Endpoint, ETag concurrency, tests |
 | B17 | Update Selections | ✅ Completed | B15 | Endpoint, validation, tests, artifacts |
-| B18 | Terms Endpoint | ⬜ Not Started | B01 | Unblocks A08 |
+| B18 | Terms Endpoint | ✅ Completed | B01 | Unblocks A08 |
 | B19 | Submit Endpoint | ⬜ Not Started | B07, B16, B17 | |
 | B20 | Background Channels | ⬜ Not Started | B19 | |
 | B21 | PDF Stamping | ⬜ Not Started | B20 | |
@@ -89,7 +89,7 @@ _Record any blockers encountered during work._
 |---------------|----------|--------|----------|
 | B02 | A14 (Playwright Auth) | ⬜ Not Started | **Critical** |
 | B11 | A04 (Trial Selection) | ⬜ Not Started | High |
-| B18 | A08 (Terms Modal) | ⬜ Not Started | Medium |
+| B18 | A08 (Terms Modal) | ✅ Completed | Medium |
 | B25 | A11 (Secretary Layout) | ⬜ Not Started | Low |
 
 ---
@@ -124,6 +124,7 @@ _Append entries as work progresses._
 [2026-01-22 21:52] — B16 — Implemented update entry endpoint + ETag handling + tests — ✅
 [2026-01-22 22:10] — B17 — Started update selections work — 🔄
 [2026-01-22 22:20] — B17 — Implemented update selections endpoint + tests + artifacts — ✅
+[2026-01-22 22:50] — B18 — Implemented terms endpoint + tests + artifacts — ✅
 ```
 
 <!-- Example:

@@ -47,6 +47,10 @@ builder.Services.AddOptions<TrialSeedingOptions>()
     .Bind(builder.Configuration.GetSection(TrialSeedingOptions.SectionName))
     .PostConfigure(options => options.ApplyEnvironmentOverrides());
 
+builder.Services.AddOptions<TermsOptions>()
+    .Bind(builder.Configuration.GetSection(TermsOptions.SectionName))
+    .PostConfigure(options => options.ApplyEnvironmentOverrides());
+
 builder.Services.AddOptions<DogTrials.Api.Options.AuthenticationOptions>()
     .Bind(builder.Configuration.GetSection(DogTrials.Api.Options.AuthenticationOptions.SectionName));
 
@@ -152,6 +156,7 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddSingleton<IClaimsTransformation, RoleClaimsTransformation>();
 builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
 builder.Services.AddScoped<TrialSeedingService>();
+builder.Services.AddScoped<ITermsService, TermsService>();
 
 // Form metadata service
 builder.Services.AddScoped<IFormMetadataService, FormMetadataService>();
@@ -191,6 +196,7 @@ app.MapTestAuthEndpoints();
 app.MapTrialsEndpoints();
 app.MapFormTemplatesEndpoints();
 app.MapEntriesEndpoints();
+app.MapTermsEndpoints();
 
 var seedingOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrialSeedingOptions>>();
 if (seedingOptions.Value.Enabled)
