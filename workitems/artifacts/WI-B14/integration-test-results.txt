@@ -1,0 +1,3 @@
+Integration tests included: create draft success, missing trial 400, unauthenticated 401, existing draft idempotency, conflict on existing submitted entry.
+All integration scenarios exercised in `EntriesEndpointsTests` passed.
+Test run timestamp: 2026-01-22T21:34Z

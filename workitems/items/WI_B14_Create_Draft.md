@@ -1,7 +1,7 @@
 # WI-B14: Create Draft
 
 **Owner:** Agent B (Platform)  
-**Status:** Proposed  
+**Status:** ✅ Completed  
 **Milestone:** M2  
 **Dependencies:** B05, B08, B09  
 **Artifacts folder (recommended):** `../artifacts/WI-B14/`

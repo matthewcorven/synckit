@@ -43,7 +43,7 @@
 | B11 | Trials Endpoints | ✅ Completed | B10, B08 | Unblocks A04 |
 | B12 | Registration Metadata | ✅ Completed | B11 | Implemented endpoint, seeding, telemetry, tests |
 | B13 | Form Metadata | ✅ Completed | B11 | Implemented endpoint, tests, telemetry |
-| B14 | Create Draft | ⬜ Not Started | B06, B08 | |
+| B14 | Create Draft | ✅ Completed | B06, B08 | Endpoint, tests, telemetry implemented |
 | B15 | Get Entry | ⬜ Not Started | B14 | |
 | B16 | Update Entry | ⬜ Not Started | B15 | |
 | B17 | Update Selections | ⬜ Not Started | B15 | |
@@ -117,7 +117,9 @@ _Append entries as work progresses._
 [2026-01-22 21:12] — B12 — Implemented endpoint, service, migration, and tests — ✅
 [2026-01-22 21:21] — B12 — Added `formtemplates.seed.json` and seeding in `TrialSeedingService` — ✅
 [2026-01-22 21:24] — B12 — Added telemetry span tag `trial.id` and test asserting it — ✅
-[2026-01-22 21:21] — B12 — Added tests for seeding idempotency and parsing — ✅[2026-01-22 21:27] — B13 — Implemented form metadata endpoint, tests, and telemetry span test — ✅```
+[2026-01-22 21:21] — B12 — Added tests for seeding idempotency and parsing — ✅
+[2026-01-22 21:27] — B13 — Implemented form metadata endpoint, tests, and telemetry span test — ✅
+[2026-01-22 22:16] — B14 — Implemented Create Draft endpoint, added tests, all tests green — ✅```
 
 <!-- Example:
 [2026-01-22 10:30] — B01 — Started API scaffold — In progress
