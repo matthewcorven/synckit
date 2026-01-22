@@ -1,7 +1,7 @@
 # WI-CFG01: Worktree & Port Configuration
 
 **Owner:** Both Agents  
-**Status:** Proposed  
+**Status:** Done  
 **Milestone:** M0  
 **Dependencies:** None  
 **Artifacts folder (recommended):** `../artifacts/WI-CFG01/`
