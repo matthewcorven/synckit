@@ -1,7 +1,7 @@
 # WI-B12: Registration Metadata
 
 **Owner:** Agent B (Platform)  
-**Status:** Proposed  
+**Status:** ✅ Completed  
 **Milestone:** M2  
 **Dependencies:** B11  
 **Artifacts folder (recommended):** `../artifacts/WI-B12/`

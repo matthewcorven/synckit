@@ -2,6 +2,7 @@ using DogTrials.Api.Data;
 using DogTrials.Api.Dtos;
 using DogTrials.Api.Entities;
 using DogTrials.Api.Security;
+using DogTrials.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace DogTrials.Api.Endpoints;
@@ -45,6 +46,49 @@ public static class TrialsEndpoints
                     : Results.Ok(trial);
             })
             .WithName("Trials_GetById");
+
+        group.MapGet("/{trialId:guid}/registration/metadata", async (Guid trialId, DogTrialsDbContext context, IFormMetadataService formMetadataService) =>
+            {
+                var trial = await context.Trials
+                    .AsNoTracking()
+                    .Where(t => t.TrialId == trialId)
+                    .Select(t => new { t.TrialId, t.OrganizationCode, t.SportCode, t.FormCode, t.FormVersion })
+                    .FirstOrDefaultAsync();
+
+                if (trial is null)
+                {
+                    return Results.Problem(
+                        title: "Trial not found",
+                        statusCode: StatusCodes.Status404NotFound,
+                        extensions: new Dictionary<string, object?>
+                        {
+                            ["errorCode"] = "TRIAL_NOT_FOUND"
+                        });
+                }
+
+                var formTemplate = new FormTemplateKeyDto(
+                    trial.OrganizationCode,
+                    trial.SportCode,
+                    trial.FormCode,
+                    trial.FormVersion);
+
+                var formMetadata = await formMetadataService.GetFormMetadataAsync(formTemplate);
+
+                if (formMetadata is null)
+                {
+                    return Results.Problem(
+                        title: "Form template not found",
+                        statusCode: StatusCodes.Status404NotFound,
+                        extensions: new Dictionary<string, object?>
+                        {
+                            ["errorCode"] = "FORM_TEMPLATE_NOT_FOUND"
+                        });
+                }
+
+                var dto = new TrialRegistrationMetadataDto(trial.TrialId, formTemplate, formMetadata);
+                return Results.Ok(dto);
+            })
+            .WithName("Trials_GetRegistrationMetadata");
 
         return endpoints;
     }

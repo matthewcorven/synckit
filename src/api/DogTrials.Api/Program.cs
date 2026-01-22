@@ -6,6 +6,7 @@ using DogTrials.Api.Endpoints;
 using DogTrials.Api.Middleware;
 using DogTrials.Api.Options;
 using DogTrials.Api.Security;
+using DogTrials.Api.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -151,6 +152,9 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddSingleton<IClaimsTransformation, RoleClaimsTransformation>();
 builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
 builder.Services.AddScoped<TrialSeedingService>();
+
+// Form metadata service
+builder.Services.AddScoped<IFormMetadataService, FormMetadataService>();
 
 builder.Services.AddDbContext<DogTrialsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DogTrialsSql")));

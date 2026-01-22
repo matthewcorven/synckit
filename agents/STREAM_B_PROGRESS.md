@@ -41,7 +41,7 @@
 | B09 | User Provisioning | ✅ Completed | B08, B05 | |
 | B10 | Trials Seed | ✅ Completed | B03, B04 |  |
 | B11 | Trials Endpoints | ✅ Completed | B10, B08 | Unblocks A04 |
-| B12 | Registration Metadata | ⬜ Not Started | B11 | |
+| B12 | Registration Metadata | 🔄 In Progress | B11 | Implementing endpoint, service, migration, and tests |
 | B13 | Form Metadata | ⬜ Not Started | B11 | |
 | B14 | Create Draft | ⬜ Not Started | B06, B08 | |
 | B15 | Get Entry | ⬜ Not Started | B14 | |
@@ -113,6 +113,8 @@ _Append entries as work progresses._
 [2026-01-22 19:50] — B09 — Implemented user provisioning middleware/service + tests + artifacts — ✅
 [2026-01-22 20:30] — B10 — Added trial seed file, seeding service, tests, and artifacts — ✅
 [2026-01-22 21:05] — B11 — Implemented trials endpoints + tests + artifacts — ✅
+[2026-01-22 21:12] — B12 — Started registration metadata implementation — 🔄 In Progress
+[2026-01-22 21:12] — B12 — Implemented endpoint, service, migration, and tests — ✅
 ```
 
 <!-- Example:

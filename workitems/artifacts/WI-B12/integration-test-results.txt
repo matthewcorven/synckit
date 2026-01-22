@@ -1,0 +1,9 @@
+WI-B12 — Integration test notes
+
+- The tests inserted a FormTemplate row with a representative grid JSON payload and asserted the GET /api/trials/{trialId}/registration/metadata response shape.
+- Verified that missing trial returns 404 with application/problem+json and errorCode TRIAL_NOT_FOUND.
+- Verified authentication required (401 when missing token via framework behavior).
+
+Next steps for broader integration:
+- Add Playwright E2E to assert frontend can fetch and render grids (A work item).
+- Add a seed for FormTemplate (optional) if we want trial seeding to include FormTemplates by default.

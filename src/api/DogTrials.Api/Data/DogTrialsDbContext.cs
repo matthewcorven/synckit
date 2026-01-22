@@ -10,6 +10,7 @@ public sealed class DogTrialsDbContext(DbContextOptions<DogTrialsDbContext> opti
     public DbSet<Entry> Entries => Set<Entry>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<FormTemplate> FormTemplates => Set<FormTemplate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

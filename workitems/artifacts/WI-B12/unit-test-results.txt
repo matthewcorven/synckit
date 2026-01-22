@@ -1,0 +1,11 @@
+WI-B12 — Unit tests for Registration Metadata
+
+- Tests added: TrialsEndpointsTests.GetRegistrationMetadata_ReturnsMetadata_WhenAuthenticated
+- Tests added: TrialsEndpointsTests.GetRegistrationMetadata_ReturnsNotFound_WhenMissingTrial
+
+Test run: dotnet test src/api/DogTrials.sln -v minimal
+Result: All tests passed (total tests: 39; new tests included and passing)
+
+Notes:
+- Endpoint validated via integration-style tests using in-memory TestDatabase SQL Server container.
+- SQL migration to add FormTemplates table included; tests exercised it by inserting a FormTemplate row.

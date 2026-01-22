@@ -1,0 +1,4 @@
+Placeholder: capture of OpenTelemetry trace for GET /api/trials/{trialId}/registration/metadata
+
+- Collect trace when running integration test or manual curl + token
+- Required tags: trial.id, entry.id (if present), user.role

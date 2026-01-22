@@ -101,6 +101,78 @@ public sealed class TrialsEndpointsTests
     }
 
     [Fact]
+    public async Task GetRegistrationMetadata_ReturnsMetadata_WhenAuthenticated()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        var trialId = await SeedTrialAsync(connectionString, isActive: true, name: "Meta Trial");
+
+        // seed corresponding form template
+        await using (var context = CreateContext(connectionString))
+        {
+            var ft = new DogTrials.Api.Entities.FormTemplate
+            {
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                Version = "2020-10-08",
+                GridConfigJson = "[{\"grid\":\"Upper\",\"rows\":[\"Sheep\",\"Cattle\",\"Ducks\",\"Mixed\"],\"cols\":[\"STD\",\"OPN\",\"ADV\",\"FTD_OPN\",\"FTD_ADV\",\"DATE1_TRIAL1\"],\"disabledCells\":[{\"row\":\"Mixed\",\"col\":\"STD\"}]}]"
+            };
+
+            context.FormTemplates.Add(ft);
+            await context.SaveChangesAsync();
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/trials/{trialId}/registration/metadata");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+
+        Assert.Equal(trialId.ToString(), root.GetProperty("trialId").GetString());
+        Assert.Equal("ASCA", root.GetProperty("formTemplate").GetProperty("organizationCode").GetString());
+        Assert.Equal(JsonValueKind.Object, root.GetProperty("formMetadata").ValueKind);
+        Assert.Equal(JsonValueKind.Array, root.GetProperty("formMetadata").GetProperty("grids").ValueKind);
+    }
+
+    [Fact]
+    public async Task GetRegistrationMetadata_ReturnsNotFound_WhenMissingTrial()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/trials/{Guid.NewGuid()}/registration/metadata");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
     public async Task List_ReturnsUnauthorized_WhenMissingToken()
     {
         var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
