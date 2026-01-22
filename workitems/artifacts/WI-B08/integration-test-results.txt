@@ -1,0 +1,2 @@
+dotnet test DogTrials.sln
+Result: Passed

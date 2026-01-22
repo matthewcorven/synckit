@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using DogTrials.Api.Options;
+using DogTrials.Api.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
@@ -104,6 +105,30 @@ public static class TestAuthEndpoints
             })
             .RequireAuthorization();
 
+        group.MapGet("/handler", [Authorize(Policy = AuthPolicies.Handler)] (IOptions<TestAuthOptions> optionsAccessor) =>
+            {
+                var options = optionsAccessor.Value;
+                if (!options.Enabled)
+                {
+                    return Results.NotFound();
+                }
+
+                return Results.Ok(new { ok = true });
+            })
+            .RequireAuthorization(AuthPolicies.Handler);
+
+        group.MapGet("/secretary", [Authorize(Policy = AuthPolicies.Secretary)] (IOptions<TestAuthOptions> optionsAccessor) =>
+            {
+                var options = optionsAccessor.Value;
+                if (!options.Enabled)
+                {
+                    return Results.NotFound();
+                }
+
+                return Results.Ok(new { ok = true });
+            })
+            .RequireAuthorization(AuthPolicies.Secretary);
+
         return app;
     }
 
@@ -122,5 +147,5 @@ public static class TestAuthEndpoints
     }
 
     private static bool IsRoleValid(string? role)
-        => role is "Handler" or "Secretary";
+        => role is UserRoles.Handler or UserRoles.Secretary;
 }

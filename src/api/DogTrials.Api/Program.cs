@@ -1,9 +1,12 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using System.Text;
 using DogTrials.Api.Data;
 using DogTrials.Api.Endpoints;
 using DogTrials.Api.Middleware;
 using DogTrials.Api.Options;
+using DogTrials.Api.Security;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -35,28 +38,109 @@ builder.Services.AddOptions<TestAuthOptions>()
     .Bind(builder.Configuration.GetSection(TestAuthOptions.SectionName))
     .PostConfigure(options => options.ApplyEnvironmentOverrides());
 
+builder.Services.AddOptions<DogTrials.Api.Options.AuthenticationOptions>()
+    .Bind(builder.Configuration.GetSection(DogTrials.Api.Options.AuthenticationOptions.SectionName));
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer();
 
 builder.Services
     .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-    .Configure<Microsoft.Extensions.Options.IOptions<TestAuthOptions>>((options, testAuthOptions) =>
+    .Configure<Microsoft.Extensions.Options.IOptions<DogTrials.Api.Options.AuthenticationOptions>, Microsoft.Extensions.Options.IOptions<TestAuthOptions>>((options, authOptions, testAuthOptions) =>
     {
-        var config = testAuthOptions.Value;
-        options.TokenValidationParameters = new TokenValidationParameters
+        var authConfig = authOptions.Value;
+        var testAuthConfig = testAuthOptions.Value;
+
+        var validIssuers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(authConfig.Authority))
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.SigningKey)),
-            ValidateIssuer = true,
-            ValidIssuer = config.Issuer,
-            ValidateAudience = true,
-            ValidAudience = config.Audience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromSeconds(30)
-        };
+            options.Authority = authConfig.Authority;
+            options.RequireHttpsMetadata = authConfig.RequireHttpsMetadata;
+            validIssuers.Add(authConfig.Authority);
+        }
+
+        if (!string.IsNullOrWhiteSpace(authConfig.Audience))
+        {
+            options.Audience = authConfig.Audience;
+        }
+        if (authConfig.ValidIssuers is { Length: > 0 })
+        {
+            foreach (var issuer in authConfig.ValidIssuers)
+            {
+                if (!string.IsNullOrWhiteSpace(issuer))
+                {
+                    validIssuers.Add(issuer);
+                }
+            }
+        }
+
+        if (testAuthConfig.Enabled && !string.IsNullOrWhiteSpace(testAuthConfig.Issuer))
+        {
+            validIssuers.Add(testAuthConfig.Issuer);
+        }
+
+        var validAudiences = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (authConfig.ValidAudiences is { Length: > 0 })
+        {
+            foreach (var audience in authConfig.ValidAudiences)
+            {
+                if (!string.IsNullOrWhiteSpace(audience))
+                {
+                    validAudiences.Add(audience);
+                }
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(authConfig.Audience))
+        {
+            validAudiences.Add(authConfig.Audience);
+        }
+
+        if (testAuthConfig.Enabled && !string.IsNullOrWhiteSpace(testAuthConfig.Audience))
+        {
+            validAudiences.Add(testAuthConfig.Audience);
+        }
+
+        var parameters = options.TokenValidationParameters ?? new TokenValidationParameters();
+        parameters.ValidateIssuerSigningKey = true;
+        parameters.ValidateIssuer = validIssuers.Count > 0;
+        parameters.ValidIssuers = validIssuers;
+        parameters.ValidateAudience = validAudiences.Count > 0;
+        parameters.ValidAudiences = validAudiences;
+        parameters.ValidateLifetime = true;
+        parameters.ClockSkew = TimeSpan.FromSeconds(30);
+        parameters.RoleClaimType = string.IsNullOrWhiteSpace(authConfig.RoleClaimType)
+            ? ClaimTypes.Role
+            : authConfig.RoleClaimType;
+
+        if (testAuthConfig.Enabled && !string.IsNullOrWhiteSpace(testAuthConfig.SigningKey))
+        {
+            var testAuthKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(testAuthConfig.SigningKey));
+            parameters.IssuerSigningKeyResolver = (token, securityToken, kid, validationParameters) =>
+            {
+                var keys = new List<SecurityKey> { testAuthKey };
+                if (validationParameters.IssuerSigningKey != null)
+                {
+                    keys.Add(validationParameters.IssuerSigningKey);
+                }
+
+                if (validationParameters.IssuerSigningKeys != null)
+                {
+                    keys.AddRange(validationParameters.IssuerSigningKeys);
+                }
+
+                return keys;
+            };
+        }
+
+        options.TokenValidationParameters = parameters;
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(AuthPolicies.Handler, policy => policy.RequireRole(UserRoles.Handler, UserRoles.Secretary))
+    .AddPolicy(AuthPolicies.Secretary, policy => policy.RequireRole(UserRoles.Secretary));
+
+builder.Services.AddSingleton<IClaimsTransformation, RoleClaimsTransformation>();
 
 builder.Services.AddDbContext<DogTrialsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DogTrialsSql")));

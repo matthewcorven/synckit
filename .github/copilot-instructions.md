@@ -87,6 +87,10 @@ When adding endpoints/DTOs, mirror the shapes and field names from the API contr
 - Playwright E2E is the merge gate (see required scenarios in [docs/prd/PRD_MVP_Test_Strategy.md](../docs/prd/PRD_MVP_Test_Strategy.md)).
 - Prefer polling `GET /api/admin/entries/{entryId}/processing-status` (secretary/test-only) to deterministically wait for async PDF/email completion.
 
+## Mandatory test execution
+- Always run relevant tests after completing any work item or refactoring, without waiting to be asked.
+- If tests fail, fix the issues and re-run until green (max 3 attempts), or document the blocker.
+
 ## Work item artifacts (required)
 - For every work item, generate and store the required artifact files under `workitems/artifacts/<WI-ID>/`.
 - If a dependency (e.g., `DOGTRIALS_TEST_SQL`) is missing, still create the artifact with a clear “not executed” note and the expected checks.
