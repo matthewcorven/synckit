@@ -55,16 +55,20 @@ public sealed class TrialSeedingServiceTests
 
         var firstTrialCount = await context.Trials.CountAsync();
         var firstCounterCount = await context.TrialCounters.CountAsync();
+        var firstFormTemplateCount = await context.FormTemplates.CountAsync();
 
         await seeder.SeedTrialsAsync(CancellationToken.None);
 
         var secondTrialCount = await context.Trials.CountAsync();
         var secondCounterCount = await context.TrialCounters.CountAsync();
+        var secondFormTemplateCount = await context.FormTemplates.CountAsync();
 
         Assert.True(firstTrialCount > 0);
         Assert.Equal(firstTrialCount, secondTrialCount);
         Assert.Equal(firstCounterCount, secondCounterCount);
         Assert.Equal(firstTrialCount, firstCounterCount);
+        Assert.True(firstFormTemplateCount > 0);
+        Assert.Equal(firstFormTemplateCount, secondFormTemplateCount);
     }
 
     private static class SeedFileLocator

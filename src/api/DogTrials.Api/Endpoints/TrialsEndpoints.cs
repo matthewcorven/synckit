@@ -86,6 +86,7 @@ public static class TrialsEndpoints
                 }
 
                 var dto = new TrialRegistrationMetadataDto(trial.TrialId, formTemplate, formMetadata);
+                System.Diagnostics.Activity.Current?.SetTag("trial.id", trial.TrialId.ToString());
                 return Results.Ok(dto);
             })
             .WithName("Trials_GetRegistrationMetadata");

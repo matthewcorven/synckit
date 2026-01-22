@@ -173,6 +173,70 @@ public sealed class TrialsEndpointsTests
     }
 
     [Fact]
+    public async Task GetRegistrationMetadata_EmitsTelemetrySpan()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        var trialId = await SeedTrialAsync(connectionString, isActive: true, name: "Telemetry Trial");
+
+        // seed corresponding form template
+        await using (var context = CreateContext(connectionString))
+        {
+            var ft = new DogTrials.Api.Entities.FormTemplate
+            {
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                Version = "2020-10-08",
+                GridConfigJson = "[{\"grid\":\"Upper\",\"rows\":[\"Sheep\"],\"cols\":[\"STD\"],\"disabledCells\":[]}]"
+            };
+
+            context.FormTemplates.Add(ft);
+            await context.SaveChangesAsync();
+        }
+
+        var activities = new List<System.Diagnostics.Activity>();
+        var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = source => true,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) => System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStarted = activity => { lock (activities) { activities.Add(activity); } },
+        };
+
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/trials/{trialId}/registration/metadata");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        // find any activity that corresponds to this route
+        var found = activities.FirstOrDefault(a => a.DisplayName?.Contains("registration/metadata") == true);
+        Assert.NotNull(found);
+
+        // assert the activity has http.route tag for the endpoint route template
+        var routeTag = found!.Tags.FirstOrDefault(t => t.Key == "http.route").Value;
+        Assert.Equal("/api/trials/{trialId}/registration/metadata", routeTag);
+
+        // assert trial.id tag present
+        var trialTag = found.Tags.FirstOrDefault(t => t.Key == "trial.id").Value;
+        Assert.Equal(trialId.ToString(), trialTag);
+
+        // cleanup listener
+        listener.Dispose();
+    }
+
+    [Fact]
     public async Task List_ReturnsUnauthorized_WhenMissingToken()
     {
         var connectionString = TestDatabase.TryCreateSqlServerConnectionString();

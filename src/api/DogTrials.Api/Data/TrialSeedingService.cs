@@ -81,5 +81,53 @@ public sealed class TrialSeedingService(
         }
 
         await _context.SaveChangesAsync(ct);
+
+        // Seed form templates (if file present)
+        var formTemplatesPath = Path.Combine(AppContext.BaseDirectory, "Data", "formtemplates.seed.json");
+        if (File.Exists(formTemplatesPath))
+        {
+            try
+            {
+                var formJson = await File.ReadAllTextAsync(formTemplatesPath, ct);
+                var formSeeds = JsonSerializer.Deserialize<List<FormTemplateSeedRecord>>(formJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (formSeeds is not null && formSeeds.Count > 0)
+                {
+                    foreach (var f in formSeeds)
+                    {
+                        var exists = await _context.FormTemplates.AnyAsync(ft =>
+                            ft.OrganizationCode == f.OrganizationCode &&
+                            ft.SportCode == f.SportCode &&
+                            ft.FormCode == f.FormCode &&
+                            ft.Version == f.Version,
+                            ct);
+
+                        if (exists)
+                        {
+                            _logger.LogDebug("Form template already exists for {Org}-{Sport}-{Form}-{Ver}.", f.OrganizationCode, f.SportCode, f.FormCode, f.Version);
+                            continue;
+                        }
+
+                        var ftEntity = new FormTemplate
+                        {
+                            OrganizationCode = f.OrganizationCode,
+                            SportCode = f.SportCode,
+                            FormCode = f.FormCode,
+                            Version = f.Version,
+                            GridConfigJson = JsonSerializer.Serialize(f.GridConfig)
+                        };
+
+                        _context.FormTemplates.Add(ftEntity);
+                        _logger.LogInformation("Seeding form template {Org}-{Sport}-{Form}-{Ver}.", f.OrganizationCode, f.SportCode, f.FormCode, f.Version);
+                    }
+
+                    await _context.SaveChangesAsync(ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to seed form templates from {Path}.", formTemplatesPath);
+            }
+        }
     }
 }

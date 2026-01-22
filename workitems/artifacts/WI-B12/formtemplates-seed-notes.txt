@@ -1,0 +1,5 @@
+Added `formtemplates.seed.json` containing ASCA/StockDog/TrialEntry/2020-10-08 grid metadata.
+
+- TrialSeedingService now imports `Data/formtemplates.seed.json` idempotently.
+- Tests added: `FormTemplateSeedingTests` validating parse and idempotency.
+- Tests run: `dotnet test src/api/DogTrials.sln` — passing (41 tests total).

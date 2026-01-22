@@ -115,6 +115,9 @@ _Append entries as work progresses._
 [2026-01-22 21:05] — B11 — Implemented trials endpoints + tests + artifacts — ✅
 [2026-01-22 21:12] — B12 — Started registration metadata implementation — 🔄 In Progress
 [2026-01-22 21:12] — B12 — Implemented endpoint, service, migration, and tests — ✅
+[2026-01-22 21:21] — B12 — Added `formtemplates.seed.json` and seeding in `TrialSeedingService` — ✅
+[2026-01-22 21:24] — B12 — Added telemetry span tag `trial.id` and test asserting it — ✅
+[2026-01-22 21:21] — B12 — Added tests for seeding idempotency and parsing — ✅
 ```
 
 <!-- Example:
