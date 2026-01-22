@@ -1,0 +1,1 @@
+[2026-01-22 19:46] WI-A05 integration tests — not run (no suite configured).

@@ -87,3 +87,4 @@ When adding endpoints/DTOs, mirror the shapes and field names from the API contr
 ## Testing expectations
 - Playwright E2E is the merge gate (see required scenarios in [docs/prd/PRD_MVP_Test_Strategy.md](../docs/prd/PRD_MVP_Test_Strategy.md)).
 - Prefer polling `GET /api/admin/entries/{entryId}/processing-status` (secretary/test-only) to deterministically wait for async PDF/email completion.
+- During development, eagerly run all available testing modes for the work item (unit + integration + E2E + DB validation + telemetry checks where applicable) and record artifacts.

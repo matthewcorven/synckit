@@ -49,8 +49,21 @@ describe('RegistrationLayoutComponent', () => {
         breeders: ['']
       }),
       contact: formBuilder.group({
-        ownerAddress: formBuilder.group({}),
-        junior: formBuilder.group({})
+        owners: [''],
+        ownerAddress: formBuilder.group({
+          street: [''],
+          city: [''],
+          state: [''],
+          zip: ['']
+        }),
+        email: [''],
+        phone: [''],
+        handler: [''],
+        membershipNumber: [''],
+        junior: formBuilder.group({
+          dob: [null],
+          memberId: ['']
+        })
       }),
       emergencyContact: formBuilder.group({}),
       fees: formBuilder.group({}),
