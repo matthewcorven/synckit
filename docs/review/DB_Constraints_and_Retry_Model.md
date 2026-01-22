@@ -4,6 +4,8 @@
 
 This document makes the concurrency + reliability mechanics unambiguous and **database-enforced**. EF Core should generate these constraints via migrations, but **SQL Server is the source of truth** for integrity/uniqueness in this MVP.
 
+Scope note: this document focuses on the **constraints/indexes/transaction model** required for correctness (counters, uniqueness, retries). It is not intended to enumerate every application column implied by the DTOs (dog/contact fields, trial display fields, etc.).
+
 ## Principles
 - SQL Server enforces uniqueness, FK integrity, and concurrency safety.
 - EF Core may validate in-process, but the system must still behave correctly if concurrent requests bypass app-level checks.

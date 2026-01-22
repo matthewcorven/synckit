@@ -30,3 +30,14 @@ Frontend (SWA settings / local env):
 ## Notes
 - MVP uses **SPA + MSAL**; SWA is static hosting only.
 - The API validates bearer JWTs and enforces roles server-side.
+
+## MVP decisions (implementation-critical)
+Internal user identity
+- Use JWT `sub` claim as the stable external identifier.
+- Persist an internal `Users` table keyed by External Subject (`sub`) and map to internal `UserId` (GUID).
+- Store internal `UserId` (GUID) on domain rows (e.g., `Entries.CreatedByUserId`) and enforce ownership/authorization via that value.
+
+Authenticated email claim extraction
+- Prefer `preferred_username`.
+- Fallback to `email`.
+- Fallback to first value in `emails` (if present).

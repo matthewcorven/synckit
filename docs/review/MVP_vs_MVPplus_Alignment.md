@@ -24,10 +24,8 @@ From the PRDs, MVP explicitly includes:
 - Anything like training content, forums, event directory, profiles, news, etc.
 
 ## Current inconsistencies / drift
-1) Root README marketing copy lists broad features (forum, training resources, etc.).
-   - Action: rewrite README to be MVP-aligned and add MVP+ roadmap section.
-
-2) PDF template naming/location was inconsistent (now standardized as docs/assets/asca-entry-form.pdf).
+1) PDF template usage needs one explicit statement: [docs/assets/asca-entry-form.pdf](../assets/asca-entry-form.pdf) is the canonical official form and must be used both for pixel-perfect UI and as the base template for generated PDFs; the runtime API must package the exact file.
+   - Tracking: [docs/review/PRD_Consistency_Deltas.md](PRD_Consistency_Deltas.md)
 
 ## Open questions to resolve (blocking decisions)
 - Q1: Do we need multi-trial-date support beyond what the grid columns imply (DATE1..DATE4)?

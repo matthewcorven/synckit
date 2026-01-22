@@ -64,8 +64,12 @@ Related setup docs (placeholders)
 
 **Acceptance criteria**
 - SWA serves the app.
-- The SPA calls the API by its own origin (App Service URL or custom domain) using a configured `API_BASE_URL`.
+- The SPA calls the API by the API origin (App Service URL or custom domain) using a configured `API_BASE_URL`.
 - CORS is restricted to the SWA origin (and local dev origins as needed).
+
+Notes (MVP)
+- Azure Static Web Apps does not automatically proxy `/api/*` to an external App Service API (that `/api` convention is for SWA Functions). For MVP, treat `API_BASE_URL` as required in deployed environments.
+- Example: `API_BASE_URL=https://<api-app>.azurewebsites.net` and the SPA calls `https://<api-app>.azurewebsites.net/api/*`.
 
 Local dev (MVP decision)
 - Use an Angular dev-server proxy so the SPA can call relative `/api/*` locally without CORS.
