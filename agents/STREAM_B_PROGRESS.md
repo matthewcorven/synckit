@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** _Not started_  
-**Current Focus:** —
+**Last Updated:** 2026-01-22 13:36  
+**Current Focus:** B02 Problem Details
 
 ---
 
@@ -21,7 +21,7 @@
 
 | ID | Name | Status | Notes |
 |----|------|--------|-------|
-| CFG01 | Worktree + Port Config | ⬜ Not Started | |
+| CFG01 | Worktree + Port Config | ✅ Completed | |
 | CFG02 | Azure CLI Setup | ⬜ Not Started | |
 
 ---
@@ -30,7 +30,7 @@
 
 | ID | Name | Status | Blocked By | Notes |
 |----|------|--------|------------|-------|
-| B01 | API Scaffold | ⬜ Not Started | CFG01 | |
+| B01 | API Scaffold | ✅ Completed | CFG01 | |
 | B02 | Problem Details | ⬜ Not Started | B01 | |
 | B03 | OpenTelemetry | ⬜ Not Started | B01 | |
 | B04 | Correlation Headers | ⬜ Not Started | B02, B03 | |
@@ -98,7 +98,8 @@ _Record any blockers encountered during work._
 _Append entries as work progresses._
 
 ```
-[YYYY-MM-DD HH:MM] — <item> — <action taken> — <outcome>
+[2026-01-22 12:00] — B01 — Started API scaffold work — In progress
+[2026-01-22 13:36] — B01 — Ran API + tests (health, x-support-id) — ✅
 ```
 
 <!-- Example:
