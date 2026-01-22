@@ -60,10 +60,40 @@ Required columns:
 - `TrialId` uniqueidentifier NOT NULL FK → `Trials(TrialId)`
 - `Status` nvarchar(16) NOT NULL  (Draft/Submitted)
 - `SequenceNumber` int NULL  (set on submit)
-- `RegistrationOrTrackingNumber` nvarchar(128) NULL  (set on submit; derived from TrackingSlug + sequence)
+- `EntryNumber` nvarchar(128) NULL  (set on submit; derived from TrackingSlug + sequence, e.g., "EXCLUB-SPRING-2026-05-02-0001")
 - `SubmittedAtUtc` datetime2 NULL
 - `CreatedByUserId` uniqueidentifier NOT NULL
 - `RowVersion` rowversion NOT NULL  — For optimistic concurrency (ETag)
+
+Dog data columns (user-entered):
+- `AscaRegistrationNumber` nvarchar(64) NULL  — User-entered ASCA dog registration (NOT the entry sequence)
+- `Breed` nvarchar(64) NULL
+- `RegisteredName` nvarchar(128) NULL
+- `CallName` nvarchar(64) NULL
+- `Dob` date NULL
+- `Color` nvarchar(64) NULL
+- `Sex` nvarchar(16) NULL  (Male/Female)
+- `Sire` nvarchar(128) NULL
+- `Dam` nvarchar(128) NULL
+- `Breeders` nvarchar(256) NULL
+
+Contact data columns (user-entered):
+- `Owners` nvarchar(256) NULL
+- `OwnerStreet` nvarchar(128) NULL
+- `OwnerCity` nvarchar(64) NULL
+- `OwnerState` nvarchar(32) NULL
+- `OwnerZip` nvarchar(16) NULL
+- `Email` nvarchar(320) NULL
+- `Phone` nvarchar(32) NULL
+- `Handler` nvarchar(128) NULL  — Handler name if different from owner
+- `MembershipNumber` nvarchar(32) NULL
+- `JuniorDob` date NULL
+- `JuniorMemberId` nvarchar(32) NULL
+
+Fees and emergency columns:
+- `TotalEntryFees` decimal(10,2) NULL
+- `EmergencyContactName` nvarchar(128) NULL
+- `EmergencyContactPhone` nvarchar(32) NULL
 
 Recommended processing columns:
 - `PdfStatus` nvarchar(16) NOT NULL  (Queued/InProgress/Success/Failed)
@@ -75,7 +105,7 @@ Recommended processing columns:
 Constraints:
 - `CK_Entries_SequenceNumber_Positive` CHECK (`SequenceNumber` IS NULL OR `SequenceNumber` >= 1)
 - `UX_Entries_TrialId_SequenceNumber` UNIQUE (`TrialId`, `SequenceNumber`) WHERE `SequenceNumber` IS NOT NULL
-- `UX_Entries_RegistrationOrTrackingNumber` UNIQUE (`RegistrationOrTrackingNumber`) WHERE `RegistrationOrTrackingNumber` IS NOT NULL
+- `UX_Entries_EntryNumber` UNIQUE (`EntryNumber`) WHERE `EntryNumber` IS NOT NULL
 - `UX_Entries_TrialId_CreatedByUserId_Draft` UNIQUE (`TrialId`, `CreatedByUserId`) WHERE `Status` = 'Draft'  — **One draft per user per trial**
 
 Indexes (for restart scans):
@@ -112,8 +142,10 @@ Inside `POST /api/entries/{entryId}/submit`:
    - `seq = NextSequenceNumber; NextSequenceNumber++`.
 4) Set on Entry:
    - `SequenceNumber = seq`
-   - `RegistrationOrTrackingNumber = Trials.TrackingSlug + '-' + RIGHT('0000' + CAST(seq AS varchar), 4)` (or equivalent padding)
+   - `EntryNumber = Trials.TrackingSlug + '-' + RIGHT('0000' + CAST(seq AS varchar), 4)` (or equivalent padding)
 5) Transition Draft → Submitted and commit.
+
+Note: `AscaRegistrationNumber` is user-entered data and is NOT affected by the submit transaction.
 
 Submit idempotency:
 - If the entry is already Submitted, return 409 and do not allocate.

@@ -31,24 +31,24 @@
 | ID | Name | Status | Blocked By | Notes |
 |----|------|--------|------------|-------|
 | B01 | API Scaffold | ✅ Completed | CFG01 | |
-| B02 | TestAuth Endpoint | ✅ Completed | B01 | TestAuth endpoint + JWT validation + tests |
-| B03 | Trials Entity | ✅ Completed | B01 | EF Core entity + migration + tests |
-| B04 | TrialCounters Entity | ✅ Completed | B03 | EF Core entity + migration + allocator + tests |
-| B05 | Entries Entity | ✅ Completed | B04 | WI_B05 complete |
-| B06 | Notifications Entity | ✅ Completed | B05 | EF Core entity + migration + tests |
-| B07 | Users Entity | ✅ Completed | B01 | EF Core config + tests + artifacts |
-| B08 | JWT Auth Policies | ✅ Completed | B07 | Auth policies + claim mapping + tests |
-| B09 | User Provisioning | ✅ Completed | B07, B08 | |
-| B10 | Trials Seed | ⬜ Not Started | B03, B04 | |
-| B11 | Trials Endpoints | ⬜ Not Started | B10, B08 | Unblocks A04 |
+| B02 | Problem Details | ✅ Completed | B01 | |
+| B03 | OpenTelemetry | ✅ Completed | B01 | |
+| B04 | Correlation Headers | ✅ Completed | B02, B03 | |
+| B05 | DbContext Scaffold | ✅ Completed | B01 | |
+| B06 | Entries Entity | ✅ Completed | B05 | |
+| B07 | DB Constraints | ✅ Completed | B06 | |
+| B08 | JWT Middleware | ✅ Completed| B01 | |
+| B09 | User Provisioning | ✅ Completed | B08, B05 | |
+| B10 | TestAuth Endpoint | ⬜ Not Started | B01 | **PRIORITY** — Unblocks A14 |
+| B11 | Trials Endpoints | ⬜ Not Started | B05 | Unblocks A04 |
 | B12 | Registration Metadata | ⬜ Not Started | B11 | |
 | B13 | Form Metadata | ⬜ Not Started | B11 | |
-| B14 | Create Draft | ⬜ Not Started | B05, B08, B09 | |
+| B14 | Create Draft | ⬜ Not Started | B06, B08 | |
 | B15 | Get Entry | ⬜ Not Started | B14 | |
 | B16 | Update Entry | ⬜ Not Started | B15 | |
 | B17 | Update Selections | ⬜ Not Started | B15 | |
-| B18 | Terms Endpoint | ⬜ Not Started | B08 | Unblocks A08 |
-| B19 | Submit Endpoint | ⬜ Not Started | B16, B17, B18 | |
+| B18 | Terms Endpoint | ⬜ Not Started | B01 | Unblocks A08 |
+| B19 | Submit Endpoint | ⬜ Not Started | B07, B16, B17 | |
 | B20 | Background Channels | ⬜ Not Started | B19 | |
 | B21 | PDF Stamping | ⬜ Not Started | B20 | |
 | B22 | Blob Storage | ⬜ Not Started | B21 | |
@@ -87,6 +87,7 @@ _Record any blockers encountered during work._
 
 | Stream B Item | Unblocks | Status | Priority |
 |---------------|----------|--------|----------|
+| B02 | A14 (Playwright Auth) | ⬜ Not Started | **Critical** |
 | B11 | A04 (Trial Selection) | ⬜ Not Started | High |
 | B18 | A08 (Terms Modal) | ⬜ Not Started | Medium |
 | B25 | A11 (Secretary Layout) | ⬜ Not Started | Low |
