@@ -189,6 +189,7 @@ app.UseAuthorization();
 app.MapHealthEndpoints();
 app.MapTestAuthEndpoints();
 app.MapTrialsEndpoints();
+app.MapFormTemplatesEndpoints();
 
 var seedingOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrialSeedingOptions>>();
 if (seedingOptions.Value.Enabled)

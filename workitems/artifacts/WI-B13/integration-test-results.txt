@@ -1,0 +1,8 @@
+WI-B13 integration tests
+
+Integration tests for form metadata are covered by `FormTemplatesEndpointsTests` in the API test project. All assertions passed locally.
+
+Notes:
+- Verified route returns `FormMetadataDto` shape and `grids` array
+- Verified 404 behavior for unknown template
+- Verified telemetry `http.route` and `form.template` tags

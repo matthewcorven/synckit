@@ -1,0 +1,10 @@
+WI-B13 unit tests
+
+All tests in `FormTemplatesEndpointsTests` passed locally during development.
+Run: dotnet test src/api/DogTrials.sln -v minimal
+Result: Success (0 failed)
+
+Notes:
+- GetMetadata_ReturnsMetadata_WhenAuthenticated
+- GetMetadata_ReturnsNotFound_WhenMissing
+- GetMetadata_EmitsTelemetrySpan

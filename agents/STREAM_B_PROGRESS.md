@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 21:05  
-**Current Focus:** B12 Registration Metadata
+**Last Updated:** 2026-01-22 21:30  
+**Current Focus:** B13 Form Metadata — ✅ Completed
 
 ---
 
@@ -41,8 +41,8 @@
 | B09 | User Provisioning | ✅ Completed | B08, B05 | |
 | B10 | Trials Seed | ✅ Completed | B03, B04 |  |
 | B11 | Trials Endpoints | ✅ Completed | B10, B08 | Unblocks A04 |
-| B12 | Registration Metadata | 🔄 In Progress | B11 | Implementing endpoint, service, migration, and tests |
-| B13 | Form Metadata | ⬜ Not Started | B11 | |
+| B12 | Registration Metadata | ✅ Completed | B11 | Implemented endpoint, seeding, telemetry, tests |
+| B13 | Form Metadata | ✅ Completed | B11 | Implemented endpoint, tests, telemetry |
 | B14 | Create Draft | ⬜ Not Started | B06, B08 | |
 | B15 | Get Entry | ⬜ Not Started | B14 | |
 | B16 | Update Entry | ⬜ Not Started | B15 | |
@@ -117,8 +117,7 @@ _Append entries as work progresses._
 [2026-01-22 21:12] — B12 — Implemented endpoint, service, migration, and tests — ✅
 [2026-01-22 21:21] — B12 — Added `formtemplates.seed.json` and seeding in `TrialSeedingService` — ✅
 [2026-01-22 21:24] — B12 — Added telemetry span tag `trial.id` and test asserting it — ✅
-[2026-01-22 21:21] — B12 — Added tests for seeding idempotency and parsing — ✅
-```
+[2026-01-22 21:21] — B12 — Added tests for seeding idempotency and parsing — ✅[2026-01-22 21:27] — B13 — Implemented form metadata endpoint, tests, and telemetry span test — ✅```
 
 <!-- Example:
 [2026-01-22 10:30] — B01 — Started API scaffold — In progress
