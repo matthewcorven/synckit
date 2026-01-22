@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 14:18  
-**Current Focus:** B04 TrialCounters Entity
+**Last Updated:** 2026-01-22 16:40  
+**Current Focus:** B06 Notifications Entity
 
 ---
 
@@ -35,7 +35,7 @@
 | B03 | Trials Entity | ✅ Completed | B01 | EF Core entity + migration + tests |
 | B04 | TrialCounters Entity | ✅ Completed | B03 | EF Core entity + migration + allocator + tests |
 | B05 | DbContext Scaffold | ⬜ Not Started | B01 | |
-| B06 | Entries Entity | ⬜ Not Started | B05 | |
+| B06 | Entries Entity | ✅ Completed | B05 | WI_B05 complete |
 | B07 | DB Constraints | ⬜ Not Started | B06 | |
 | B08 | JWT Middleware | ⬜ Not Started | B01 | |
 | B09 | User Provisioning | ⬜ Not Started | B08, B05 | |
@@ -103,6 +103,9 @@ _Append entries as work progresses._
 [2026-01-22 13:52] — B02 — Implemented TestAuth endpoint + tests — ✅
 [2026-01-22 14:01] — B03 — Added Trials entity + EF Core migration + tests — ✅
 [2026-01-22 14:18] — B04 — Added TrialCounters entity + migration + allocator + tests — ✅
+[2026-01-22 16:10] — B05 — Started Entries entity work — In progress
+[2026-01-22 16:25] — B05 — Regenerated Entries migration via EF tools — In progress
+[2026-01-22 16:40] — B05 — Completed Entries entity + artifacts + tests — ✅
 ```
 
 <!-- Example:

@@ -20,4 +20,5 @@ public sealed class Trial
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
     public TrialCounter? Counter { get; set; }
+    public ICollection<Entry> Entries { get; set; } = new List<Entry>();
 }

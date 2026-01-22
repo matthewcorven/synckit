@@ -42,6 +42,9 @@ If you need to change the API contract, **open/update a work item and update the
   - Environment variables: add a small `docs/setup/Environment.md` (future) once real env vars exist
 - Expected end state (do not implement unless a work item asks): local web dev server, local API at `/api`, and Playwright uses TestAuth.
 
+## Self-sufficient troubleshooting (non-blocking)
+- If a task fails due to a common, non-blocking issue (wrong working directory, missing relative path, etc.), try a reasonable self-fix (e.g., rerun from the correct folder) before asking the user.
+
 ## API conventions you must follow
 - All endpoints are under `/api`; JSON only.
 - Errors: `application/problem+json` using RFC 7807 ProblemDetails (include validation `errors` map).
@@ -62,6 +65,10 @@ When adding endpoints/DTOs, mirror the shapes and field names from the API contr
 - Follow the exact constraints/indexes listed in [docs/review/DB_Constraints_and_Retry_Model.md](../docs/review/DB_Constraints_and_Retry_Model.md) (filtered unique indexes for nullable uniqueness, retry scan indexes).
 - Submit allocates a per-trial sequence number transactionally and sets `RegistrationOrTrackingNumber` once; submit retries must not “burn” extra numbers.
 
+## EF Core migrations (always use tooling)
+- Create migrations using EF Core tooling (`dotnet ef migrations add ...`) and commit the generated `.Designer.cs` files.
+- Do not hand-author `.Designer.cs` or snapshot files; if edits are needed, regenerate the migration and then adjust the main migration file as required.
+
 ## Background processing (MVP)
 - MVP expects in-process background work (Channels) but **idempotent** behaviors:
   - PDF blob name is deterministic: `entries/{entryId}.pdf`
@@ -79,3 +86,7 @@ When adding endpoints/DTOs, mirror the shapes and field names from the API contr
 ## Testing expectations
 - Playwright E2E is the merge gate (see required scenarios in [docs/prd/PRD_MVP_Test_Strategy.md](../docs/prd/PRD_MVP_Test_Strategy.md)).
 - Prefer polling `GET /api/admin/entries/{entryId}/processing-status` (secretary/test-only) to deterministically wait for async PDF/email completion.
+
+## Work item artifacts (required)
+- For every work item, generate and store the required artifact files under `workitems/artifacts/<WI-ID>/`.
+- If a dependency (e.g., `DOGTRIALS_TEST_SQL`) is missing, still create the artifact with a clear “not executed” note and the expected checks.

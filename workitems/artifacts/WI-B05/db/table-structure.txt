@@ -1,0 +1,4 @@
+DB verification not executed. DOGTRIALS_TEST_SQL not set.
+Expected tables:
+- Users: UserId PK, ExternalSubject (nvarchar(256) unique), Email (nvarchar(320)), Role (nvarchar(16)), CreatedAtUtc default SYSUTCDATETIME(), LastLoginAtUtc.
+- Entries: EntryId PK, TrialId FK -> Trials, CreatedByUserId FK -> Users, Status (Draft/Submitted), SequenceNumber (nullable), RegistrationOrTrackingNumber (nullable), SubmittedAtUtc, dog/contact/emergency/fees fields, SelectionsJson, TermsVersion/TermsAcceptedAtUtc/TermsAcceptedByUserId, PdfStatus (Queued/InProgress/Success/Failed), GeneratedPdfBlobUri, PdfAttemptCount default 0, PdfNextAttemptAtUtc, PdfLastAttemptAtUtc, PdfLastErrorCode, CreatedAtUtc default SYSUTCDATETIME(), UpdatedAtUtc, RowVersion.

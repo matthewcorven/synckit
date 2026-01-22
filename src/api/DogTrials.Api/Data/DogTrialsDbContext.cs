@@ -7,6 +7,8 @@ public sealed class DogTrialsDbContext(DbContextOptions<DogTrialsDbContext> opti
 {
     public DbSet<Trial> Trials => Set<Trial>();
     public DbSet<TrialCounter> TrialCounters => Set<TrialCounter>();
+    public DbSet<Entry> Entries => Set<Entry>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

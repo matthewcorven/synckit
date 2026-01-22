@@ -1,0 +1,8 @@
+DB index verification not executed. DOGTRIALS_TEST_SQL not set.
+Expected indexes:
+- UX_Users_ExternalSubject unique on Users.ExternalSubject
+- IX_Users_Email on Users.Email
+- UX_Entries_TrialId_SequenceNumber unique filtered on (TrialId, SequenceNumber) WHERE SequenceNumber IS NOT NULL
+- UX_Entries_RegistrationOrTrackingNumber unique filtered on RegistrationOrTrackingNumber WHERE RegistrationOrTrackingNumber IS NOT NULL
+- UX_Entries_TrialId_CreatedByUserId_Draft unique filtered on (TrialId, CreatedByUserId) WHERE Status = 'Draft'
+- IX_Entries_Status_PdfStatus_PdfNextAttemptAtUtc on (Status, PdfStatus, PdfNextAttemptAtUtc)
