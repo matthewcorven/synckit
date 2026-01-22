@@ -2,7 +2,18 @@
 
 ## Big picture
 - MVP is **Angular 22 (Azure Static Web Apps)** + **.NET 10 Web API** + **EF Core + Azure SQL** + **Blob PDFs** + **ACS Email** + **OpenTelemetry**.
-- This repo is designed for **two parallel coding agents** (UI-first + platform foundations). Coordination rules live in [agents/README.md](../agents/README.md).
+- This repo is designed for **three AI agents** working in parallel. See [agents/README.md](../agents/README.md) for coordination rules.
+
+## Agent identification
+If you are an autonomous coding agent, **read your entry point file first** to understand your role, scope, and work items:
+
+| Agent | Entry Point | Role | Scope |
+|-------|-------------|------|-------|
+| **Agent A** | [agents/STREAM_A_ENTRY.md](../agents/STREAM_A_ENTRY.md) | UI-first iteration | Angular SPA, form layout, grid UX, Playwright E2E |
+| **Agent B** | [agents/STREAM_B_ENTRY.md](../agents/STREAM_B_ENTRY.md) | Platform foundations | .NET API, EF Core schema, auth, background processing, Bicep |
+| **Coordinator** | [agents/STREAM_COORD_ENTRY.md](../agents/STREAM_COORD_ENTRY.md) | Workstream advisor | Status reporting, merge readiness, cross-stream dependencies (**does not write code**) |
+
+Each coding agent (A, B) must update their progress file (`STREAM_A_PROGRESS.md` / `STREAM_B_PROGRESS.md`) throughout work. The Coordinator reads both progress files to advise the human.
 
 ## Sources of truth (read these before changing contracts)
 - Canonical API/DTOs, error format, auth, telemetry tags: [docs/prd/PRD_MVP_API_Contract.md](../docs/prd/PRD_MVP_API_Contract.md)
