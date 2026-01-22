@@ -1,0 +1,5 @@
+dotnet test src/api/DogTrials.Api.Tests/DogTrials.Api.Tests.csproj -v minimal
+
+Result: Passed (60 tests)
+Date: 2026-01-22
+Notes: Integration coverage included update selections scenarios in EntriesEndpointsTests.

@@ -1,0 +1,3 @@
+Not executed. Manual DB verification not run in this session.
+Expected check: Entries.SelectionsJson updated for the target EntryId after PUT /api/entries/{entryId}/selections.
+Date: 2026-01-22

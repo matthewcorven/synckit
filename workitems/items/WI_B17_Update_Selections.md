@@ -43,7 +43,7 @@ Implement the update selections endpoint for grid class selections.
 - Status validation works
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B17/unit-test-results.txt`
+- [../artifacts/WI-B17/unit-test-results.txt](../artifacts/WI-B17/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -52,21 +52,21 @@ Implement the update selections endpoint for grid class selections.
 - Selections persisted correctly
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B17/integration-test-results.txt`
+- [../artifacts/WI-B17/integration-test-results.txt](../artifacts/WI-B17/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
 - Select cells in UI, save, reload, verify
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B17/playwright/selections-trace.zip`
+- [../artifacts/WI-B17/playwright/selections-trace.zip](../artifacts/WI-B17/playwright/selections-trace.zip)
 
 ### DB verification
 **Artifact requirements**
 - SelectionsJson updated correctly
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B17/db/selections-updated.txt`
+- [../artifacts/WI-B17/db/selections-updated.txt](../artifacts/WI-B17/db/selections-updated.txt)
 
 ### Telemetry verification
 - Verify `Entry.UpdateSelections` span

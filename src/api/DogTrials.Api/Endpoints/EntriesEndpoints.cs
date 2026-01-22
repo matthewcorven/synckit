@@ -2,6 +2,7 @@ using DogTrials.Api.Data;
 using DogTrials.Api.Dtos;
 using DogTrials.Api.Entities;
 using DogTrials.Api.Security;
+using DogTrials.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Text.Json;
@@ -326,6 +327,181 @@ public static class EntriesEndpoints
             return Results.Ok(entry.ToDetailDto());
         })
         .WithName("Entries_Update");
+
+        group.MapPut("/{entryId:guid}/selections", async (
+            Guid entryId,
+            EntrySelectionsReplaceRequestDto request,
+            HttpContext context,
+            DogTrialsDbContext dbContext,
+            IFormMetadataService formMetadataService,
+            ILogger<Program> logger) =>
+        {
+            using var activitySource = new ActivitySource(HealthEndpoints.ActivitySourceName);
+            using var activity = activitySource.StartActivity("Entry.UpdateSelections");
+            activity?.SetTag("entry.id", entryId.ToString());
+            activity?.SetTag("grid", request.Grid);
+
+            if (string.IsNullOrWhiteSpace(request.Grid))
+            {
+                return Results.Problem(
+                    title: "Invalid grid",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errors"] = new Dictionary<string, string[]>
+                        {
+                            ["grid"] = new[] { "Grid is required." }
+                        }
+                    });
+            }
+
+            if (request.Items is null)
+            {
+                return Results.Problem(
+                    title: "Invalid selections",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errors"] = new Dictionary<string, string[]>
+                        {
+                            ["items"] = new[] { "Selections items are required." }
+                        }
+                    });
+            }
+
+            var userId = context.GetUserId();
+
+            var entry = await dbContext.Entries
+                .Include(e => e.Trial)
+                .Include(e => e.Notifications)
+                .Where(e => e.EntryId == entryId)
+                .FirstOrDefaultAsync();
+
+            if (entry is null)
+            {
+                return Results.Problem(
+                    title: "Entry not found",
+                    statusCode: StatusCodes.Status404NotFound,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errorCode"] = "ENTRY_NOT_FOUND"
+                    });
+            }
+
+            if (entry.CreatedByUserId != userId)
+            {
+                return Results.Problem(
+                    title: "Access denied",
+                    statusCode: StatusCodes.Status403Forbidden,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errorCode"] = "ENTRY_FORBIDDEN"
+                    });
+            }
+
+            if (entry.Status != EntryStatus.Draft)
+            {
+                return Results.Problem(
+                    title: "Entry already submitted",
+                    statusCode: StatusCodes.Status409Conflict,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errorCode"] = "ENTRY_ALREADY_SUBMITTED"
+                    });
+            }
+
+            activity?.SetTag("trial.id", entry.TrialId.ToString());
+
+            var formTemplate = new FormTemplateKeyDto(
+                entry.Trial.OrganizationCode,
+                entry.Trial.SportCode,
+                entry.Trial.FormCode,
+                entry.Trial.FormVersion);
+
+            var formMetadata = await formMetadataService.GetFormMetadataAsync(formTemplate);
+            if (formMetadata is null)
+            {
+                return Results.Problem(
+                    title: "Form template not found",
+                    statusCode: StatusCodes.Status404NotFound,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errorCode"] = "FORM_TEMPLATE_NOT_FOUND"
+                    });
+            }
+
+            var gridMetadata = formMetadata.Grids.FirstOrDefault(g => string.Equals(g.Grid, request.Grid, StringComparison.OrdinalIgnoreCase));
+            if (gridMetadata is null)
+            {
+                return Results.Problem(
+                    title: "Invalid grid",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errors"] = new Dictionary<string, string[]>
+                        {
+                            ["grid"] = new[] { "Invalid grid specified." }
+                        }
+                    });
+            }
+
+            var disabledSet = gridMetadata.DisabledCells
+                .Select(d => $"{d.Row}:{d.Col}")
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var invalidSelections = request.Items
+                .Where(i => string.Equals(i.Value, "X", StringComparison.OrdinalIgnoreCase)
+                            && disabledSet.Contains($"{i.Row}:{i.Col}"))
+                .ToList();
+
+            if (invalidSelections.Count > 0)
+            {
+                return Results.Problem(
+                    title: "Selection targets a disabled cell",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errors"] = new Dictionary<string, string[]>
+                        {
+                            ["selections"] = new[] { "Selection targets a disabled cell." }
+                        }
+                    });
+            }
+
+            var selections = DeserializeSelections(entry.SelectionsJson);
+
+            if (string.Equals(request.Grid, "Upper", StringComparison.OrdinalIgnoreCase))
+            {
+                selections = selections with { Upper = request.Items };
+            }
+            else if (string.Equals(request.Grid, "Lower", StringComparison.OrdinalIgnoreCase))
+            {
+                selections = selections with { Lower = request.Items };
+            }
+            else
+            {
+                return Results.Problem(
+                    title: "Invalid grid",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errors"] = new Dictionary<string, string[]>
+                        {
+                            ["grid"] = new[] { "Invalid grid specified." }
+                        }
+                    });
+            }
+
+            entry.SelectionsJson = JsonSerializer.Serialize(selections);
+            entry.UpdatedAtUtc = DateTime.UtcNow;
+            await dbContext.SaveChangesAsync();
+
+            activity?.SetTag("entry.status", entry.Status.ToString());
+            logger.LogInformation("Entry selections updated: {EntryId}", entryId);
+
+            return Results.Ok(entry.ToDetailDto());
+        })
+        .WithName("Entries_UpdateSelections");
 
         return endpoints;
     }

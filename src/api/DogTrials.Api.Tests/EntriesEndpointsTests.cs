@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using DogTrials.Api.Data;
+using DogTrials.Api.Dtos;
 using DogTrials.Api.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -787,6 +788,263 @@ public sealed class EntriesEndpointsTests
         Assert.Equal(HttpStatusCode.PreconditionFailed, response.StatusCode);
     }
 
+    [Fact]
+    public async Task UpdateSelections_ReplacesGrid_WhenDraftAndValid()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await SeedFormTemplateAsync(context, trial.OrganizationCode, trial.SportCode, trial.FormCode, trial.FormVersion);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            var selectionsJson = JsonSerializer.Serialize(new EntrySelectionsDto(
+                new List<EntrySelectionCellDto>(),
+                new List<EntrySelectionCellDto> { new("Sheep", "NOV", "X") }));
+
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Draft,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow,
+                SelectionsJson = selectionsJson
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/entries/{entryId}/selections");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new
+            {
+                grid = "Upper",
+                items = new[]
+                {
+                    new { row = "Sheep", col = "STD", value = "X" },
+                    new { row = "Sheep", col = "OPN", value = "X" }
+                }
+            }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        var selections = doc.RootElement.GetProperty("selections");
+        Assert.Equal(2, selections.GetProperty("upper").GetArrayLength());
+        Assert.Equal(1, selections.GetProperty("lower").GetArrayLength());
+
+        await using var verify = CreateContext(connectionString);
+        var updated = await verify.Entries.FindAsync(entryId);
+        Assert.NotNull(updated);
+        Assert.False(string.IsNullOrWhiteSpace(updated!.SelectionsJson));
+        Assert.Contains("\"upper\"", updated.SelectionsJson, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task UpdateSelections_ReturnsBadRequest_WhenDisabledCellSelected()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await SeedFormTemplateAsync(context, trial.OrganizationCode, trial.SportCode, trial.FormCode, trial.FormVersion);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Draft,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/entries/{entryId}/selections");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new
+            {
+                grid = "Upper",
+                items = new[] { new { row = "Mixed", col = "STD", value = "X" } }
+            }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        Assert.True(doc.RootElement.TryGetProperty("errors", out var errors));
+        Assert.True(errors.TryGetProperty("selections", out _));
+    }
+
+    [Fact]
+    public async Task UpdateSelections_ReturnsConflict_WhenSubmitted()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            await SeedFormTemplateAsync(context, trial.OrganizationCode, trial.SportCode, trial.FormCode, trial.FormVersion);
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Submitted,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/entries/{entryId}/selections");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new
+            {
+                grid = "Upper",
+                items = new[] { new { row = "Sheep", col = "STD", value = "X" } }
+            }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
 
     private static WebApplicationFactory<Program> CreateFactory(string connectionString)
     {
@@ -816,6 +1074,33 @@ public sealed class EntriesEndpointsTests
     {
         await using var context = CreateContext(connectionString);
         await context.Database.MigrateAsync();
+    }
+
+    private static async Task SeedFormTemplateAsync(DogTrialsDbContext context, string organizationCode, string sportCode, string formCode, string version)
+    {
+        var grids = new List<GridMetadataDto>
+        {
+            new("Upper",
+                new List<string> { "Sheep", "Mixed" },
+                new List<string> { "STD", "OPN" },
+                new List<DisabledCellDto> { new("Mixed", "STD") }),
+            new("Lower",
+                new List<string> { "Sheep", "Ducks" },
+                new List<string> { "NOV", "RTD" },
+                new List<DisabledCellDto> { new("Ducks", "RTD") })
+        };
+
+        var formTemplate = new FormTemplate
+        {
+            OrganizationCode = organizationCode,
+            SportCode = sportCode,
+            FormCode = formCode,
+            Version = version,
+            GridConfigJson = JsonSerializer.Serialize(grids)
+        };
+
+        context.FormTemplates.Add(formTemplate);
+        await context.SaveChangesAsync();
     }
 
     private static DogTrialsDbContext CreateContext(string connectionString)

@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 21:52  
-**Current Focus:** B16 Update Entry — ✅ Completed
+**Last Updated:** 2026-01-22 22:20
+**Current Focus:** B17 Update Selections — ✅ Completed
 
 ---
 
@@ -46,7 +46,7 @@
 | B14 | Create Draft | ✅ Completed | B06, B08 | Endpoint, tests, telemetry implemented |
 | B15 | Get Entry | ✅ Completed | B14 | Endpoint, DTO mapping, tests |
 | B16 | Update Entry | ✅ Completed | B15 | Endpoint, ETag concurrency, tests |
-| B17 | Update Selections | ⬜ Not Started | B15 | |
+| B17 | Update Selections | ✅ Completed | B15 | Endpoint, validation, tests, artifacts |
 | B18 | Terms Endpoint | ⬜ Not Started | B01 | Unblocks A08 |
 | B19 | Submit Endpoint | ⬜ Not Started | B07, B16, B17 | |
 | B20 | Background Channels | ⬜ Not Started | B19 | |
@@ -122,6 +122,8 @@ _Append entries as work progresses._
 [2026-01-22 22:16] — B14 — Implemented Create Draft endpoint, added tests, all tests green — ✅
 [2026-01-22 21:50] — B15 — Implemented get entry endpoint + DTO mapping + tests — ✅
 [2026-01-22 21:52] — B16 — Implemented update entry endpoint + ETag handling + tests — ✅
+[2026-01-22 22:10] — B17 — Started update selections work — 🔄
+[2026-01-22 22:20] — B17 — Implemented update selections endpoint + tests + artifacts — ✅
 ```
 
 <!-- Example:
