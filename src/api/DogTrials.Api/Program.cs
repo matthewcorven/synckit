@@ -38,6 +38,10 @@ builder.Services.AddOptions<TestAuthOptions>()
     .Bind(builder.Configuration.GetSection(TestAuthOptions.SectionName))
     .PostConfigure(options => options.ApplyEnvironmentOverrides());
 
+builder.Services.AddOptions<UserProvisioningOptions>()
+    .Bind(builder.Configuration.GetSection(UserProvisioningOptions.SectionName))
+    .PostConfigure(options => options.ApplyEnvironmentOverrides());
+
 builder.Services.AddOptions<DogTrials.Api.Options.AuthenticationOptions>()
     .Bind(builder.Configuration.GetSection(DogTrials.Api.Options.AuthenticationOptions.SectionName));
 
@@ -141,6 +145,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(AuthPolicies.Secretary, policy => policy.RequireRole(UserRoles.Secretary));
 
 builder.Services.AddSingleton<IClaimsTransformation, RoleClaimsTransformation>();
+builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
 
 builder.Services.AddDbContext<DogTrialsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DogTrialsSql")));
@@ -169,6 +174,7 @@ app.UseStatusCodePages(async context =>
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseMiddleware<UserProvisioningMiddleware>();
 app.UseAuthorization();
 
 app.MapHealthEndpoints();

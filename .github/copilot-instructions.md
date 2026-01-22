@@ -87,6 +87,13 @@ When adding endpoints/DTOs, mirror the shapes and field names from the API contr
 - Playwright E2E is the merge gate (see required scenarios in [docs/prd/PRD_MVP_Test_Strategy.md](../docs/prd/PRD_MVP_Test_Strategy.md)).
 - Prefer polling `GET /api/admin/entries/{entryId}/processing-status` (secretary/test-only) to deterministically wait for async PDF/email completion.
 
+## DB verification (explicit, when required by a work item)
+- Use the local SQL Server Docker container from [docs/setup/Local_Db_Setup.md](../docs/setup/Local_Db_Setup.md).
+- Run tests with a real SQL connection:
+  - `DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' dotnet test src/api/DogTrials.sln -v minimal`
+- If no endpoint exists to trigger the behavior, add a SQL-backed integration test that uses `TestDatabase.TryCreateSqlServerOptions()` and `Database.MigrateAsync()` to verify the DB state.
+- Record the exact command + pass/fail outcome in the work item DB verification artifact.
+
 ## Mandatory test execution
 - Always run relevant tests after completing any work item or refactoring, without waiting to be asked.
 - If tests fail, fix the issues and re-run until green (max 3 attempts), or document the blocker.

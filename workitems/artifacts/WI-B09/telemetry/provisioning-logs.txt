@@ -1,0 +1,2 @@
+Not executed. Telemetry verification pending environment with log capture.
+Expected: log event for provisioning without PII (email not logged).

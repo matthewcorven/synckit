@@ -2,7 +2,7 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 19:05  
+**Last Updated:** 2026-01-22 19:50  
 **Current Focus:** B09 User Provisioning
 
 ---
@@ -38,7 +38,7 @@
 | B06 | Notifications Entity | ✅ Completed | B05 | EF Core entity + migration + tests |
 | B07 | Users Entity | ✅ Completed | B01 | EF Core config + tests + artifacts |
 | B08 | JWT Auth Policies | ✅ Completed | B07 | Auth policies + claim mapping + tests |
-| B09 | User Provisioning | ⬜ Not Started | B07, B08 | |
+| B09 | User Provisioning | ✅ Completed | B07, B08 | |
 | B10 | Trials Seed | ⬜ Not Started | B03, B04 | |
 | B11 | Trials Endpoints | ⬜ Not Started | B10, B08 | Unblocks A04 |
 | B12 | Registration Metadata | ⬜ Not Started | B11 | |
@@ -109,6 +109,7 @@ _Append entries as work progresses._
 [2026-01-22 17:20] — B06 — Added Notifications entity + migration + tests + artifacts — ✅
 [2026-01-22 18:05] — B07 — Added Users entity tests + artifacts — ✅
 [2026-01-22 19:05] — B08 — Configured JWT policies + role mapping + tests + artifacts — ✅
+[2026-01-22 19:50] — B09 — Implemented user provisioning middleware/service + tests + artifacts — ✅
 ```
 
 <!-- Example:

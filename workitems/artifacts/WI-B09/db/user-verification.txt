@@ -1,0 +1,11 @@
+Executed against local Docker SQL Server (dogtrials-sql).
+
+Command:
+DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' \
+	dotnet test /Users/core/git/matthewcorven/dog-trials-stream-b/src/api/DogTrials.sln -v minimal
+
+DB verification test:
+- UserProvisioningSqlTests.ProvisionAsync_PersistsUserInSqlServer
+
+Result: Passed
+Verified: user row created with ExternalSubject, Email, Role, CreatedAtUtc, LastLoginAtUtc.

@@ -1,0 +1,3 @@
+dotnet test /Users/core/git/matthewcorven/dog-trials-stream-b/src/api/DogTrials.sln -v minimal
+Result: Passed
+Notes: Includes UserProvisioningServiceTests (claim extraction, allowlist parsing, provisioning behavior).
