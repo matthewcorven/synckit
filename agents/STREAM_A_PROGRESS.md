@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** _Not started_  
-**Current Focus:** —
+**Last Updated:** 2026-01-22 14:10  
+**Current Focus:** A02 — Material + Layout
 
 ---
 
@@ -21,7 +21,7 @@
 
 | ID | Name | Status | Notes |
 |----|------|--------|-------|
-| CFG01 | Worktree + Port Config | ⬜ Not Started | |
+| CFG01 | Worktree + Port Config | 🔄 In Progress | |
 
 ---
 
@@ -29,7 +29,7 @@
 
 | ID | Name | Status | Blocked By | Notes |
 |----|------|--------|------------|-------|
-| A01 | Angular Scaffold | ⬜ Not Started | CFG01 | |
+| A01 | Angular Scaffold | ✅ Completed | CFG01 | |
 | A02 | Material + Layout | ⬜ Not Started | A01 | |
 | A03 | Routing + Auth Guards | ⬜ Not Started | A02 | |
 | A04 | Trial Selection | ⬜ Not Started | A03, B11* | *Can mock until B11 ready |
@@ -85,6 +85,8 @@ _Append entries as work progresses._
 
 ```
 [YYYY-MM-DD HH:MM] — <item> — <action taken> — <outcome>
+[2026-01-22 13:40] — A01 — Started Angular scaffold — In progress
+[2026-01-22 14:10] — A01 — Angular scaffold completed — ✅
 ```
 
 <!-- Example:

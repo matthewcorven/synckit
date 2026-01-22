@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
   apiPort: 5200,
-  useMocks: true
+  useMocks: true,
+  apiBaseUrl: null as string | null
 };
