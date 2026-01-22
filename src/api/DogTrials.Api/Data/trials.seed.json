@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Spring Stockdog Trial 2026",
+    "organizationCode": "ASCA",
+    "sportCode": "StockDog",
+    "formCode": "TrialEntry",
+    "formVersion": "2020-10-08",
+    "organizerSlug": "EXCLUB",
+    "eventSlug": "SPRING-2026-05-02",
+    "hostClub": "Example Stockdog Club",
+    "startDate": "2026-05-02",
+    "endDate": "2026-05-03",
+    "location": "Bryan, TX",
+    "secretaryEmail": "secretary@exclub.org",
+    "isActive": true
+  },
+  {
+    "name": "Summer Championship 2026",
+    "organizationCode": "ASCA",
+    "sportCode": "StockDog",
+    "formCode": "TrialEntry",
+    "formVersion": "2020-10-08",
+    "organizerSlug": "EXCLUB",
+    "eventSlug": "SUMMER-2026-07-15",
+    "hostClub": "Example Stockdog Club",
+    "startDate": "2026-07-15",
+    "endDate": "2026-07-17",
+    "location": "Austin, TX",
+    "secretaryEmail": "secretary@exclub.org",
+    "isActive": true
+  },
+  {
+    "name": "Fall Classic 2026",
+    "organizationCode": "ASCA",
+    "sportCode": "StockDog",
+    "formCode": "TrialEntry",
+    "formVersion": "2020-10-08",
+    "organizerSlug": "OTHERCLUB",
+    "eventSlug": "FALL-2026-10-20",
+    "hostClub": "Other Stockdog Club",
+    "startDate": "2026-10-20",
+    "endDate": "2026-10-21",
+    "location": "Dallas, TX",
+    "secretaryEmail": "secretary@otherclub.org",
+    "isActive": true
+  }
+]

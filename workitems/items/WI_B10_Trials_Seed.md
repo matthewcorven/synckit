@@ -43,7 +43,7 @@ Create trial seed data file and startup seeding behavior.
 - Seeding logic skips existing trials
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B10/unit-test-results.txt`
+- [../artifacts/WI-B10/unit-test-results.txt](../artifacts/WI-B10/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -52,7 +52,7 @@ Create trial seed data file and startup seeding behavior.
 - TrialCounters exist for all trials
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B10/integration-test-results.txt`
+- [../artifacts/WI-B10/integration-test-results.txt](../artifacts/WI-B10/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -67,7 +67,7 @@ Create trial seed data file and startup seeding behavior.
 - Query showing TrialCounters
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B10/db/seeded-trials.txt`
+- [../artifacts/WI-B10/db/seeded-trials.txt](../artifacts/WI-B10/db/seeded-trials.txt)
 
 ### Telemetry verification
 - Seeding logged appropriately
@@ -76,7 +76,7 @@ Create trial seed data file and startup seeding behavior.
 - Log sample
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B10/telemetry/seeding-logs.txt`
+- [../artifacts/WI-B10/telemetry/seeding-logs.txt](../artifacts/WI-B10/telemetry/seeding-logs.txt)
 
 ## Risks / Questions
 - ~~Production seeding strategy (one-time vs always)~~ → **RESOLVED: One-time migration** - Manual seed script, run once per environment

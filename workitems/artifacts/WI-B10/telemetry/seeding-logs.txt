@@ -1,0 +1,11 @@
+WI-B10 telemetry verification
+Date: 2026-01-22
+Command: SEED_TRIALS=true dotnet run --project DogTrials.Api --no-build
+
+Logs:
+info: DogTrials.Api.Data.TrialSeedingService[0]
+	Seeding trial EXCLUB-SPRING-2026-05-02.
+info: DogTrials.Api.Data.TrialSeedingService[0]
+	Seeding trial EXCLUB-SUMMER-2026-07-15.
+info: DogTrials.Api.Data.TrialSeedingService[0]
+	Seeding trial OTHERCLUB-FALL-2026-10-20.

@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 19:50  
-**Current Focus:** B09 User Provisioning
+**Last Updated:** 2026-01-22 20:30  
+**Current Focus:** B11 Trials Endpoints
 
 ---
 
@@ -39,7 +39,7 @@
 | B07 | DB Constraints | ✅ Completed | B06 | |
 | B08 | JWT Middleware | ✅ Completed| B01 | |
 | B09 | User Provisioning | ✅ Completed | B08, B05 | |
-| B10 | TestAuth Endpoint | ⬜ Not Started | B01 | **PRIORITY** — Unblocks A14 |
+| B10 | Trials Seed | ✅ Completed | B03, B04 |  |
 | B11 | Trials Endpoints | ⬜ Not Started | B05 | Unblocks A04 |
 | B12 | Registration Metadata | ⬜ Not Started | B11 | |
 | B13 | Form Metadata | ⬜ Not Started | B11 | |
@@ -111,6 +111,7 @@ _Append entries as work progresses._
 [2026-01-22 18:05] — B07 — Added Users entity tests + artifacts — ✅
 [2026-01-22 19:05] — B08 — Configured JWT policies + role mapping + tests + artifacts — ✅
 [2026-01-22 19:50] — B09 — Implemented user provisioning middleware/service + tests + artifacts — ✅
+[2026-01-22 20:30] — B10 — Added trial seed file, seeding service, tests, and artifacts — ✅
 ```
 
 <!-- Example:

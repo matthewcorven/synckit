@@ -1,0 +1,9 @@
+WI-B10 integration test results
+Date: 2026-01-22
+Command: DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' dotnet test DogTrials.sln -v minimal
+
+Tests:
+- TrialSeedingServiceTests.SeedTrialsAsync_IsIdempotent_WhenUsingSqlServer
+
+Summary:
+- Passed (part of full test suite run)

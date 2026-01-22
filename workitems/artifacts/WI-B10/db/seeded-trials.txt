@@ -1,0 +1,17 @@
+WI-B10 DB verification
+Date: 2026-01-22
+Command: docker exec -i dogtrials-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'YourStrong!Passw0rd' -d DogTrials -Q "SET NOCOUNT ON; SELECT TrialId, OrganizerSlug, EventSlug, TrackingSlug FROM Trials ORDER BY OrganizerSlug, EventSlug; SELECT TrialId, NextSequenceNumber FROM TrialCounters ORDER BY TrialId;"
+
+Trials:
+TrialId                              OrganizerSlug                      EventSlug                                                        TrackingSlug
+------------------------------------ -------------------------------     ---------------------------------------------------------------- ----------------------------------------------------------------
+301CAA11-33E3-47EE-8DF4-3673791CA6AF EXCLUB                              SPRING-2026-05-02                                               EXCLUB-SPRING-2026-05-02
+5BF06908-F5BC-490F-9D32-AEE66F3CC308 EXCLUB                              SUMMER-2026-07-15                                               EXCLUB-SUMMER-2026-07-15
+736CADA7-285D-4263-8A2E-A2A75603D99D OTHERCLUB                           FALL-2026-10-20                                                 OTHERCLUB-FALL-2026-10-20
+
+TrialCounters:
+TrialId                              NextSequenceNumber
+------------------------------------ ------------------
+301CAA11-33E3-47EE-8DF4-3673791CA6AF                  1
+736CADA7-285D-4263-8A2E-A2A75603D99D                  1
+5BF06908-F5BC-490F-9D32-AEE66F3CC308                  1

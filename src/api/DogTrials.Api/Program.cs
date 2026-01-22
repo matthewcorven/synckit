@@ -42,6 +42,10 @@ builder.Services.AddOptions<UserProvisioningOptions>()
     .Bind(builder.Configuration.GetSection(UserProvisioningOptions.SectionName))
     .PostConfigure(options => options.ApplyEnvironmentOverrides());
 
+builder.Services.AddOptions<TrialSeedingOptions>()
+    .Bind(builder.Configuration.GetSection(TrialSeedingOptions.SectionName))
+    .PostConfigure(options => options.ApplyEnvironmentOverrides());
+
 builder.Services.AddOptions<DogTrials.Api.Options.AuthenticationOptions>()
     .Bind(builder.Configuration.GetSection(DogTrials.Api.Options.AuthenticationOptions.SectionName));
 
@@ -146,6 +150,7 @@ builder.Services.AddAuthorizationBuilder()
 
 builder.Services.AddSingleton<IClaimsTransformation, RoleClaimsTransformation>();
 builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
+builder.Services.AddScoped<TrialSeedingService>();
 
 builder.Services.AddDbContext<DogTrialsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DogTrialsSql")));
@@ -179,6 +184,14 @@ app.UseAuthorization();
 
 app.MapHealthEndpoints();
 app.MapTestAuthEndpoints();
+
+var seedingOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrialSeedingOptions>>();
+if (seedingOptions.Value.Enabled)
+{
+    using var scope = app.Services.CreateScope();
+    var seeder = scope.ServiceProvider.GetRequiredService<TrialSeedingService>();
+    await seeder.SeedTrialsAsync(CancellationToken.None);
+}
 
 app.Run();
 
