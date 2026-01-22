@@ -1,13 +1,27 @@
 # dog-trials.com
 
-Welcome to Dog Trials, the premier destination for working dog enthusiasts and competitors! Our website is dedicated to connecting dog owners, trainers, and handlers with the resources they need to register for and compete in dog trials, find training tips, and stay updated on the latest events in the working dog community.
+This repository is the build-out of the **MVP: Stock Dog Trial Registration** web app.
 
-## Features
-- **Trial Host & Event Management**: Organizers can create and manage dog trial events with ease.
-- **Comprehensive Event Listings**: Browse a wide range of upcoming dog trials and events across various disciplines.
-- **Training Resources**: Access articles, videos, and tutorials from expert trainers to help you prepare your dog for competition.
-- **Community Forum**: Connect with other dog enthusiasts to share experiences, ask questions, and get advice.
-- **Event Registration**: Easily register for upcoming dog trials and events, using our secure online system with official registation forms, payment processing, and confirmation emails.
-- **User Profiles**: Create and manage your profile, track your dog's performance, and view your event history.
-- **News & Updates**: Stay informed with the latest news, tips, and updates from the working dog world.
-- tbd
+**Target stack (MVP):** Angular 22 (Azure Static Web Apps) + .NET 10 Web API + EF Core + Azure SQL + Azure Blob + ACS Email + OpenTelemetry.
+
+## What the MVP ships
+- Handler + Trial Secretary login (Microsoft Entra External ID)
+- Trial selection from a seeded/static list
+- On-screen registration form matching the **left-half** of the official ASCA entry form
+- Web-style terms acceptance (versioned)
+- Submit writes to DB, generates official PDF from template, stores it in blob, and emails handler + secretary
+- Secretary portal: list entries, view details, download PDF
+- Testability: deterministic Playwright via TestAuth mode (disabled by default)
+- Observability: correlated traces/metrics/logs with a Support ID
+
+## What is explicitly out of MVP (MVP+ / future)
+- Payments and fee calculation beyond user-entered “Total Entry Fees”
+- Wizard mode, PDF upload/extraction
+- SMS
+- Community forum, training resources, profiles, news, general event directory
+
+## Start here
+- Docs index: [docs/README.md](docs/README.md)
+- PRDs: [docs/prd](docs/prd)
+- Work items: [workitems/README.md](workitems/README.md)
+- Agent coordination: [agents/README.md](agents/README.md)

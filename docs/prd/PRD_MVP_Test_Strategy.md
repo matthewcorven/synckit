@@ -40,6 +40,13 @@ Add a **TestAuth** bypass that is:
   - `X-Test-Role: Handler|Secretary`
 - Produces a short-lived JWT accepted by the API
 
+Recommended endpoint contract:
+- `POST /api/testauth/token`
+- Headers:
+  - `X-Test-Auth-Secret: <secret>`
+  - `X-Test-Role: Handler|Secretary`
+- Response: `{ accessToken, expiresInSeconds, role }`
+
 ### 2.2 Safety controls
 - In production: `ENABLE_TEST_AUTH=false`
 - Additionally restrict by:
@@ -83,7 +90,7 @@ For EntryId:
 - After background completion:
   - `PdfStatus='Success'`
   - `GeneratedPdfBlobUri` not null
-  - Notification rows exist for handler + secretary (or EmailStatus fields show success)
+  - Notification rows exist for handler + secretary (per-recipient delivery status)
 
 ### 4.2 Implementation
 - Preferred: C# integration tests using connection string from env var.
@@ -94,8 +101,12 @@ For EntryId:
 ## 5) Async background work test approach
 - Provide a status endpoint (secretary-only or test-only):
   - `GET /api/admin/entries/{entryId}/processing-status`
-  - returns `pdfStatus`, `emailStatus`, error codes
+  - returns `pdfStatus`, `emailNotifications`, error codes
 - Playwright polls until success or timeout.
+
+Status values should be treated as:
+- Non-terminal: `Queued`, `InProgress`
+- Terminal: `Success`, `Failed`
 
 ---
 

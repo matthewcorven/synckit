@@ -35,11 +35,31 @@
 
 ## 2) DTOs (data contracts)
 
+### 2.0 FormTemplateKey (organization/sport/form/version)
+Registration forms are versioned by their issuing organization (e.g., ASCA). The canonical identity is:
+- `organizationCode` (e.g., `ASCA`)
+- `sportCode` (e.g., `StockDog`)
+- `formCode` (e.g., `TrialEntry`)
+- `version` (e.g., `2020-10-08`)
+
+```json
+{
+  "organizationCode": "ASCA",
+  "sportCode": "StockDog",
+  "formCode": "TrialEntry",
+  "version": "2020-10-08"
+}
+```
+
 ### 2.1 TrialSummaryDto
 ```json
 {
   "trialId": "9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49",
   "name": "Spring Stockdog Trial",
+  "formTemplate": { "organizationCode": "ASCA", "sportCode": "StockDog", "formCode": "TrialEntry", "version": "2020-10-08" },
+  "organizerSlug": "EXCLUB",
+  "eventSlug": "SPRING-2026-05-02",
+  "trackingSlug": "EXCLUB-SPRING-2026-05-02",
   "hostClub": "Example Club",
   "startDate": "2026-05-02",
   "endDate": "2026-05-03",
@@ -52,6 +72,35 @@
 ### 2.2 EntryStatus enum
 - `Draft`
 - `Submitted`
+
+### 2.2.1 ProcessingStatus enums
+**PdfStatus**
+- `Queued`
+- `InProgress`
+- `Success`
+- `Failed`
+
+**NotificationStatus**
+- `Queued`
+- `InProgress`
+- `Success`
+- `Failed`
+
+**NotificationRecipientType**
+- `Handler`
+- `Secretary`
+
+### 2.2.2 NotificationDto
+Used to represent per-recipient email delivery state.
+
+```json
+{
+  "recipientType": "Handler",
+  "status": "Queued",
+  "sentAtUtc": null,
+  "lastError": null
+}
+```
 
 ### 2.3 Grid enums (Exact Cell Grid)
 **GridId**
@@ -72,7 +121,60 @@
 - `NOV`, `WRK_JR_HNDLR`, `FEO`, `POST_ADV`, `RTD`,
 - `DATE1_TRIAL1`, `DATE1_TRIAL2`, `DATE2_TRIAL1`, `DATE2_TRIAL2`, `DATE3_TRIAL1`, `DATE3_TRIAL2`, `DATE4_TRIAL1`, `DATE4_TRIAL2`
 
-> Note: Disabled cells are enforced by server validation (see 4.3).
+> Note: Disabled cells are enforced by server validation (see 4.2).
+
+### 2.3.1 FormMetadataDto
+The API is the source of truth for the supported grid layout and disabled cells.
+This metadata is scoped to a specific organization/sport/form/version.
+
+```json
+{
+  "formTemplate": { "organizationCode": "ASCA", "sportCode": "StockDog", "formCode": "TrialEntry", "version": "2020-10-08" },
+  "grids": [
+    {
+      "grid": "Upper",
+      "rows": ["Sheep", "Cattle", "Ducks", "Mixed"],
+      "cols": ["STD", "OPN", "ADV", "FTD_OPN", "FTD_ADV", "DATE1_TRIAL1"],
+      "disabledCells": [
+        { "row": "Mixed", "col": "STD" }
+      ]
+    },
+    {
+      "grid": "Lower",
+      "rows": ["Sheep", "Cattle", "Ducks"],
+      "cols": ["NOV", "WRK_JR_HNDLR", "FEO", "POST_ADV", "RTD", "DATE1_TRIAL1"],
+      "disabledCells": [
+        { "row": "Ducks", "col": "RTD" }
+      ]
+    }
+  ]
+}
+```
+
+### 2.3.2 TrialRegistrationMetadataDto
+Trial-scoped registration metadata for a specific trial instance. This makes the trial the entry point, while still explicitly referencing the underlying organization/sport/form/version template.
+
+```json
+{
+  "trialId": "9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49",
+  "formTemplate": { "organizationCode": "ASCA", "sportCode": "StockDog", "formCode": "TrialEntry", "version": "2020-10-08" },
+  "formMetadata": {
+    "formTemplate": { "organizationCode": "ASCA", "sportCode": "StockDog", "formCode": "TrialEntry", "version": "2020-10-08" },
+    "grids": [
+      {
+        "grid": "Upper",
+        "rows": ["Sheep", "Cattle", "Ducks", "Mixed"],
+        "cols": ["STD", "OPN", "ADV", "FTD_OPN", "FTD_ADV", "DATE1_TRIAL1"],
+        "disabledCells": [
+          { "row": "Mixed", "col": "STD" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+
 
 ### 2.4 EntryCreateRequestDto
 ```json
@@ -91,8 +193,7 @@
   "handlerEmail": "handler@example.com",
   "dogCallName": "Ranger",
   "dogRegisteredName": "Optional",
-  "pdfStatus": "Success",
-  "emailStatus": "Success"
+  "pdfStatus": "Success"
 }
 ```
 
@@ -103,15 +204,18 @@
   "trial": {
     "trialId": "9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49",
     "name": "Spring Stockdog Trial",
+    "organizerSlug": "EXCLUB",
+    "eventSlug": "SPRING-2026-05-02",
+    "trackingSlug": "EXCLUB-SPRING-2026-05-02",
     "hostClub": "Example Club",
     "startDate": "2026-05-02",
     "endDate": "2026-05-03",
     "secretaryEmail": "secretary@example.com"
   },
   "status": "Draft",
-  "formTemplateVersion": "ASCA-2020-10-08",
+  "formTemplate": { "organizationCode": "ASCA", "sportCode": "StockDog", "formCode": "TrialEntry", "version": "2020-10-08" },
   "dog": {
-    "registrationOrTrackingNumber": "ASCA-12345",
+    "registrationOrTrackingNumber": null,
     "breed": "Australian Shepherd",
     "registeredName": "Registered Name",
     "dob": "2021-04-10",
@@ -158,15 +262,19 @@
   },
   "terms": {
     "version": "v1",
-    "acceptedAtUtc": null
+    "acceptedAtUtc": null,
+    "acceptedByUserId": null
   },
   "processing": {
-    "pdfStatus": "Pending",
-    "emailStatus": "Pending",
+    "pdfStatus": "Queued",
     "generatedPdf": {
       "blobUri": null,
       "downloadUrl": null
     },
+    "emailNotifications": [
+      { "recipientType": "Handler", "status": "Queued", "sentAtUtc": null, "lastError": null },
+      { "recipientType": "Secretary", "status": "Queued", "sentAtUtc": null, "lastError": null }
+    ],
     "lastError": null
   }
 }
@@ -175,10 +283,12 @@
 ### 2.7 EntryUpdateRequestDto
 All fields optional; only provided fields are updated.
 
+Null handling (MVP decision)
+- Explicit nulls are rejected; omit fields to leave them unchanged.
+
 ```json
 {
   "dog": {
-    "registrationOrTrackingNumber": "ASCA-12345",
     "breed": "Australian Shepherd",
     "registeredName": "Registered Name",
     "dob": "2021-04-10",
@@ -245,14 +355,20 @@ Replaces all selections for a grid.
 {
   "entryId": "f3e0e855-6522-4d4b-8d9e-34e61f9a4a75",
   "pdfStatus": "Success",
-  "emailStatus": "Success",
   "generatedPdfDownloadUrl": "https://...SAS...",
+  "emailNotifications": [
+    { "recipientType": "Handler", "status": "Success", "sentAtUtc": "2026-05-01T15:22:30Z", "lastError": null },
+    { "recipientType": "Secretary", "status": "Success", "sentAtUtc": "2026-05-01T15:22:31Z", "lastError": null }
+  ],
   "lastError": {
     "code": "PDF_STAMP_FAILED",
     "message": "Short message for UI; full stack in logs only."
   }
 }
 ```
+
+Notes:
+- `terms.acceptedByUserId` is intended for secretary/admin auditing and may be omitted for handler views.
 
 ---
 
@@ -277,6 +393,16 @@ Replaces all selections for a grid.
 
 **Errors**
 - 404 if not found
+
+### 3.2.1 Trial registration metadata (authenticated)
+**GET** `/api/trials/{trialId}/registration/metadata` (Handler or Secretary)
+
+**200**: `TrialRegistrationMetadataDto`
+
+### 3.2.2 Form template metadata (authenticated)
+**GET** `/api/form-templates/{organizationCode}/{sportCode}/{formCode}/{version}/metadata` (Handler or Secretary)
+
+**200**: `FormMetadataDto`
 
 ### 3.3 Entries (Handler)
 
@@ -349,13 +475,21 @@ Replaces all selections for a grid.
 
 ### 3.6 Admin/test endpoints (MVP testability)
 
-> If TestAuth mode is used, this section is required. Otherwise, omit.
+This section is **required for MVP** to enable deterministic Playwright automation without relying on external identity providers.
 
 **GET** `/api/admin/entries/{entryId}/processing-status` (Secretary or Test-only)
 - Returns `ProcessingStatusDto`
 
 **POST** `/api/testauth/token` (Test-only; gated)
-- Returns a short-lived JWT for role-based testing.
+- Purpose: return a short-lived JWT for role-based testing.
+- Required headers:
+  - `X-Test-Auth-Secret: <secret>`
+  - `X-Test-Role: Handler|Secretary`
+- Response **200**:
+```json
+{ "accessToken": "<jwt>", "expiresInSeconds": 900, "role": "Handler" }
+```
+- When disabled, return **404** (preferred) or **403**.
 
 ---
 
@@ -399,23 +533,53 @@ Default MVP rule:
 Config override:
 - `ALLOW_ENTRY_EMAIL_DIFFERENT_FROM_LOGIN=true` allows mismatch.
 
+MVP decision: authenticated email claim
+- Treat the authenticated email as the `preferred_username` claim from the access token.
+
+MVP decision: secretary allowlist parsing
+- Parse `SECRETARY_EMAIL_ALLOWLIST` as comma/semicolon/newline-separated, case-insensitive.
+
+### 4.4 Registration/Tracking # generation
+MVP rule:
+- `dog.registrationOrTrackingNumber` is generated by the server on successful submit.
+- Format: `TrialSlug-0001` (zero-padded sequence), sequence resets per trial.
+- Clients must treat the field as read-only.
+
+Concurrency + idempotency requirements:
+- Allocation must be concurrency-safe (no duplicate numbers for a trial).
+- Allocation must occur at most once per entry (submit retries must not burn extra numbers).
+- Recommended implementation: allocate within the same DB transaction that transitions Draft → Submitted, and enforce uniqueness with a DB constraint.
+
+Database-first enforcement note (MVP)
+- Prefer SQL Server constraints and transactional locks as the primary guardrails; EF Core should model these, but should not be relied on as the sole protection.
+
 ---
 
 ## 5) Processing and idempotency
 
 ### 5.1 PDF generation
+- Container: `pdf`
 - Deterministic blob name: `entries/{entryId}.pdf`
 - If blob exists and PdfStatus=Success, do not regenerate.
+
+Retry-on-restart (MVP decision)
+- The API may retry incomplete PDF generation on startup; operations must be idempotent.
+
+SAS TTL (MVP decision)
+- UI-minted download links: 15 minutes.
+- Email links: 24 hours.
 
 ### 5.2 Email sending
 - Notification keys:
   - (EntryId, RecipientType=Handler)
   - (EntryId, RecipientType=Secretary)
-- If already `Sent`, do not resend.
+- If already `Success`, do not resend.
+
+Retry-on-restart (MVP decision)
+- The API may retry incomplete notifications on startup; operations must be idempotent.
 
 ### 5.3 Status fields (recommended on Entries)
-- `PdfStatus`: Pending|Success|Failed
-- `EmailStatus`: Pending|Success|Failed
+- `PdfStatus`: Queued|InProgress|Success|Failed
 - `LastErrorCode`, `LastErrorAtUtc` (short, no PII)
 
 ---
@@ -437,7 +601,9 @@ Config override:
 - `entry.mode` (MVP: `direct`)
 - `user.role` (Handler/Secretary)
 - `pdf.status` (Pending/Success/Failed) on Pdf.Generate
-- `email.status` (Pending/Success/Failed) on Email.Send
+- `pdf.status` (Queued/InProgress/Success/Failed) on Pdf.Generate
+- `email.status` (Queued/InProgress/Success/Failed) on Email.Send
+- `email.recipientType` (Handler/Secretary) on Email.Send
 
 ### 6.3 Log fields (structured)
 Every log line in the above flows should include:

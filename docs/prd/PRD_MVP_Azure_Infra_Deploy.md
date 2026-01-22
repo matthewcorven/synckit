@@ -11,7 +11,7 @@
 - Azure Static Web Apps (Angular)
 - Azure App Service (API, .NET 10)
 - Azure SQL Server + Database
-- Storage account + private blob container `pdf`
+- Storage account + private blob container `pdf` (blob name convention: `entries/{entryId}.pdf`)
 - Key Vault
 - Application Insights
 - Azure Communication Services Email
@@ -46,6 +46,10 @@ App settings:
 - `SECRETARY_EMAIL_ALLOWLIST` set
 - `TERMS_VERSION` set
 
+Related setup docs (placeholders)
+- [Entra External ID setup (MVP)](../setup/Auth_Entra_ExternalId.md)
+- [Local development routing (MVP)](../setup/Local_Dev_Routing.md)
+
 ---
 
 ## 4) Deployment approach
@@ -59,7 +63,12 @@ App settings:
 - deploy with `swa deploy` or `az staticwebapp`
 
 **Acceptance criteria**
-- SWA serves app and proxies `/api/*` correctly.
+- SWA serves the app.
+- The SPA calls the API by its own origin (App Service URL or custom domain) using a configured `API_BASE_URL`.
+- CORS is restricted to the SWA origin (and local dev origins as needed).
+
+Local dev (MVP decision)
+- Use an Angular dev-server proxy so the SPA can call relative `/api/*` locally without CORS.
 
 ---
 
@@ -69,6 +78,10 @@ App settings:
 
 **Acceptance criteria**
 - Schema exists and trials are seeded.
+
+Notes (MVP)
+- Trial seeds must include `OrganizerSlug` + `EventSlug` to form a deterministic `TrackingSlug` used in sequential Registration/Tracking # allocation.
+- DB constraints and retry/backoff fields should follow [docs/review/DB_Constraints_and_Retry_Model.md](../review/DB_Constraints_and_Retry_Model.md).
 
 ---
 

@@ -180,7 +180,8 @@ This defines the implementation order and detailed Definition of Done per item.
 ### WI-7.1 Submit endpoint
 - `POST /api/entries/{entryId}/submit`
 - Validates required fields and selections
-- Stores TermsAcceptedAtUtc + TermsVersion, marks Submitted
+- Stores TermsAcceptedAtUtc + TermsVersion + TermsAcceptedByUserId, marks Submitted
+- Allocates per-trial sequential Registration/Tracking # on submit (concurrency-safe; idempotent on retries)
 - Enqueues PDF + email work items (Channels)
 
 **Acceptance criteria**
@@ -198,7 +199,7 @@ This defines the implementation order and detailed Definition of Done per item.
 
 ### WI-8.1 Template asset packaged
 - Official PDF stored in API assets
-- `FormTemplateVersion` constant
+- Form template key constants (organization/sport/form/version)
 
 **Acceptance criteria**
 - API can load template at runtime in Azure
@@ -209,6 +210,9 @@ This defines the implementation order and detailed Definition of Done per item.
 ### WI-8.2 PDF stamping implementation
 - Deterministic blob name by EntryId
 - Update Entries with PdfStatus and GeneratedPdfBlobUri
+
+Notes
+- PdfStatus should support non-terminal states (`Queued`, `InProgress`) plus terminal (`Success`, `Failed`).
 
 **Acceptance criteria**
 - Generated PDF exists and is accessible via SAS URL
@@ -227,6 +231,9 @@ This defines the implementation order and detailed Definition of Done per item.
 
 **Acceptance criteria**
 - Notifications recorded and status exposed
+
+Notes
+- Email delivery should be tracked per-recipient via Notifications (Handler + Secretary), with non-terminal (`Queued`, `InProgress`) and terminal (`Success`, `Failed`) states.
 
 **Tests**
 - Integration: notification rows written (use provider stub or sandbox)
