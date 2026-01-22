@@ -57,15 +57,11 @@ public class EntriesEntityTests
     [Fact]
     public async Task Entry_InsertWithoutValidTrial_FailsWhenUsingSqlServer()
     {
-        var connectionString = Environment.GetEnvironmentVariable("DOGTRIALS_TEST_SQL");
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var options = TestDatabase.TryCreateSqlServerOptions();
+        if (options is null)
         {
             return;
         }
-
-        var options = new DbContextOptionsBuilder<DogTrialsDbContext>()
-            .UseSqlServer(connectionString)
-            .Options;
 
         await using var context = new DogTrialsDbContext(options);
         await context.Database.EnsureDeletedAsync();
@@ -89,15 +85,11 @@ public class EntriesEntityTests
     [Fact]
     public async Task Entry_DuplicateSequenceNumber_FailsWhenUsingSqlServer()
     {
-        var connectionString = Environment.GetEnvironmentVariable("DOGTRIALS_TEST_SQL");
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var options = TestDatabase.TryCreateSqlServerOptions();
+        if (options is null)
         {
             return;
         }
-
-        var options = new DbContextOptionsBuilder<DogTrialsDbContext>()
-            .UseSqlServer(connectionString)
-            .Options;
 
         await using var context = new DogTrialsDbContext(options);
         await context.Database.EnsureDeletedAsync();
@@ -134,15 +126,11 @@ public class EntriesEntityTests
     [Fact]
     public async Task Entry_DuplicateRegistrationNumber_FailsWhenUsingSqlServer()
     {
-        var connectionString = Environment.GetEnvironmentVariable("DOGTRIALS_TEST_SQL");
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var options = TestDatabase.TryCreateSqlServerOptions();
+        if (options is null)
         {
             return;
         }
-
-        var options = new DbContextOptionsBuilder<DogTrialsDbContext>()
-            .UseSqlServer(connectionString)
-            .Options;
 
         await using var context = new DogTrialsDbContext(options);
         await context.Database.EnsureDeletedAsync();

@@ -1,7 +1,7 @@
 # WI-B06: Notifications Entity
 
 **Owner:** Agent B (Platform)  
-**Status:** Proposed  
+**Status:** Completed  
 **Milestone:** M1  
 **Dependencies:** B05  
 **Artifacts folder (recommended):** `../artifacts/WI-B06/`
@@ -44,7 +44,7 @@ Create the Notifications entity for tracking per-recipient email delivery status
 - Constraints are configured
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B06/unit-test-results.txt`
+- [../artifacts/WI-B06/unit-test-results.txt](../artifacts/WI-B06/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -52,7 +52,7 @@ Create the Notifications entity for tracking per-recipient email delivery status
 - Duplicate EntryId + RecipientType fails
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B06/integration-test-results.txt`
+- [../artifacts/WI-B06/integration-test-results.txt](../artifacts/WI-B06/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -67,8 +67,8 @@ Create the Notifications entity for tracking per-recipient email delivery status
 - Constraint test results
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B06/db/table-structure.txt`
-- `../artifacts/WI-B06/db/constraint-test.txt`
+- [../artifacts/WI-B06/db/table-structure.txt](../artifacts/WI-B06/db/table-structure.txt)
+- [../artifacts/WI-B06/db/constraint-test.txt](../artifacts/WI-B06/db/constraint-test.txt)
 
 ### Telemetry verification
 - N/A

@@ -1,0 +1,3 @@
+DB verification not executed. DOGTRIALS_TEST_SQL not set.
+Expected table:
+- Notifications: NotificationId PK, EntryId FK -> Entries, RecipientType (nvarchar(16)), Status (nvarchar(16)), AttemptCount default 0, NextAttemptAtUtc, LastAttemptAtUtc, LastErrorCode (nvarchar(64)), SentAtUtc, CreatedAtUtc default SYSUTCDATETIME().

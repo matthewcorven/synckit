@@ -1,0 +1,5 @@
+DB verification not executed. DOGTRIALS_TEST_SQL not set.
+Expected constraints/indexes:
+- UX_Notifications_EntryId_RecipientType unique (EntryId, RecipientType)
+- IX_Notifications_Status_NextAttemptAtUtc index (Status, NextAttemptAtUtc)
+- FK Notifications.EntryId -> Entries.EntryId

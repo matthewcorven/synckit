@@ -15,10 +15,10 @@ WHERE TrialId = @trialId";
 
         var parameter = new SqlParameter("@trialId", trialId);
 
-        var sequenceNumber = await context.Database
+        var results = await context.Database
             .SqlQueryRaw<int>(sql, parameter)
-            .FirstOrDefaultAsync(ct);
+            .ToListAsync(ct);
 
-        return sequenceNumber;
+        return results.FirstOrDefault();
     }
 }

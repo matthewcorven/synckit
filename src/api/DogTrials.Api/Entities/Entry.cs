@@ -57,6 +57,7 @@ public sealed class Entry
 
     public Trial Trial { get; set; } = null!;
     public User CreatedByUser { get; set; } = null!;
+    public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 }
 
 public enum EntryStatus

@@ -38,15 +38,11 @@ public class TrialCountersEntityTests
     [Fact]
     public async Task TrialCounter_InsertInvalidNextSequenceNumber_FailsWhenUsingSqlServer()
     {
-        var connectionString = Environment.GetEnvironmentVariable("DOGTRIALS_TEST_SQL");
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var options = TestDatabase.TryCreateSqlServerOptions();
+        if (options is null)
         {
             return;
         }
-
-        var options = new DbContextOptionsBuilder<DogTrialsDbContext>()
-            .UseSqlServer(connectionString)
-            .Options;
 
         await using var context = new DogTrialsDbContext(options);
         await context.Database.EnsureDeletedAsync();
@@ -66,15 +62,11 @@ public class TrialCountersEntityTests
     [Fact]
     public async Task TrialCounter_InsertWithoutTrial_FailsWhenUsingSqlServer()
     {
-        var connectionString = Environment.GetEnvironmentVariable("DOGTRIALS_TEST_SQL");
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var options = TestDatabase.TryCreateSqlServerOptions();
+        if (options is null)
         {
             return;
         }
-
-        var options = new DbContextOptionsBuilder<DogTrialsDbContext>()
-            .UseSqlServer(connectionString)
-            .Options;
 
         await using var context = new DogTrialsDbContext(options);
         await context.Database.EnsureDeletedAsync();
@@ -92,15 +84,11 @@ public class TrialCountersEntityTests
     [Fact]
     public async Task TrialCounter_AllocatesDistinctSequenceNumbers_WhenConcurrent()
     {
-        var connectionString = Environment.GetEnvironmentVariable("DOGTRIALS_TEST_SQL");
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var options = TestDatabase.TryCreateSqlServerOptions();
+        if (options is null)
         {
             return;
         }
-
-        var options = new DbContextOptionsBuilder<DogTrialsDbContext>()
-            .UseSqlServer(connectionString)
-            .Options;
 
         await using (var setupContext = new DogTrialsDbContext(options))
         {

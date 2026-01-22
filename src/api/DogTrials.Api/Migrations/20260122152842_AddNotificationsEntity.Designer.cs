@@ -4,6 +4,7 @@ using DogTrials.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DogTrials.Api.Migrations
 {
     [DbContext(typeof(DogTrialsDbContext))]
-    partial class DogTrialsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260122152842_AddNotificationsEntity")]
+    partial class AddNotificationsEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
