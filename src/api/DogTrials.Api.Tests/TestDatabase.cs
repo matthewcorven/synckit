@@ -8,6 +8,19 @@ internal static class TestDatabase
 {
     public static DbContextOptions<DogTrialsDbContext>? TryCreateSqlServerOptions()
     {
+        var connectionString = TryCreateSqlServerConnectionString();
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return null;
+        }
+
+        return new DbContextOptionsBuilder<DogTrialsDbContext>()
+            .UseSqlServer(connectionString)
+            .Options;
+    }
+
+    public static string? TryCreateSqlServerConnectionString()
+    {
         var baseConnectionString = Environment.GetEnvironmentVariable("DOGTRIALS_TEST_SQL");
         if (string.IsNullOrWhiteSpace(baseConnectionString))
         {
@@ -21,8 +34,6 @@ internal static class TestDatabase
 
         builder.InitialCatalog = $"{baseCatalog}_{Guid.NewGuid():N}";
 
-        return new DbContextOptionsBuilder<DogTrialsDbContext>()
-            .UseSqlServer(builder.ConnectionString)
-            .Options;
+        return builder.ConnectionString;
     }
 }

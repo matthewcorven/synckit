@@ -1,0 +1,12 @@
+WI-B11 unit test results
+Date: 2026-01-22
+Command: DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' dotnet test DogTrials.sln -v minimal
+
+Tests:
+- TrialsEndpointsTests.List_ReturnsOnlyActiveTrials_WhenAuthenticated
+- TrialsEndpointsTests.GetById_ReturnsTrial_WhenAuthenticated
+- TrialsEndpointsTests.GetById_ReturnsNotFound_WhenMissing
+- TrialsEndpointsTests.List_ReturnsUnauthorized_WhenMissingToken
+
+Summary:
+- Passed (part of full test suite run)

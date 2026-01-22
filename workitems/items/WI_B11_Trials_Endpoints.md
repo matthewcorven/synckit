@@ -45,7 +45,7 @@ Implement the trials list and detail endpoints.
 - 404 for missing trial
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B11/unit-test-results.txt`
+- [../artifacts/WI-B11/unit-test-results.txt](../artifacts/WI-B11/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -54,7 +54,7 @@ Implement the trials list and detail endpoints.
 - Unauthenticated request returns 401
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B11/integration-test-results.txt`
+- [../artifacts/WI-B11/integration-test-results.txt](../artifacts/WI-B11/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -62,7 +62,7 @@ Implement the trials list and detail endpoints.
 - Trial selection navigates correctly
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B11/playwright/trials-api-trace.zip`
+- [../artifacts/WI-B11/playwright/trials-api-trace.zip](../artifacts/WI-B11/playwright/trials-api-trace.zip)
 
 ### DB verification
 **Artifact requirements**
@@ -78,7 +78,7 @@ Implement the trials list and detail endpoints.
 - Trace screenshot
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B11/telemetry/trials-trace.png`
+- [../artifacts/WI-B11/telemetry/trials-trace.png](../artifacts/WI-B11/telemetry/trials-trace.png)
 
 ## Risks / Questions
 - Pagination for large trial lists (future enhancement)
