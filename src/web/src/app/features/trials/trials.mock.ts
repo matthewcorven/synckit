@@ -1,0 +1,70 @@
+import { TrialSummaryDto } from './trial.types';
+
+export const TRIALS_MOCK_DATA: TrialSummaryDto[] = [
+  {
+    trialId: '9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49',
+    name: 'Spring Stockdog Trial',
+    organizationName: 'Australian Shepherd Club of America',
+    sportName: 'Stock Dog',
+    formName: 'Trial Entry Form',
+    formTemplate: {
+      organizationCode: 'ASCA',
+      sportCode: 'StockDog',
+      formCode: 'TrialEntry',
+      version: '2020-10-08'
+    },
+    organizerSlug: 'EXCLUB',
+    eventSlug: 'SPRING-2026-05-02',
+    trackingSlug: 'EXCLUB-SPRING-2026-05-02',
+    hostClub: 'Example Club',
+    startDate: '2026-05-02',
+    endDate: '2026-05-04',
+    location: 'Horse Cave, KY',
+    secretaryEmail: 'secretary@example.com',
+    isActive: true
+  },
+  {
+    trialId: 'ae3a7fb2-7b63-4b9f-bb55-2fc6ff0a3d5c',
+    name: 'Summer Invitational',
+    organizationName: 'Australian Shepherd Club of America',
+    sportName: 'Stock Dog',
+    formName: 'Trial Entry Form',
+    formTemplate: {
+      organizationCode: 'ASCA',
+      sportCode: 'StockDog',
+      formCode: 'TrialEntry',
+      version: '2020-10-08'
+    },
+    organizerSlug: 'WAVCLUB',
+    eventSlug: 'SUMMER-2026-07-19',
+    trackingSlug: 'WAVCLUB-SUMMER-2026-07-19',
+    hostClub: 'Wave Runners',
+    startDate: '2026-07-19',
+    endDate: '2026-07-19',
+    location: 'Austin, TX',
+    secretaryEmail: 'secretary@waveclub.org',
+    isActive: true
+  },
+  {
+    trialId: '7a80db12-1a63-47f6-9059-1b0fdf7d8b44',
+    name: 'Fall Classic',
+    organizationName: 'Australian Shepherd Club of America',
+    sportName: 'Stock Dog',
+    formName: 'Trial Entry Form',
+    formTemplate: {
+      organizationCode: 'ASCA',
+      sportCode: 'StockDog',
+      formCode: 'TrialEntry',
+      version: '2020-10-08'
+    },
+    organizerSlug: 'HILLCLUB',
+    eventSlug: 'FALL-2026-09-12',
+    trackingSlug: 'HILLCLUB-FALL-2026-09-12',
+    hostClub: 'Hill Country',
+    startDate: '2026-09-12',
+    endDate: '2026-09-13',
+    location: 'Wimberley, TX',
+    secretaryEmail: 'secretary@hillclub.org',
+    isActive: false
+  }
+];

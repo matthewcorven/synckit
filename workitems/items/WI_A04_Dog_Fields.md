@@ -13,6 +13,7 @@ Implement the Dog Information section of the registration form with all required
 ### In
 - Dog section reactive form group
 - All dog fields from PDF/API contract:
+  - ASCA Registration # (user-entered, optional)
   - Breed (required)
   - Registered Name
   - Call Name (required)
@@ -24,7 +25,7 @@ Implement the Dog Information section of the registration form with all required
   - Breeders
 - Field-level validation
 - Material form field styling
-- Registration/Tracking Number display (read-only, populated after submit)
+- Entry Number display (read-only, populated after submit — separate from ASCA Reg #)
 
 ### Out
 - Form layout container (see A03)
@@ -35,7 +36,8 @@ Implement the Dog Information section of the registration form with all required
 - Use Angular Material form fields
 - Sex field should be radio buttons or select
 - DOB should use Material datepicker
-- Registration/Tracking Number is read-only and only shown after submit
+- ASCA Registration # is user-entered (optional input field)
+- Entry Number is read-only and only shown after submit (separate from ASCA Reg #)
 - Validation rules:
   - `breed`: required
   - `callName`: required
@@ -45,12 +47,13 @@ Implement the Dog Information section of the registration form with all required
 
 ## Acceptance criteria
 - [ ] Dog section displays all fields from API contract
+- [ ] ASCA Registration # is an editable input field
 - [ ] Required fields show asterisk indicator
 - [ ] Date picker works for DOB field
 - [ ] Sex field uses radio buttons placed horizontally as per PDF
 - [ ] Form values bind to parent form group
 - [ ] Field-level validation shows inline errors
-- [ ] Registration Number field is read-only
+- [ ] Entry Number field is read-only (separate display from ASCA Reg #)
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -98,8 +101,11 @@ Implement the Dog Information section of the registration form with all required
 
 ## DTO Reference (from PRD_MVP_API_Contract.md)
 ```typescript
+// Entry-level field (read-only, server-generated on submit)
+entryNumber?: string;  // e.g., "EXCLUB-SPRING-2026-05-02-0001"
+
 interface DogDto {
-  registrationOrTrackingNumber?: string; // Read-only, set by server
+  ascaRegistrationNumber?: string;        // User-entered ASCA dog registration
   breed: string;                          // Required
   registeredName?: string;
   dob: string;                            // Required, ISO date
@@ -117,16 +123,19 @@ interface DogDto {
 ┌─────────────────────────────────────────┐
 │ DOG INFORMATION                         │
 ├─────────────────────────────────────────┤
-│ Reg/Tracking #: [readonly display]      │
+│ Entry #: [readonly - after submit only] │
 ├──────────────────┬──────────────────────┤
-│ Breed*           │ Registered Name      │
+│ ASCA Reg #       │ Breed*               │
 │ [___________]    │ [_______________]    │
 ├──────────────────┼──────────────────────┤
-│ Call Name*       │ Date of Birth*       │
-│ [___________]    │ [📅 ___________]    │
+│ Registered Name  │ Call Name*           │
+│ [___________]    │ [_______________]    │
 ├──────────────────┼──────────────────────┤
-│ Color            │ Sex*                 │
-│ [___________]    │ ○ Male ○ Female      │
+│ Date of Birth*   │ Color                │
+│ [📅 ___________]│ [_______________]    │
+├──────────────────┼──────────────────────┤
+│ Sex*             │                      │
+│ ○ Male ○ Female  │                      │
 ├──────────────────┼──────────────────────┤
 │ Sire             │ Dam                  │
 │ [___________]    │ [_______________]    │

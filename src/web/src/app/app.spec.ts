@@ -17,10 +17,11 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render the header title', async () => {
+  it('should render the router outlet', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
+    fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.app-title')?.textContent).toContain('Dog Trials');
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 });

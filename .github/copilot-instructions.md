@@ -42,6 +42,14 @@ If you need to change the API contract, **open/update a work item and update the
   - Environment variables: add a small `docs/setup/Environment.md` (future) once real env vars exist
 - Expected end state (do not implement unless a work item asks): local web dev server, local API at `/api`, and Playwright uses TestAuth.
 
+## Playwright automation (local)
+- Preferred: use Playwright MCP browser tools for autonomous UI checks.
+- If MCP fails to start (e.g., `spawn ENOTDIR`), fall back to CLI Playwright:
+  - Start web app: `cd src/web && npm run start:stream-a`
+  - Open app in Simple Browser or via `npx playwright codegen http://localhost:4200/...`
+  - Capture screenshots with `npx playwright screenshot` from `src/tests/e2e`.
+- Always ensure port 4200 is free before starting dev server (`lsof -ti :4200 | xargs -r kill -9`).
+
 ## API conventions you must follow
 - All endpoints are under `/api`; JSON only.
 - Errors: `application/problem+json` using RFC 7807 ProblemDetails (include validation `errors` map).

@@ -1,0 +1,1 @@
+[2026-01-22 16:15] WI-A03 integration tests — not run (no suite configured).

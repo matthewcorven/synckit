@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-22 15:25  
-**Current Focus:** A02 — Trial Selection UI
+**Last Updated:** 2026-01-22 17:45  
+**Current Focus:** A04 — Trial Selection
 
 ---
 
@@ -31,8 +31,8 @@
 |----|------|--------|------------|-------|
 | A01 | Angular Scaffold | ✅ Completed | CFG01 | |
 | A02 | Material + Layout | ✅ Completed | A01 | UI + unit tests + Playwright smoke (unauth) |
-| A03 | Routing + Auth Guards | ⬜ Not Started | A02 | |
-| A04 | Trial Selection | ⬜ Not Started | A03, B11* | *Can mock until B11 ready |
+| A03 | Form Layout | ✅ Completed | A02 | Layout aligned to PDF; grids updated |
+| A04 | Trial Selection | 🔄 In Progress | A03, B11* | *Can mock until B11 ready |
 | A05 | Registration Form | ⬜ Not Started | A04 | |
 | A06 | Dog + Handler Fields | ⬜ Not Started | A05 | |
 | A07 | Grid Cells | ⬜ Not Started | A06 | |
@@ -90,6 +90,13 @@ _Append entries as work progresses._
 [2026-01-22 15:10] — A02 — Trial selection UI + unit tests — ✅ (E2E pending)
 [2026-01-22 15:25] — A02 — Playwright smoke tests (unauth) — ✅
 [2026-01-22 15:25] — A14 — Playwright baseline (unauth) — ✅
+[2026-01-22 15:40] — A03 — Started form layout scaffolding — 🔄
+[2026-01-22 15:55] — A03 — Added layout styling + section placeholders — 🔄
+[2026-01-22 16:15] — A03 — Unit tests pass; layout screenshot captured — 🔄
+[2026-01-22 16:25] — A03 — Playwright trace captured — 🔄
+[2026-01-22 16:35] — A03 — Header/detail spacing + labeled placeholders — 🔄
+[2026-01-22 16:45] — A03 — Panel borders + refreshed layout screenshot — 🔄
+[2026-01-22 17:45] — A03 — Completed PDF-aligned layout + grids + screenshots — ✅
 ```
 
 <!-- Example:

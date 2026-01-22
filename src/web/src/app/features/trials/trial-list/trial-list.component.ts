@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
+import { catchError, of, timeout } from 'rxjs';
 import { TrialService } from '../trial.service';
 import { TrialSummaryDto } from '../trial.types';
 import { TrialCardComponent } from '../trial-card/trial-card.component';
@@ -64,16 +65,30 @@ export class TrialListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.trialService.getTrials().subscribe({
-      next: (trials) => {
-        this.trials = trials;
-        this.isLoading = false;
-      },
-      error: () => {
-        this.errorMessage = 'Unable to load trials. Please try again later.';
+    const loadingGuard = setTimeout(() => {
+      if (this.isLoading) {
+        this.errorMessage = 'Loading trials timed out. Please refresh.';
         this.isLoading = false;
       }
-    });
+    }, 10000);
+
+    this.trialService
+      .getTrials()
+      .pipe(
+        timeout({ first: 8000 }),
+        catchError((error) => {
+          this.errorMessage =
+            error?.name === 'TimeoutError'
+              ? 'Loading trials timed out. Please refresh.'
+              : 'Unable to load trials. Please try again later.';
+          return of([]);
+        })
+      )
+      .subscribe((trials) => {
+        clearTimeout(loadingGuard);
+        this.trials = trials;
+        this.isLoading = false;
+      });
   }
 
   onSelectTrial(trial: TrialSummaryDto): void {

@@ -8,6 +8,9 @@ export interface FormTemplateKey {
 export interface TrialSummaryDto {
   trialId: string;
   name: string;
+  organizationName: string;
+  sportName: string;
+  formName: string;
   formTemplate: FormTemplateKey;
   organizerSlug: string;
   eventSlug: string;

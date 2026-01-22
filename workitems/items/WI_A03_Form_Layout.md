@@ -1,7 +1,7 @@
 # WI-A03: Form Layout
 
 **Owner:** Agent A (UI-First)  
-**Status:** Proposed  
+**Status:** Completed  
 **Milestone:** M2  
 **Dependencies:** A02  
 **Artifacts folder (recommended):** `../artifacts/WI-A03/`
@@ -39,12 +39,12 @@ Create the registration form layout that matches the left-half of the official A
 - Consider print-friendly styling (future)
 
 ## Acceptance criteria
-- [ ] Form displays at `/register/{trialId}`
-- [ ] Layout matches PDF structure (sections in correct order and styled with near-perfect accuracy versus official form, as observed by AI agent review of Playwright screenshots versus official PDF)
-- [ ] Form fetches trial info from API/mock on load
-- [ ] Reactive form group is initialized
-- [ ] Section headers are visible and properly styled
-- [ ] Layout is responsive (min 768px width)
+- [x] Form displays at `/register/{trialId}`
+- [x] Layout matches PDF structure (sections in correct order and styled with near-perfect accuracy versus official form, as observed by AI agent review of Playwright screenshots versus official PDF)
+- [x] Form fetches trial info from API/mock on load
+- [x] Reactive form group is initialized
+- [x] Section headers are visible and properly styled
+- [x] Layout is responsive (min 768px width)
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -54,14 +54,14 @@ Create the registration form layout that matches the left-half of the official A
 - Form sections render in correct order
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A03/unit-test-results.txt`
+- [../artifacts/WI-A03/unit-test-results.txt](../artifacts/WI-A03/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
 - Form loads trial data from mock service
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A03/integration-test-results.txt`
+- [../artifacts/WI-A03/integration-test-results.txt](../artifacts/WI-A03/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -69,8 +69,8 @@ Create the registration form layout that matches the left-half of the official A
 - Screenshot comparison with expected layout
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A03/playwright/form-layout-screenshot.png`
-- `../artifacts/WI-A03/playwright/form-layout-trace.zip`
+- [../artifacts/WI-A03/playwright/form-layout-screenshot.png](../artifacts/WI-A03/playwright/form-layout-screenshot.png)
+- [../artifacts/WI-A03/playwright/form-layout-trace.zip](../artifacts/WI-A03/playwright/form-layout-trace.zip)
 
 ### DB verification
 **Artifact requirements**
