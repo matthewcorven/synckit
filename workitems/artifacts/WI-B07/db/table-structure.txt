@@ -1,0 +1,3 @@
+DB verification not executed. DOGTRIALS_TEST_SQL not set.
+Expected table:
+- Users: UserId PK, ExternalSubject (nvarchar(256) unique), Email (nvarchar(320)), Role (nvarchar(16)), CreatedAtUtc default SYSUTCDATETIME(), LastLoginAtUtc, IX_Users_Email index.

@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 17:20  
-**Current Focus:** B06 Notifications Entity
+**Last Updated:** 2026-01-22 18:05  
+**Current Focus:** B08 JWT Auth Policies
 
 ---
 
@@ -36,7 +36,7 @@
 | B04 | TrialCounters Entity | ✅ Completed | B03 | EF Core entity + migration + allocator + tests |
 | B05 | Entries Entity | ✅ Completed | B04 | WI_B05 complete |
 | B06 | Notifications Entity | ✅ Completed | B05 | EF Core entity + migration + tests |
-| B07 | Users Entity | ⬜ Not Started | B01 | |
+| B07 | Users Entity | ✅ Completed | B01 | EF Core config + tests + artifacts |
 | B08 | JWT Auth Policies | ⬜ Not Started | B07 | |
 | B09 | User Provisioning | ⬜ Not Started | B07, B08 | |
 | B10 | Trials Seed | ⬜ Not Started | B03, B04 | |
@@ -107,6 +107,7 @@ _Append entries as work progresses._
 [2026-01-22 16:25] — B05 — Regenerated Entries migration via EF tools — In progress
 [2026-01-22 16:40] — B05 — Completed Entries entity + artifacts + tests — ✅
 [2026-01-22 17:20] — B06 — Added Notifications entity + migration + tests + artifacts — ✅
+[2026-01-22 18:05] — B07 — Added Users entity tests + artifacts — ✅
 ```
 
 <!-- Example:

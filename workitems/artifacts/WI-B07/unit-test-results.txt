@@ -1,0 +1,4 @@
+Restore complete (0.2s)
+  DogTrials.Api net10.0 succeeded (0.2s) → DogTrials.Api/bin/Debug/net10.0/DogTrials.Api.dll
+  DogTrials.Api.Tests net10.0 succeeded (0.2s) → DogTrials.Api.Tests/bin/Debug/net10.0/DogTrials.Api.Tests.dll
+Test summary: total: 20, failed: 0, succeeded: 20, skipped: 0, duration: 0.7s
