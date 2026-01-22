@@ -87,7 +87,7 @@ Create the Entries entity with all form fields, processing status, and required 
 - N/A
 
 ## Risks / Questions
-- Selections storage: JSON vs normalized table
+- ~~Selections storage: JSON vs normalized table~~ → **RESOLVED: JSON column** - Simpler, single column, works well for MVP
 - PII fields encryption consideration (future)
 
 ## Entity Definition

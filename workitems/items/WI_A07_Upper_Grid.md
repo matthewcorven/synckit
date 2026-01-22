@@ -90,7 +90,7 @@ Implement the Upper Grid component for class selections (STD, OPN, ADV, FTD clas
 
 ## Risks / Questions
 - Confirm grid structure matches official PDF exactly
-- Dynamic columns based on trial dates?
+- ~~Dynamic columns based on trial dates?~~ → **RESOLVED: Fixed columns** - Same columns for all trials (STD, OPN, ADV, etc.)
 
 ## DTO Reference (from PRD_MVP_API_Contract.md)
 ```typescript

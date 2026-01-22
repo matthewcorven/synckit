@@ -25,6 +25,7 @@ Implement the create draft entry endpoint.
 
 ## Implementation notes
 - Validates trial exists and is active
+- **Enforces one draft per user per trial** (returns existing draft if one exists, or 409 if submitted)
 - Sets CreatedByUserId from authenticated user
 - Sets Status to Draft
 - Initializes processing fields (PdfStatus = Queued)
@@ -37,6 +38,8 @@ Implement the create draft entry endpoint.
 - [ ] Returns 201 with entry ID
 - [ ] Validates trial exists
 - [ ] Returns 400 for non-existent trial
+- [ ] **Returns existing draft if one already exists** (idempotent)
+- [ ] **Returns 409 if user already has submitted entry for trial**
 - [ ] Handler authorization required
 
 ## Test Plan
@@ -84,7 +87,7 @@ Implement the create draft entry endpoint.
 - `../artifacts/WI-B14/telemetry/create-draft-trace.png`
 
 ## Risks / Questions
-- Should we limit drafts per user per trial?
+- ~~Should we limit drafts per user per trial?~~ → **RESOLVED: One draft per user per trial** - Prevent duplicate entries
 
 ## DTO
 ```csharp

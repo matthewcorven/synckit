@@ -44,6 +44,8 @@ Implement the secretary entry detail view with PDF download capability.
 - [ ] Processing status shown clearly
 - [ ] Email status shown for both recipients
 - [ ] Back navigation to list
+- [ ] **Retry PDF button shown when pdfStatus is Failed**
+- [ ] **Retry button calls POST /api/secretary/entries/{entryId}/pdf/retry**
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -91,7 +93,7 @@ Implement the secretary entry detail view with PDF download capability.
 
 ## Risks / Questions
 - SAS URL expiration handling (re-fetch if expired?)
-- Should secretary be able to trigger PDF regeneration on failure?
+- ~~Should secretary be able to trigger PDF regeneration on failure?~~ → **RESOLVED: Yes** - Add retry button for secretary
 
 ## DTO Reference (from PRD_MVP_API_Contract.md)
 ```typescript

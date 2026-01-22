@@ -40,7 +40,7 @@ Create the registration form layout that matches the left-half of the official A
 
 ## Acceptance criteria
 - [ ] Form displays at `/register/{trialId}`
-- [ ] Layout matches PDF structure (sections in correct order)
+- [ ] Layout matches PDF structure (sections in correct order and styled with near-perfect accuracy versus official form, as observed by AI agent review of Playwright screenshots versus official PDF)
 - [ ] Form fetches trial info from API/mock on load
 - [ ] Reactive form group is initialized
 - [ ] Section headers are visible and properly styled
@@ -89,7 +89,7 @@ Create the registration form layout that matches the left-half of the official A
 - N/A
 
 ## Risks / Questions
-- Need access to official ASCA PDF for pixel-matching
+- Need access to official ASCA PDF for pixel-matching (../../docs/assets/asca-entry-form.pdf)
 - Mobile layout may require separate design decisions
 
 ## Form Structure Reference

@@ -80,7 +80,7 @@ Create the Notifications entity for tracking per-recipient email delivery status
 - N/A
 
 ## Risks / Questions
-- Should we store recipient email in notification or derive from entry/trial?
+- ~~Should we store recipient email in notification or derive from entry/trial?~~ → **RESOLVED: Derive** - Look up Entry.ContactEmail or Trial.SecretaryEmail at send time
 
 ## Entity Definition
 ```csharp

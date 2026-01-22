@@ -84,7 +84,7 @@ Configure Entra External ID for user authentication with social login support.
 ## Risks / Questions
 - External ID licensing costs
 - Social provider developer account requirements
-- Apple Sign-In complexity
+- ~~Apple Sign-In complexity~~ → **RESOLVED: Microsoft + Google only for MVP** - Apple deferred
 
 ## Scripted Configuration
 

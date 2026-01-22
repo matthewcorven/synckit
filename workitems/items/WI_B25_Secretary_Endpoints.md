@@ -14,6 +14,7 @@ Implement the secretary portal endpoints for entry management.
 - `GET /api/secretary/entries` — Paginated entry list
 - `GET /api/secretary/entries/{entryId}` — Entry detail
 - `GET /api/secretary/entries/{entryId}/pdf` — PDF download URL
+- `POST /api/secretary/entries/{entryId}/pdf/retry` — Trigger PDF regeneration
 - Secretary authorization
 - Trial filtering
 - Status filtering
@@ -36,6 +37,7 @@ Implement the secretary portal endpoints for entry management.
 - [ ] Detail returns full entry
 - [ ] PDF endpoint returns SAS URL
 - [ ] Secretary authorization required
+- [ ] **PDF retry endpoint resets status to Queued and enqueues job**
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -83,7 +85,7 @@ Implement the secretary portal endpoints for entry management.
 
 ## Risks / Questions
 - Performance with large entry counts
-- Should secretary see draft entries?
+- ~~Should secretary see draft entries?~~ → **RESOLVED: Yes - Include drafts** - Secretary can see in-progress entries
 
 ## Implementation
 ```csharp
@@ -107,8 +109,7 @@ secretary.MapGet("/entries", async (
         
     if (!string.IsNullOrEmpty(status) && Enum.TryParse<EntryStatus>(status, out var statusEnum))
         query = query.Where(e => e.Status == statusEnum);
-    else
-        query = query.Where(e => e.Status == EntryStatus.Submitted); // Default to submitted
+    // No default filter - secretary sees all entries (Draft + Submitted)
     
     var total = await query.CountAsync();
     
@@ -178,6 +179,49 @@ secretary.MapGet("/entries/{entryId:guid}/pdf", async (
     var downloadUrl = await blobService.GenerateSasUrlAsync(entryId, SasTtl.UiDownload, CancellationToken.None);
     
     return Results.Ok(new { downloadUrl });
+});
+
+// Retry PDF generation
+secretary.MapPost("/entries/{entryId:guid}/pdf/retry", async (
+    Guid entryId,
+    DogTrialsDbContext context,
+    IBackgroundJobQueue jobQueue) =>
+{
+    var entry = await context.Entries
+        .Where(e => e.EntryId == entryId && e.Status == EntryStatus.Submitted)
+        .FirstOrDefaultAsync();
+        
+    if (entry is null)
+    {
+        return Results.Problem(
+            title: "Entry not found or not submitted",
+            statusCode: 404,
+            extensions: new Dictionary<string, object?>
+            {
+                ["errorCode"] = "ENTRY_NOT_FOUND"
+            });
+    }
+    
+    if (entry.PdfStatus == PdfStatus.InProgress)
+    {
+        return Results.Problem(
+            title: "PDF generation already in progress",
+            statusCode: 409,
+            extensions: new Dictionary<string, object?>
+            {
+                ["errorCode"] = "PDF_IN_PROGRESS"
+            });
+    }
+    
+    // Reset status and enqueue retry
+    entry.PdfStatus = PdfStatus.Queued;
+    entry.PdfNextAttemptAtUtc = DateTime.UtcNow;
+    entry.PdfLastErrorCode = null;
+    await context.SaveChangesAsync();
+    
+    await jobQueue.EnqueueAsync(new PdfGenerationJob(entryId));
+    
+    return Results.Accepted();
 });
 ```
 

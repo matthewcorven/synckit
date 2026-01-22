@@ -81,7 +81,7 @@ Create the .NET 10 Web API scaffold with health endpoint and correlation header 
 
 ## Risks / Questions
 - .NET 10 preview availability (ensure SDK installed)
-- Minimal APIs vs Controllers preference
+- ~~Minimal APIs vs Controllers preference~~ → **RESOLVED: Minimal APIs** - Clean, less boilerplate
 
 ## Project Structure
 ```

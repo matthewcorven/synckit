@@ -30,6 +30,20 @@ Constraints:
 Notes:
 - Even if `TrackingSlug` is computed, it should be stable and deterministic.
 
+### FormTemplates
+Purpose: store form grid configuration and metadata per organization/sport/form/version.
+
+Columns:
+- `FormTemplateId` int PK IDENTITY
+- `OrganizationCode` nvarchar(32) NOT NULL
+- `SportCode` nvarchar(32) NOT NULL
+- `FormCode` nvarchar(32) NOT NULL
+- `Version` nvarchar(32) NOT NULL
+- `GridConfigJson` nvarchar(max) NOT NULL  — JSON array of grid metadata
+
+Constraints:
+- `UX_FormTemplates_Key` UNIQUE (`OrganizationCode`, `SportCode`, `FormCode`, `Version`)
+
 ### TrialCounters
 Purpose: allocate per-trial sequential numbers safely.
 
@@ -49,6 +63,7 @@ Required columns:
 - `RegistrationOrTrackingNumber` nvarchar(128) NULL  (set on submit; derived from TrackingSlug + sequence)
 - `SubmittedAtUtc` datetime2 NULL
 - `CreatedByUserId` uniqueidentifier NOT NULL
+- `RowVersion` rowversion NOT NULL  — For optimistic concurrency (ETag)
 
 Recommended processing columns:
 - `PdfStatus` nvarchar(16) NOT NULL  (Queued/InProgress/Success/Failed)
@@ -61,6 +76,7 @@ Constraints:
 - `CK_Entries_SequenceNumber_Positive` CHECK (`SequenceNumber` IS NULL OR `SequenceNumber` >= 1)
 - `UX_Entries_TrialId_SequenceNumber` UNIQUE (`TrialId`, `SequenceNumber`) WHERE `SequenceNumber` IS NOT NULL
 - `UX_Entries_RegistrationOrTrackingNumber` UNIQUE (`RegistrationOrTrackingNumber`) WHERE `RegistrationOrTrackingNumber` IS NOT NULL
+- `UX_Entries_TrialId_CreatedByUserId_Draft` UNIQUE (`TrialId`, `CreatedByUserId`) WHERE `Status` = 'Draft'  — **One draft per user per trial**
 
 Indexes (for restart scans):
 - `IX_Entries_Status_PdfStatus_PdfNextAttemptAtUtc` on (`Status`, `PdfStatus`, `PdfNextAttemptAtUtc`)

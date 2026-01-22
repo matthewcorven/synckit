@@ -79,7 +79,7 @@ Create trial seed data file and startup seeding behavior.
 - `../artifacts/WI-B10/telemetry/seeding-logs.txt`
 
 ## Risks / Questions
-- Production seeding strategy (one-time vs always)
+- ~~Production seeding strategy (one-time vs always)~~ → **RESOLVED: One-time migration** - Manual seed script, run once per environment
 - Consider migration-based seeding alternative
 
 ## Seed File: trials.seed.json

@@ -83,7 +83,7 @@ Implement PDF template loading and form field stamping service.
 - `../artifacts/WI-B21/telemetry/pdf-generate-trace.png`
 
 ## Risks / Questions
-- PDF library licensing (ensure OSS compliant)
+- ~~PDF library licensing (ensure OSS compliant)~~ → **RESOLVED: QuestPDF** - Modern .NET, MIT license, fluent API
 - Template format and field names
 
 ## Implementation

@@ -89,7 +89,7 @@ Implement comprehensive validation UX with inline errors and a validation summar
 - N/A
 
 ## Risks / Questions
-- UX decision: sticky vs inline summary
+- ~~UX decision: sticky vs inline summary~~ → **RESOLVED: Sticky banner** - Fixed position, visible as user scrolls
 - Error message wording (should match server messages)
 
 ## Validation Rules Reference

@@ -47,7 +47,7 @@ Implement the Dog Information section of the registration form with all required
 - [ ] Dog section displays all fields from API contract
 - [ ] Required fields show asterisk indicator
 - [ ] Date picker works for DOB field
-- [ ] Sex field uses radio buttons or dropdown
+- [ ] Sex field uses radio buttons placed horizontally as per PDF
 - [ ] Form values bind to parent form group
 - [ ] Field-level validation shows inline errors
 - [ ] Registration Number field is read-only
@@ -94,7 +94,7 @@ Implement the Dog Information section of the registration form with all required
 - N/A
 
 ## Risks / Questions
-- Confirm breed should be free text vs. dropdown with known breeds
+- ~~Confirm breed should be free text vs. dropdown with known breeds~~ → **RESOLVED: Free text input** - User types any breed name
 
 ## DTO Reference (from PRD_MVP_API_Contract.md)
 ```typescript

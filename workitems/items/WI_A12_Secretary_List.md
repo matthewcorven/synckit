@@ -97,8 +97,8 @@ Implement the secretary portal entry list page for viewing submitted entries.
 - N/A
 
 ## Risks / Questions
-- Confirm pagination UX (page numbers vs infinite scroll)
-- Should status column show all processing statuses or just PDF?
+- ~~Confirm pagination UX (page numbers vs infinite scroll)~~ → **RESOLVED: Page numbers** - Standard pagination with navigation
+- ~~Should status column show all processing statuses or just PDF?~~ → **RESOLVED: All statuses** - Show PDF + Handler email + Secretary email statuses
 
 ## DTO Reference (from PRD_MVP_API_Contract.md)
 ```typescript

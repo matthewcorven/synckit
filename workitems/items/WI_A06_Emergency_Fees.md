@@ -84,7 +84,7 @@ Implement the Emergency Contact section and Entry Fees display.
 - N/A
 
 ## Risks / Questions
-- Fee calculation rules (based on selections?) — MVP may be manual entry
+- ~~Fee calculation rules (based on selections?) — MVP may be manual entry~~ → **RESOLVED: Manual entry** - Handler enters calculated total
 - Payment integration (out of scope for MVP)
 
 ## DTO Reference (from PRD_MVP_API_Contract.md)

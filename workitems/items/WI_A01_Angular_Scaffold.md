@@ -82,7 +82,7 @@ Create the Angular 22 application shell with Material design, routing, and the b
 
 ## Risks / Questions
 - Ensure Angular 22 is the target version (not 19)
-- Material 3 vs Material 2 theming decision
+- ~~Material 3 vs Material 2 theming decision~~ → **RESOLVED: Material 3 (M3)** - Latest theming system, modern look
 
 ## Project Structure
 ```

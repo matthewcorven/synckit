@@ -93,8 +93,8 @@ Implement the Owner/Handler Contact section with address sub-form and junior han
 - N/A
 
 ## Risks / Questions
-- Confirm state field should be dropdown vs free text
-- International address format considerations (MVP: US only?)
+- ~~Confirm state field should be dropdown vs free text~~ → **RESOLVED: Dropdown** - US states only
+- ~~International address format considerations (MVP: US only?)~~ → **RESOLVED: US-only for MVP** - State dropdown, standard US format
 
 ## DTO Reference (from PRD_MVP_API_Contract.md)
 ```typescript

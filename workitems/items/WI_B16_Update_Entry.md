@@ -26,8 +26,10 @@ Implement the update entry endpoint for draft editing.
 - MVP null handling: Reject explicit nulls; omit fields to leave unchanged
 - Validate entry is Draft (return 409 if Submitted)
 - Validate ownership (return 403 if not owner)
+- **Optimistic concurrency via ETag/RowVersion**: Check If-Match header, return 412 Precondition Failed on conflict
 - Update only provided fields
 - Set UpdatedAtUtc timestamp
+- Return ETag header with new RowVersion
 - OpenTelemetry span: `Entry.Update`
 
 ## Acceptance criteria
@@ -37,6 +39,8 @@ Implement the update entry endpoint for draft editing.
 - [ ] Returns 404 if not found
 - [ ] Only updates provided fields
 - [ ] Returns updated entry detail
+- [ ] **Returns 412 if ETag/RowVersion mismatch**
+- [ ] **Returns ETag header in response**
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -82,7 +86,7 @@ Implement the update entry endpoint for draft editing.
 - `../artifacts/WI-B16/telemetry/update-trace.png`
 
 ## Risks / Questions
-- Consider optimistic concurrency (ETag/version)
+- ~~Consider optimistic concurrency (ETag/version)~~ → **RESOLVED: Yes - ETag/RowVersion** - Track row version, reject stale updates
 
 ## DTO
 ```csharp

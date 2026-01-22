@@ -74,7 +74,7 @@ Implement the trial-scoped registration metadata endpoint.
 - `../artifacts/WI-B12/telemetry/metadata-trace.png`
 
 ## Risks / Questions
-- Should grid metadata be stored in DB or hardcoded for MVP?
+- ~~Should grid metadata be stored in DB or hardcoded for MVP?~~ → **RESOLVED: Stored in database** - FormTemplates table with JSON grid config
 
 ## DTO (from PRD)
 ```csharp
@@ -135,41 +135,43 @@ app.MapGet("/api/trials/{trialId:guid}/registration/metadata", async (
 .RequireAuthorization("Handler");
 ```
 
-## Form Metadata Service (MVP: Hardcoded)
+## Form Metadata Service (Database Storage)
 ```csharp
+// FormTemplates entity stores grid configuration in database
+public class FormTemplate
+{
+    public int FormTemplateId { get; set; }
+    public string OrganizationCode { get; set; } = null!;
+    public string SportCode { get; set; } = null!;
+    public string FormCode { get; set; } = null!;
+    public string Version { get; set; } = null!;
+    public string GridConfigJson { get; set; } = null!;  // JSON column
+}
+
 public class FormMetadataService : IFormMetadataService
 {
-    public FormMetadataDto GetFormMetadata(FormTemplateKeyDto template)
+    private readonly DogTrialsDbContext _context;
+    
+    public FormMetadataService(DogTrialsDbContext context)
     {
-        // MVP: Return hardcoded ASCA StockDog form metadata
-        return new FormMetadataDto(
-            template,
-            new List<GridMetadataDto>
-            {
-                new GridMetadataDto(
-                    "Upper",
-                    new List<string> { "Sheep", "Cattle", "Ducks", "Mixed" },
-                    new List<string> { "STD", "OPN", "ADV", "FTD_OPN", "FTD_ADV", 
-                        "DATE1_TRIAL1", "DATE1_TRIAL2", "DATE2_TRIAL1", "DATE2_TRIAL2" },
-                    new List<DisabledCellDto>
-                    {
-                        new("Mixed", "STD"),
-                        new("Mixed", "OPN"),
-                        new("Mixed", "ADV"),
-                        new("Mixed", "FTD_OPN"),
-                        new("Mixed", "FTD_ADV")
-                    }),
-                new GridMetadataDto(
-                    "Lower",
-                    new List<string> { "Sheep", "Cattle", "Ducks" },
-                    new List<string> { "NOV", "WRK_JR_HNDLR", "FEO", "POST_ADV", "RTD",
-                        "DATE1_TRIAL1", "DATE1_TRIAL2", "DATE2_TRIAL1", "DATE2_TRIAL2" },
-                    new List<DisabledCellDto>
-                    {
-                        new("Ducks", "POST_ADV"),
-                        new("Ducks", "RTD")
-                    })
-            });
+        _context = context;
+    }
+    
+    public async Task<FormMetadataDto?> GetFormMetadataAsync(FormTemplateKeyDto template)
+    {
+        var formTemplate = await _context.FormTemplates
+            .FirstOrDefaultAsync(f => 
+                f.OrganizationCode == template.OrganizationCode &&
+                f.SportCode == template.SportCode &&
+                f.FormCode == template.FormCode &&
+                f.Version == template.Version);
+                
+        if (formTemplate is null) return null;
+        
+        var grids = JsonSerializer.Deserialize<List<GridMetadataDto>>(
+            formTemplate.GridConfigJson);
+            
+        return new FormMetadataDto(template, grids ?? new());
     }
 }
 ```

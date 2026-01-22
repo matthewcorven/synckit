@@ -95,7 +95,7 @@ Implement the submit flow with confirmation, Support ID display, and error handl
 - `../artifacts/WI-A11/telemetry/support-id-verification.png`
 
 ## Risks / Questions
-- Confirmation screen vs modal decision
+- ~~Confirmation screen vs modal decision~~ → **RESOLVED: Separate confirmation page** - Navigate to dedicated route
 - What happens if user navigates away during submission?
 
 ## API Reference (from PRD_MVP_API_Contract.md)
