@@ -1,0 +1,3 @@
+EXECUTED
+Method: ActivityListener validation via BackgroundJobTelemetryTests
+Result: Pdf.Generate and Email.Send spans emitted with entry.id, trial.id, entry.status, entry.mode, and status tags.

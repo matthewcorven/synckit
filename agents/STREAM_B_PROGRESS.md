@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 23:59
-**Current Focus:** B19 Submit Endpoint — ✅ Completed
+**Last Updated:** 2026-01-22 01:40
+**Current Focus:** B20 Background Channels — ✅ Completed
 
 ---
 
@@ -49,7 +49,7 @@
 | B17 | Update Selections | ✅ Completed | B15 | Endpoint, validation, tests, artifacts |
 | B18 | Terms Endpoint | ✅ Completed | B01 | Unblocks A08 |
 | B19 | Submit Endpoint | ✅ Completed | B07, B16, B17 | |
-| B20 | Background Channels | ⬜ Not Started | B19 | |
+| B20 | Background Channels | ✅ Completed | B19 | |
 | B21 | PDF Stamping | ⬜ Not Started | B20 | |
 | B22 | Blob Storage | ⬜ Not Started | B21 | |
 | B23 | Email Sender | ⬜ Not Started | B20, B06 | |
@@ -87,8 +87,8 @@ _Record any blockers encountered during work._
 
 | Stream B Item | Unblocks | Status | Priority |
 |---------------|----------|--------|----------|
-| B02 | A14 (Playwright Auth) | ⬜ Not Started | **Critical** |
-| B11 | A04 (Trial Selection) | ⬜ Not Started | High |
+| B02 | A14 (Playwright Auth) | ✅ Completed | **Critical** |
+| B11 | A04 (Trial Selection) | ✅ Completed | High |
 | B18 | A08 (Terms Modal) | ✅ Completed | Medium |
 | B25 | A11 (Secretary Layout) | ⬜ Not Started | Low |
 
@@ -128,6 +128,9 @@ _Append entries as work progresses._
 [2026-01-22 23:05] — B19 — Started submit endpoint work — 🔄 In Progress
 [2026-01-22 23:55] — B19 — Implemented submit endpoint, tests, artifacts; ran dotnet test (DB env not set) — ✅
 [2026-01-22 23:59] — B19 — Regenerated FormTemplates migration, fixed DB tests, ran SQL-backed suite (65/65) — ✅
+[2026-01-22 00:10] — B20 — Started background channels implementation — 🔄 In Progress
+[2026-01-22 01:30] — B20 — Implemented background queue, processor, recovery, tests, artifacts — ✅
+[2026-01-22 01:40] — B20 — Added telemetry span validation test; re-ran suite — ✅
 ```
 
 <!-- Example:

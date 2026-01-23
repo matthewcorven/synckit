@@ -1,0 +1,4 @@
+EXECUTED (DB configured)
+Command: DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' dotnet test src/api/DogTrials.sln -v minimal
+Result: Build succeeded. Tests passed (74/74).
+Notes: Background job processor and recovery integration tests executed as part of the suite.

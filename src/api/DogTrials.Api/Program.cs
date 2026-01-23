@@ -162,7 +162,12 @@ builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
 builder.Services.AddScoped<TrialSeedingService>();
 builder.Services.AddScoped<ITermsService, TermsService>();
 builder.Services.AddScoped<TrialCounterAllocator>();
-builder.Services.AddSingleton<IBackgroundJobQueue, NoOpBackgroundJobQueue>();
+builder.Services.AddSingleton<IBackgroundJobQueue, ChannelBackgroundJobQueue>();
+builder.Services.AddScoped<IPdfJobHandler, NotImplementedPdfJobHandler>();
+builder.Services.AddScoped<IEmailJobHandler, NotImplementedEmailJobHandler>();
+builder.Services.AddHostedService<BackgroundJobProcessor>();
+builder.Services.AddHostedService<BackgroundJobRecoveryService>();
+builder.Services.AddOptions<BackgroundJobOptions>();
 
 // Form metadata service
 builder.Services.AddScoped<IFormMetadataService, FormMetadataService>();
