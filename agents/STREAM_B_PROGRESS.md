@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-23 14:10
-**Current Focus:** B24 Processing Status — ✅ Completed
+**Last Updated:** 2026-01-23 14:40
+**Current Focus:** B25 Secretary Endpoints — ✅ Completed
 
 ---
 
@@ -54,7 +54,7 @@
 | B22 | Blob Storage | ✅ Completed | B21 | |
 | B23 | Email Sender | ✅ Completed | B20, B06 | |
 | B24 | Processing Status | ✅ Completed | B22, B23 | Endpoint + tests + artifacts |
-| B25 | Secretary Endpoints | ⬜ Not Started | B15, B22 | Unblocks A11 |
+| B25 | Secretary Endpoints | ✅ Completed | B15, B22 | Unblocks A11 |
 | B26 | Bicep Scaffold | ⬜ Not Started | B01 | |
 | B27 | Entra External ID | ⬜ Not Started | B26 | |
 
@@ -90,7 +90,7 @@ _Record any blockers encountered during work._
 | B02 | A14 (Playwright Auth) | ✅ Completed | **Critical** |
 | B11 | A04 (Trial Selection) | ✅ Completed | High |
 | B18 | A08 (Terms Modal) | ✅ Completed | Medium |
-| B25 | A11 (Secretary Layout) | ⬜ Not Started | Low |
+| B25 | A11 (Secretary Layout) | ✅ Completed | Low |
 
 ---
 
@@ -139,6 +139,7 @@ _Append entries as work progresses._
 [2026-01-23 03:12] — B23 — Implemented ACS email sender + templates + tests + artifacts; ran SQL-backed tests — ✅
 [2026-01-23 13:45] — B24 — Started processing status endpoint — 🔄 In Progress
 [2026-01-23 14:10] — B24 — Implemented processing status endpoint + tests + artifacts; ran SQL-backed tests — ✅
+[2026-01-23 14:40] — B25 — Implemented secretary endpoints + tests + artifacts; ran dotnet test — ✅
 ```
 
 <!-- Example:

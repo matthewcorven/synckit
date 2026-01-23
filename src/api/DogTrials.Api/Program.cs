@@ -237,6 +237,7 @@ app.MapFormTemplatesEndpoints();
 app.MapEntriesEndpoints();
 app.MapTermsEndpoints();
 app.MapAdminEndpoints();
+app.MapSecretaryEndpoints();
 
 var seedingOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrialSeedingOptions>>();
 if (seedingOptions.Value.Enabled)

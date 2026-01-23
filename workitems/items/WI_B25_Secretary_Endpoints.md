@@ -1,7 +1,7 @@
 # WI-B25: Secretary Endpoints
 
 **Owner:** Agent B (Platform)  
-**Status:** Proposed  
+**Status:** Completed
 **Milestone:** M5  
 **Dependencies:** B15, B22  
 **Artifacts folder (recommended):** `../artifacts/WI-B25/`
@@ -31,13 +31,13 @@ Implement the secretary portal endpoints for entry management.
 - Return SAS URL for PDF download
 
 ## Acceptance criteria
-- [ ] List entries with pagination
-- [ ] Filter by trial works
-- [ ] Filter by status works
-- [ ] Detail returns full entry
-- [ ] PDF endpoint returns SAS URL
-- [ ] Secretary authorization required
-- [ ] **PDF retry endpoint resets status to Queued and enqueues job**
+- [x] List entries with pagination
+- [x] Filter by trial works
+- [x] Filter by status works
+- [x] Detail returns full entry
+- [x] PDF endpoint returns SAS URL
+- [x] Secretary authorization required
+- [x] **PDF retry endpoint resets status to Queued and enqueues job**
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -47,7 +47,7 @@ Implement the secretary portal endpoints for entry management.
 - DTO mapping correct
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B25/unit-test-results.txt`
+- [../artifacts/WI-B25/unit-test-results.txt](../artifacts/WI-B25/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -56,7 +56,7 @@ Implement the secretary portal endpoints for entry management.
 - PDF URL works
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B25/integration-test-results.txt`
+- [../artifacts/WI-B25/integration-test-results.txt](../artifacts/WI-B25/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -65,7 +65,7 @@ Implement the secretary portal endpoints for entry management.
 - Secretary downloads PDF
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B25/playwright/secretary-flow-trace.zip`
+- _Not run (UI wiring pending in Stream A)._
 
 ### DB verification
 **Artifact requirements**
