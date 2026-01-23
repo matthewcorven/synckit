@@ -53,7 +53,7 @@ Implement the terms and conditions modal with acceptance checkbox that gates for
 - Checkbox state gates submit
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A10/unit-test-results.txt`
+- [../artifacts/WI-A10/unit-test-results.txt](../../artifacts/WI-A10/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -61,7 +61,7 @@ Implement the terms and conditions modal with acceptance checkbox that gates for
 - Acceptance flow end-to-end
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A10/integration-test-results.txt`
+- [../artifacts/WI-A10/integration-test-results.txt](../../artifacts/WI-A10/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -71,8 +71,8 @@ Implement the terms and conditions modal with acceptance checkbox that gates for
 - Screenshot of terms modal
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A10/playwright/terms-modal-trace.zip`
-- `../artifacts/WI-A10/playwright/terms-modal-screenshot.png`
+- [../artifacts/WI-A10/playwright/terms-modal-trace.zip](../../artifacts/WI-A10/playwright/terms-modal-trace.zip)
+- [../artifacts/WI-A10/playwright/terms-modal-screenshot.png](../../artifacts/WI-A10/playwright/terms-modal-screenshot.png)
 
 ### DB verification
 **Artifact requirements**

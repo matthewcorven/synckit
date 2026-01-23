@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-23 02:05  
-**Current Focus:** A10 — Terms Modal
+**Last Updated:** 2026-01-22 22:30  
+**Current Focus:** A11 — Submit Flow UI
 
 ---
 
@@ -38,10 +38,10 @@
 | A07 | Grid Cells | ✅ Completed | A06 | Metadata-driven upper grid + unit tests |
 | A08 | Lower Grid | ✅ Completed | A07 | Unit + Playwright tests complete |
 | A09 | Validation Summary | ✅ Completed | A08 | Inline + summary validation UX with tests |
-| A10 | Submit + Confirmation | ⬜ Not Started | A09 | |
-| A11 | Secretary Layout | ⬜ Not Started | A03, B25* | *Can mock until B25 ready |
-| A12 | Entry List View | ⬜ Not Started | A11 | |
-| A13 | Entry Detail View | ⬜ Not Started | A12 | |
+| A10 | Terms Modal | ✅ Completed | A09 | Unit + integration + Playwright tests complete |
+| A11 | Submit Flow UI | ⬜ Not Started | A10 | |
+| A12 | Secretary List | ⬜ Not Started | A11 | |
+| A13 | Secretary Detail | ⬜ Not Started | A12 | |
 | A14 | Playwright Baseline | ✅ Completed | A01 | Unauthenticated smoke tests set up |
 | A15 | Mocks Folder | ⬜ Not Started | A01 | Optional |
 
@@ -54,7 +54,7 @@
 | M0 | ⬜ Not Started | A01 | Smoke test |
 | M1 | ⬜ Not Started | A03 | Auth guards |
 | M2 | ⬜ Not Started | A04-A07 | Form + draft |
-| M3 | ⬜ Not Started | A08-A10 | Submit flow |
+| M3 | 🔄 In Progress | A08-A10 | Stream A items complete; awaiting Stream B |
 | M5 | ⬜ Not Started | A11-A14 | Secretary portal |
 
 ---
@@ -108,6 +108,7 @@ _Append entries as work progresses._
 [2026-01-23 01:40] — A08 — Started lower grid implementation — 🔄
 [2026-01-23 01:46] — A08 — Lower grid component + unit + Playwright tests — ✅
 [2026-01-23 02:05] — A09 — Validation UX + unit/integration/E2E tests — ✅
+[2026-01-22 22:30] — A10 — Terms modal + acceptance gating + tests — ✅
 ```
 
 <!-- Example:

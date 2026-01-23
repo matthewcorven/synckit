@@ -1,9 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 import { RegistrationLayoutComponent } from './registration-layout.component';
 import { TrialSummaryDto } from '../../trials/trial.types';
-import { TrialRegistrationMetadataDto } from '../registration.types';
+import { TermsDto, TrialRegistrationMetadataDto } from '../registration.types';
 
 const mockTrial: TrialSummaryDto = {
   trialId: 'trial-123',
@@ -48,6 +50,11 @@ const mockRegistrationMetadata: TrialRegistrationMetadataDto = {
       }
     ]
   }
+};
+
+const mockTerms: TermsDto = {
+  version: 'v1',
+  html: '<h1>Terms</h1><p>Sample</p>'
 };
 
 describe('RegistrationLayoutComponent', () => {
@@ -99,6 +106,12 @@ describe('RegistrationLayoutComponent', () => {
       selections: formBuilder.group({
         upper: formBuilder.array([]),
         lower: formBuilder.array([])
+      }),
+      terms: formBuilder.group({
+        version: [''],
+        accepted: formBuilder.control({ value: false, disabled: true }, [
+          Validators.requiredTrue
+        ])
       })
     });
 
@@ -168,6 +181,12 @@ describe('RegistrationLayoutComponent', () => {
       selections: formBuilder.group({
         upper: formBuilder.array([]),
         lower: formBuilder.array([])
+      }),
+      terms: formBuilder.group({
+        version: [''],
+        accepted: formBuilder.control({ value: false, disabled: true }, [
+          Validators.requiredTrue
+        ])
       })
     });
 
@@ -185,5 +204,98 @@ describe('RegistrationLayoutComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Validation summary');
+  });
+
+  it('enables terms checkbox and submit after acceptance', async () => {
+    const dialogMock = {
+      open: vi.fn(() => ({
+        afterClosed: () => of(true)
+      }))
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [RegistrationLayoutComponent, NoopAnimationsModule]
+    }).compileComponents();
+
+    const formBuilder = TestBed.inject(FormBuilder);
+    const form = formBuilder.group({
+      entryNumber: [{ value: '', disabled: true }],
+      dog: formBuilder.group({
+        ascaRegistrationNumber: [''],
+        breed: [''],
+        registeredName: [''],
+        callName: [''],
+        dob: [null],
+        color: [''],
+        sex: [''],
+        sire: [''],
+        dam: [''],
+        breeders: ['']
+      }),
+      contact: formBuilder.group({
+        owners: [''],
+        ownerAddress: formBuilder.group({
+          street: [''],
+          city: [''],
+          state: [''],
+          zip: ['']
+        }),
+        email: [''],
+        phone: [''],
+        handler: [''],
+        membershipNumber: [''],
+        junior: formBuilder.group({
+          dob: [null],
+          memberId: ['']
+        })
+      }),
+      emergencyContact: formBuilder.group({
+        name: [''],
+        phoneOrNumber: ['']
+      }),
+      fees: formBuilder.group({
+        totalEntryFees: [null],
+        currency: ['USD']
+      }),
+      selections: formBuilder.group({
+        upper: formBuilder.array([]),
+        lower: formBuilder.array([])
+      }),
+      terms: formBuilder.group({
+        version: [''],
+        accepted: formBuilder.control({ value: false, disabled: true }, [
+          Validators.requiredTrue
+        ])
+      })
+    });
+
+    const fixture = TestBed.createComponent(RegistrationLayoutComponent);
+    fixture.componentInstance.form = form;
+    fixture.componentInstance.trial = mockTrial;
+    fixture.componentInstance.terms = mockTerms;
+    (fixture.componentInstance as unknown as { dialog: MatDialog }).dialog =
+      dialogMock as unknown as MatDialog;
+    fixture.detectChanges();
+
+    const submitButtons = Array.from(
+      fixture.nativeElement.querySelectorAll('button')
+    ) as HTMLButtonElement[];
+    const submitButton = submitButtons.find((button) =>
+      button.textContent?.includes('Submit')
+    );
+
+    expect(submitButton?.disabled).toBeTruthy();
+
+    fixture.componentInstance.openTermsDialog();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const acceptedControl = fixture.componentInstance.form.get('terms.accepted');
+    const versionControl = fixture.componentInstance.form.get('terms.version');
+    expect(acceptedControl?.value).toBe(true);
+    expect(versionControl?.value).toBe('v1');
+
+    fixture.detectChanges();
+    expect(submitButton?.disabled).toBeFalsy();
   });
 });

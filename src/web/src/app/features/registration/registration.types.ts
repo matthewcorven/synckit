@@ -33,6 +33,11 @@ export interface TrialRegistrationMetadataDto {
   formMetadata: FormMetadataDto;
 }
 
+export interface TermsDto {
+  version: string;
+  html: string;
+}
+
 export interface GridSelectionItem {
   row: string;
   col: string;

@@ -7,7 +7,8 @@ import { RegistrationPageComponent } from './registration.page';
 import { TrialService } from '../trials/trial.service';
 import { TrialSummaryDto } from '../trials/trial.types';
 import { RegistrationMetadataService } from './registration-metadata.service';
-import { TrialRegistrationMetadataDto } from './registration.types';
+import { TermsDto, TrialRegistrationMetadataDto } from './registration.types';
+import { TermsService } from './terms.service';
 
 const mockTrial: TrialSummaryDto = {
   trialId: 'trial-123',
@@ -54,6 +55,11 @@ const mockRegistrationMetadata: TrialRegistrationMetadataDto = {
   }
 };
 
+const mockTerms: TermsDto = {
+  version: 'v1',
+  html: '<h1>Terms</h1><p>Sample</p>'
+};
+
 describe('RegistrationPageComponent', () => {
   it('initializes the registration form group', async () => {
     await TestBed.configureTestingModule({
@@ -77,6 +83,12 @@ describe('RegistrationPageComponent', () => {
           provide: RegistrationMetadataService,
           useValue: {
             getRegistrationMetadata: () => of(mockRegistrationMetadata)
+          }
+        },
+        {
+          provide: TermsService,
+          useValue: {
+            getCurrentTerms: () => of(mockTerms)
           }
         }
       ]
@@ -107,10 +119,14 @@ describe('RegistrationPageComponent', () => {
     expect(component.form.get('fees.totalEntryFees')).toBeTruthy();
     expect(component.form.get('fees.currency')).toBeTruthy();
     expect(component.form.get('selections')).toBeTruthy();
+    expect(component.form.get('terms')).toBeTruthy();
+    expect(component.form.get('terms.version')).toBeTruthy();
+    expect(component.form.get('terms.accepted')).toBeTruthy();
   });
 
   it('loads trial data using the route param trialId', async () => {
     const getTrial = vi.fn(() => of(mockTrial));
+    const getCurrentTerms = vi.fn(() => of(mockTerms));
 
     await TestBed.configureTestingModule({
       imports: [RegistrationPageComponent, NoopAnimationsModule],
@@ -132,6 +148,12 @@ describe('RegistrationPageComponent', () => {
           useValue: {
             getRegistrationMetadata: () => of(mockRegistrationMetadata)
           }
+        },
+        {
+          provide: TermsService,
+          useValue: {
+            getCurrentTerms
+          }
         }
       ]
     }).compileComponents();
@@ -140,6 +162,7 @@ describe('RegistrationPageComponent', () => {
     fixture.detectChanges();
 
     expect(getTrial).toHaveBeenCalledWith(mockTrial.trialId);
+    expect(getCurrentTerms).toHaveBeenCalled();
   });
 
   it('requires complete address when any address field is provided', async () => {
@@ -162,6 +185,12 @@ describe('RegistrationPageComponent', () => {
           provide: RegistrationMetadataService,
           useValue: {
             getRegistrationMetadata: () => of(mockRegistrationMetadata)
+          }
+        },
+        {
+          provide: TermsService,
+          useValue: {
+            getCurrentTerms: () => of(mockTerms)
           }
         }
       ]
@@ -209,6 +238,12 @@ describe('RegistrationPageComponent', () => {
           provide: RegistrationMetadataService,
           useValue: {
             getRegistrationMetadata: () => of(mockRegistrationMetadata)
+          }
+        },
+        {
+          provide: TermsService,
+          useValue: {
+            getCurrentTerms: () => of(mockTerms)
           }
         }
       ]

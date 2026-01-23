@@ -1,17 +1,20 @@
 import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { DatePipe, NgIf } from '@angular/common';
-import { FormArray, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TrialSummaryDto } from '../../trials/trial.types';
 import { DogSectionComponent } from '../sections/dog-section.component';
 import { ContactSectionComponent } from '../sections/contact-section.component';
 import { EmergencyFeesSectionComponent } from '../sections/emergency-fees-section.component';
 import { UpperGridSectionComponent } from '../sections/upper-grid-section.component';
 import { LowerGridSectionComponent } from '../sections/lower-grid-section.component';
-import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.types';
+import { GridMetadata, TermsDto, TrialRegistrationMetadataDto } from '../registration.types';
 import { ValidationSummaryComponent } from '../validation-summary/validation-summary.component';
+import { TermsModalComponent } from '../terms-modal/terms-modal.component';
 
 @Component({
   selector: 'app-registration-layout',
@@ -23,6 +26,8 @@ import { ValidationSummaryComponent } from '../validation-summary/validation-sum
     MatCardModule,
     MatDividerModule,
     MatButtonModule,
+    MatCheckboxModule,
+    MatDialogModule,
     DogSectionComponent,
     ContactSectionComponent,
     EmergencyFeesSectionComponent,
@@ -103,6 +108,50 @@ import { ValidationSummaryComponent } from '../validation-summary/validation-sum
           [emergencyGroup]="emergencyGroup"
           [feesGroup]="feesGroup"
         ></app-emergency-fees-section>
+
+        <section
+          class="section-block terms-block"
+          [class.section-block--error]="showTermsError"
+          data-control-path="terms.accepted"
+        >
+          <div class="section-title">Terms and Conditions</div>
+          <div class="terms-copy">
+            <mat-checkbox [formControl]="termsAcceptedControl">
+              I have read and accept the terms.
+            </mat-checkbox>
+            <button
+              mat-button
+              class="terms-link"
+              type="button"
+              (click)="openTermsDialog()"
+              [disabled]="!terms"
+            >
+              View Terms and Conditions
+            </button>
+            <span class="terms-version" *ngIf="termsVersion">({{ termsVersion }})</span>
+          </div>
+          <div class="field-error" *ngIf="showTermsError">
+            You must accept the terms before submitting.
+          </div>
+          <div class="terms-actions">
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="openTermsDialog()"
+              [disabled]="!terms"
+            >
+              Review terms
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              [disabled]="!termsAccepted"
+            >
+              Submit
+            </button>
+          </div>
+        </section>
 
         <div class="validation-actions">
           <button mat-flat-button color="primary" type="button" (click)="reviewForErrors()">
@@ -262,6 +311,35 @@ import { ValidationSummaryComponent } from '../validation-summary/validation-sum
         padding-top: 8px;
       }
 
+      .terms-block {
+        gap: 12px;
+      }
+
+      .terms-copy {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .terms-link {
+        padding: 0 4px;
+      }
+
+      .terms-version {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--mat-sys-on-surface-variant);
+      }
+
+      .terms-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
       @media (max-width: 900px) {
         .registration-header__badge {
           text-align: left;
@@ -278,11 +356,15 @@ export class RegistrationLayoutComponent {
   @Input({ required: true }) form!: FormGroup;
   @Input({ required: true }) trial!: TrialSummaryDto;
   @Input() registrationMetadata?: TrialRegistrationMetadataDto | null;
+  @Input() terms?: TermsDto | null;
   @ViewChild(ValidationSummaryComponent) summary?: ValidationSummaryComponent;
 
   validationSummaryVisible = false;
 
-  constructor(private readonly host: ElementRef<HTMLElement>) {}
+  constructor(
+    private readonly host: ElementRef<HTMLElement>,
+    private readonly dialog: MatDialog
+  ) {}
 
   get dogGroup(): FormGroup {
     return this.form.get('dog') as FormGroup;
@@ -321,9 +403,31 @@ export class RegistrationLayoutComponent {
     return this.form.get('selections') as FormGroup;
   }
 
+  get termsGroup(): FormGroup {
+    return this.form.get('terms') as FormGroup;
+  }
+
+  get termsAcceptedControl(): FormControl {
+    return this.termsGroup.get('accepted') as FormControl;
+  }
+
+  get termsAccepted(): boolean {
+    return this.termsAcceptedControl?.value === true;
+  }
+
+  get termsVersion(): string | null {
+    const value = this.termsGroup.get('version')?.value as string | null;
+    return value && value.trim().length > 0 ? value : this.terms?.version ?? null;
+  }
+
   get showSelectionsError(): boolean {
     const control = this.selectionsGroup;
     return control.hasError('minSelections') && (control.touched || control.dirty);
+  }
+
+  get showTermsError(): boolean {
+    const control = this.termsAcceptedControl;
+    return control.invalid && (control.touched || control.dirty);
   }
 
   get upperGridMetadata(): GridMetadata | null {
@@ -376,5 +480,31 @@ export class RegistrationLayoutComponent {
     if (typeof element.focus === 'function') {
       element.focus({ preventScroll: true });
     }
+  }
+
+  openTermsDialog(): void {
+    if (!this.terms) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(TermsModalComponent, {
+      data: this.terms,
+      autoFocus: true,
+      restoreFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe((accepted: boolean | undefined) => {
+      if (!accepted) {
+        return;
+      }
+
+      if (this.termsAcceptedControl.disabled) {
+        this.termsAcceptedControl.enable();
+      }
+      this.termsAcceptedControl.setValue(true);
+      this.termsGroup.get('version')?.setValue(this.terms?.version ?? '');
+      this.termsGroup.markAsDirty();
+      this.termsGroup.updateValueAndValidity();
+    });
   }
 }

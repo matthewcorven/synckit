@@ -13,12 +13,14 @@ import {
 } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { forkJoin } from 'rxjs';
 import { RegistrationLayoutComponent } from './registration-layout/registration-layout.component';
 import { TrialService } from '../trials/trial.service';
 import { TrialSummaryDto } from '../trials/trial.types';
 import { RegistrationMetadataService } from './registration-metadata.service';
-import { TrialRegistrationMetadataDto } from './registration.types';
+import { TermsDto, TrialRegistrationMetadataDto } from './registration.types';
 import { applyServerErrorsToForm, clearServerErrors, ValidationErrorMap } from './validation.utils';
+import { TermsService } from './terms.service';
 
 @Component({
   selector: 'app-registration-page',
@@ -49,6 +51,7 @@ import { applyServerErrorsToForm, clearServerErrors, ValidationErrorMap } from '
         [trial]="trial"
         [form]="form"
         [registrationMetadata]="registrationMetadata"
+        [terms]="terms"
       ></app-registration-layout>
     </section>
   `
@@ -57,6 +60,7 @@ export class RegistrationPageComponent implements OnInit {
   form: FormGroup;
   trial: TrialSummaryDto | null = null;
   registrationMetadata: TrialRegistrationMetadataDto | null = null;
+  terms: TermsDto | null = null;
   isLoading = true;
   errorMessage = '';
 
@@ -64,6 +68,7 @@ export class RegistrationPageComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly trialService: TrialService,
     private readonly metadataService: RegistrationMetadataService,
+    private readonly termsService: TermsService,
     private readonly formBuilder: FormBuilder
   ) {
     this.form = this.formBuilder.group({
@@ -109,7 +114,13 @@ export class RegistrationPageComponent implements OnInit {
           lower: this.formBuilder.array([])
         },
         { validators: [this.minSelectionsValidator()] }
-      )
+      ),
+      terms: this.formBuilder.group({
+        version: [''],
+        accepted: this.formBuilder.control({ value: false, disabled: true }, [
+          Validators.requiredTrue
+        ])
+      })
     });
   }
 
@@ -125,9 +136,13 @@ export class RegistrationPageComponent implements OnInit {
     this.trialService.getTrial(trialId).subscribe({
       next: (trial) => {
         this.trial = trial;
-        this.metadataService.getRegistrationMetadata(trialId).subscribe({
-          next: (metadata) => {
+        forkJoin({
+          metadata: this.metadataService.getRegistrationMetadata(trialId),
+          terms: this.termsService.getCurrentTerms()
+        }).subscribe({
+          next: ({ metadata, terms }) => {
             this.registrationMetadata = metadata;
+            this.terms = terms;
             this.isLoading = false;
           },
           error: () => {

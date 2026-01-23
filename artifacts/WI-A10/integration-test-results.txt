@@ -1,0 +1,5 @@
+WI-A10 Integration Test Results
+Date: 2026-01-22
+Command: cd src/web && npm test -- --watch=false
+Result: PASS
+Notes: Registration page spec verifies terms fetch and form wiring as part of the integration coverage.
