@@ -14,9 +14,6 @@ const ENTRY: EntryDetailDto = {
   trial: {
     trialId: 'trial-1',
     name: 'Spring Stockdog Trial',
-    organizationName: 'ASCA',
-    sportName: 'Stock Dog',
-    formName: 'Trial Entry Form',
     formTemplate: {
       organizationCode: 'ASCA',
       sportCode: 'StockDog',

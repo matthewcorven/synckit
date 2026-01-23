@@ -23,9 +23,6 @@ export const SECRETARY_ENTRY_DETAIL_MOCKS: EntryDetailDto[] = [
     trial: {
       trialId: '9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49',
       name: 'Spring Stockdog Trial',
-      organizationName: 'Australian Shepherd Club of America',
-      sportName: 'Stock Dog',
-      formName: 'Trial Entry Form',
       formTemplate: {
         organizationCode: 'ASCA',
         sportCode: 'StockDog',
@@ -115,9 +112,6 @@ export const SECRETARY_ENTRY_DETAIL_MOCKS: EntryDetailDto[] = [
     trial: {
       trialId: '9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49',
       name: 'Spring Stockdog Trial',
-      organizationName: 'Australian Shepherd Club of America',
-      sportName: 'Stock Dog',
-      formName: 'Trial Entry Form',
       formTemplate: {
         organizationCode: 'ASCA',
         sportCode: 'StockDog',

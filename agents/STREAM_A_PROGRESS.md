@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-23 10:10  
-**Current Focus:** A15 — Mocks Folder (optional)
+**Last Updated:** 2026-01-23 11:55  
+**Current Focus:** Ready for next item
 
 ---
 
@@ -43,7 +43,7 @@
 | A12 | Secretary List | ✅ Completed | A11 | UI, tests, and artifacts complete |
 | A13 | Secretary Detail | ✅ Completed | A12 | UI, tests, and artifacts complete |
 | A14 | Playwright Baseline | ✅ Completed | A01 | Unauthenticated smoke tests set up |
-| A15 | Mocks Folder | ⬜ Not Started | A01 | Optional |
+| A15 | Mocks Folder | ✅ Completed | A01 | Unit + integration artifacts captured |
 
 ---
 
@@ -114,6 +114,7 @@ _Append entries as work progresses._
 [2026-01-23 09:10] — A12 — Secretary list UI + tests + artifacts — ✅
 [2026-01-23 09:35] — A13 — Started secretary detail implementation — 🔄
 [2026-01-23 10:10] — A13 — Secretary detail UI + tests + artifacts — ✅
+[2026-01-23 11:55] — A15 — Mocks folder + mock loader + tests — ✅
 ```
 
 <!-- Example:

@@ -12,9 +12,6 @@ const TRIALS = [
   {
     trialId: 'trial-1',
     name: 'Mock Trial',
-    organizationName: 'ASCA',
-    sportName: 'Stock Dog',
-    formName: 'Trial Entry Form',
     organizerSlug: 'ORG',
     eventSlug: 'EVENT',
     trackingSlug: 'ORG-EVENT',

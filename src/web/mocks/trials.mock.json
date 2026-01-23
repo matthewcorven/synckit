@@ -1,0 +1,59 @@
+[
+  {
+    "trialId": "9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49",
+    "name": "Spring Stockdog Trial 2026",
+    "formTemplate": {
+      "organizationCode": "ASCA",
+      "sportCode": "StockDog",
+      "formCode": "TrialEntry",
+      "version": "2020-10-08"
+    },
+    "organizerSlug": "EXCLUB",
+    "eventSlug": "SPRING-2026-05-02",
+    "trackingSlug": "OLDKYASCASPRING-2026-05-02",
+    "hostClub": "Old Fashioned KY ASCA Club",
+    "startDate": "2026-05-02",
+    "endDate": "2026-05-03",
+    "location": "Bryan, TX",
+    "secretaryEmail": "secretary@exclub.org",
+    "isActive": true
+  },
+  {
+    "trialId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+    "name": "Fall Championship 2026",
+    "formTemplate": {
+      "organizationCode": "ASCA",
+      "sportCode": "StockDog",
+      "formCode": "TrialEntry",
+      "version": "2020-10-08"
+    },
+    "organizerSlug": "EXCLUB",
+    "eventSlug": "FALL-2026-10-15",
+    "trackingSlug": "OLDKYASCAFALL-2026-10-15",
+    "hostClub": "Example Stockdog Club",
+    "startDate": "2026-10-15",
+    "endDate": "2026-10-17",
+    "location": "Austin, TX",
+    "secretaryEmail": "secretary@exclub.org",
+    "isActive": true
+  },
+  {
+    "trialId": "b7e4f123-8a91-4d2e-9c56-7f82a1b3c4d5",
+    "name": "Bluegrass Stockdog Weekend",
+    "formTemplate": {
+      "organizationCode": "ASCA",
+      "sportCode": "StockDog",
+      "formCode": "TrialEntry",
+      "version": "2020-10-08"
+    },
+    "organizerSlug": "BLUEGRASS",
+    "eventSlug": "BLUEGRASS-2026-08-08",
+    "trackingSlug": "BLUEGRASS-BLUEGRASS-2026-08-08",
+    "hostClub": "Bluegrass Working Stockdogs",
+    "startDate": "2026-08-08",
+    "endDate": "2026-08-09",
+    "location": "Lexington, KY",
+    "secretaryEmail": "entries@bluegrassstockdogs.org",
+    "isActive": true
+  }
+]

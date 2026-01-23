@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { TrialRegistrationMetadataDto } from './registration.types';
-import { buildRegistrationMetadataMock } from './registration-metadata.mock';
+import { MockDataService } from '../../shared/mocks/mock-data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,11 +11,14 @@ import { buildRegistrationMetadataMock } from './registration-metadata.mock';
 export class RegistrationMetadataService {
   private readonly baseUrl = environment.apiBaseUrl ?? '/api';
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly mockDataService: MockDataService
+  ) {}
 
   getRegistrationMetadata(trialId: string): Observable<TrialRegistrationMetadataDto> {
-    if (environment.useMocks) {
-      return of(buildRegistrationMetadataMock(trialId));
+    if (this.mockDataService.isEnabled) {
+      return this.mockDataService.getRegistrationMetadata(trialId);
     }
 
     return this.http.get<TrialRegistrationMetadataDto>(

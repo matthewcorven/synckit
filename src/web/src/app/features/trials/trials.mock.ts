@@ -4,9 +4,6 @@ export const TRIALS_MOCK_DATA: TrialSummaryDto[] = [
   {
     trialId: '9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49',
     name: 'Spring Stockdog Trial',
-    organizationName: 'Australian Shepherd Club of America',
-    sportName: 'Stock Dog',
-    formName: 'Trial Entry Form',
     formTemplate: {
       organizationCode: 'ASCA',
       sportCode: 'StockDog',
@@ -26,9 +23,6 @@ export const TRIALS_MOCK_DATA: TrialSummaryDto[] = [
   {
     trialId: 'ae3a7fb2-7b63-4b9f-bb55-2fc6ff0a3d5c',
     name: 'Summer Invitational',
-    organizationName: 'Australian Shepherd Club of America',
-    sportName: 'Stock Dog',
-    formName: 'Trial Entry Form',
     formTemplate: {
       organizationCode: 'ASCA',
       sportCode: 'StockDog',
@@ -48,9 +42,6 @@ export const TRIALS_MOCK_DATA: TrialSummaryDto[] = [
   {
     trialId: '7a80db12-1a63-47f6-9059-1b0fdf7d8b44',
     name: 'Fall Classic',
-    organizationName: 'Australian Shepherd Club of America',
-    sportName: 'Stock Dog',
-    formName: 'Trial Entry Form',
     formTemplate: {
       organizationCode: 'ASCA',
       sportCode: 'StockDog',

@@ -16,9 +16,6 @@ import { of, throwError } from 'rxjs';
 const mockTrial: TrialSummaryDto = {
   trialId: 'trial-123',
   name: 'Mock Trial',
-  organizationName: 'Australian Shepherd Club of America',
-  sportName: 'Stock Dog',
-  formName: 'Trial Entry Form',
   formTemplate: {
     organizationCode: 'ASCA',
     sportCode: 'StockDog',

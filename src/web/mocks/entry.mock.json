@@ -1,0 +1,91 @@
+{
+  "entryId": "f3e0e855-6522-4d4b-8d9e-34e61f9a4a75",
+  "trial": {
+    "trialId": "9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49",
+    "name": "Spring Stockdog Trial 2026",
+    "formTemplate": {
+      "organizationCode": "ASCA",
+      "sportCode": "StockDog",
+      "formCode": "TrialEntry",
+      "version": "2020-10-08"
+    },
+    "organizerSlug": "EXCLUB",
+    "eventSlug": "SPRING-2026-05-02",
+    "trackingSlug": "OLDKYASCASPRING-2026-05-02",
+    "hostClub": "Old Fashioned KY ASCA Club",
+    "startDate": "2026-05-02",
+    "endDate": "2026-05-03",
+    "location": "Bryan, TX",
+    "secretaryEmail": "secretary@exclub.org",
+    "isActive": true
+  },
+  "status": "Draft",
+  "formTemplate": {
+    "organizationCode": "ASCA",
+    "sportCode": "StockDog",
+    "formCode": "TrialEntry",
+    "version": "2020-10-08"
+  },
+  "entryNumber": null,
+  "submittedAtUtc": null,
+  "dog": {
+    "ascaRegistrationNumber": "E-12345",
+    "breed": "Australian Shepherd",
+    "registeredName": "Example's Blue Lightning",
+    "dob": "2021-04-10",
+    "color": "Blue Merle",
+    "callName": "Ranger",
+    "sex": "Male",
+    "sire": "Champion Sire Name",
+    "dam": "Champion Dam Name",
+    "breeders": "Example Breeders"
+  },
+  "contact": {
+    "owners": "Jane Handler",
+    "ownerAddress": {
+      "street": "123 Main St",
+      "city": "Bryan",
+      "state": "TX",
+      "zip": "77801"
+    },
+    "email": "jane@example.com",
+    "phone": "555-555-5555",
+    "handler": null,
+    "membershipNumber": "12345",
+    "junior": null
+  },
+  "fees": {
+    "totalEntryFees": 75.0,
+    "currency": "USD"
+  },
+  "emergencyContact": {
+    "name": "John Emergency",
+    "phoneOrNumber": "555-111-2222"
+  },
+  "selections": {
+    "upper": [
+      { "row": "Sheep", "col": "STD", "value": "X" },
+      { "row": "Sheep", "col": "DATE1_TRIAL1", "value": "X" }
+    ],
+    "lower": [
+      { "row": "Sheep", "col": "NOV", "value": "X" }
+    ]
+  },
+  "terms": {
+    "version": "v1",
+    "acceptedAtUtc": null,
+    "acceptedByUserId": null
+  },
+  "processing": {
+    "pdfStatus": "Queued",
+    "generatedPdf": {
+      "blobUri": null,
+      "downloadUrl": null
+    },
+    "emailNotifications": [
+      { "recipientType": "Handler", "status": "Queued", "sentAtUtc": null, "lastError": null },
+      { "recipientType": "Secretary", "status": "Queued", "sentAtUtc": null, "lastError": null }
+    ],
+    "lastError": null
+  }
+}

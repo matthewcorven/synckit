@@ -41,9 +41,11 @@ import { TermsModalComponent } from '../terms-modal/terms-modal.component';
     <mat-card class="registration-card">
       <section class="registration-header" *ngIf="trial">
         <div>
-          <div class="registration-header__org">{{ trial.organizationName }}</div>
+          <div class="registration-header__org">{{ trial.hostClub }}</div>
           <div class="registration-header__label">
-            {{ trial.sportName }} {{ trial.formName }}
+            {{ trial.formTemplate.organizationCode }}
+            {{ trial.formTemplate.sportCode }}
+            {{ trial.formTemplate.formCode }}
           </div>
           <h2 class="registration-header__title">{{ trial.name }}</h2>
           <div class="registration-header__meta">

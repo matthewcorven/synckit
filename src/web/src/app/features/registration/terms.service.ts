@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { TermsDto } from './registration.types';
-import { TERMS_MOCK_DATA } from './terms.mock';
+import { MockDataService } from '../../shared/mocks/mock-data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,11 +11,14 @@ import { TERMS_MOCK_DATA } from './terms.mock';
 export class TermsService {
   private readonly baseUrl = environment.apiBaseUrl ?? '/api';
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly mockDataService: MockDataService
+  ) {}
 
   getCurrentTerms(): Observable<TermsDto> {
-    if (environment.useMocks) {
-      return of(TERMS_MOCK_DATA);
+    if (this.mockDataService.isEnabled) {
+      return this.mockDataService.getTerms();
     }
 
     return this.http.get<TermsDto>(`${this.baseUrl}/terms/current`);

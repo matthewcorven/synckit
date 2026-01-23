@@ -27,6 +27,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "mocks",
+                "output": "/mocks"
               }
             ],
             "styles": [

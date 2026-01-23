@@ -1,0 +1,8 @@
+Integration tests: Mock service usage
+
+Result: PASS
+- TrialService uses mock fixtures when useMocks=true
+- TrialService uses live API when useMocks=false
+- MockDataService builds registration metadata from fixtures
+- MockDataService rejects when mocks disabled
+- Date: 2026-01-23
