@@ -1,36 +1,64 @@
 import { Component, Input } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { NgIf } from '@angular/common';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-emergency-fees-section',
   standalone: true,
-  imports: [MatCardModule],
+  imports: [NgIf, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule],
   template: `
     <section class="section">
       <div class="section__header">Emergency Contact / Fees</div>
       <div class="section__grid">
-        <mat-card class="section__body form-panel">
-          <div class="section__subheader">Emergency Contact Name &amp; Number</div>
-          <div class="placeholder-grid">
-            <div class="placeholder-item">
-              <div class="field-label">Name</div>
-              <div class="placeholder-field"></div>
-            </div>
-            <div class="placeholder-item">
-              <div class="field-label">Number</div>
-              <div class="placeholder-field"></div>
-            </div>
+        <mat-card class="section__body form-panel" [formGroup]="emergencyGroup">
+          <div class="section__subheader">Emergency Contact</div>
+          <div class="field-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Name *</mat-label>
+              <input matInput formControlName="name" required />
+              <mat-error *ngIf="showRequiredError(emergencyGroup, 'name')">
+                Emergency contact name is required.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Phone/Number *</mat-label>
+              <input matInput formControlName="phoneOrNumber" required />
+              <mat-error *ngIf="showRequiredError(emergencyGroup, 'phoneOrNumber')">
+                Emergency contact number is required.
+              </mat-error>
+            </mat-form-field>
           </div>
         </mat-card>
-        <mat-card class="section__body form-panel">
+        <mat-card class="section__body form-panel" [formGroup]="feesGroup">
           <div class="section__subheader">Entry Fees</div>
-          <div class="placeholder-grid">
-            <div class="placeholder-item">
-              <div class="field-label">Total Entry Fees ($)</div>
-              <div class="placeholder-field"></div>
-            </div>
+          <div class="field-grid">
+            <mat-form-field appearance="outline" class="fee-field">
+              <mat-label>Total Entry Fees *</mat-label>
+              <span matPrefix>$&nbsp;</span>
+              <input
+                matInput
+                formControlName="totalEntryFees"
+                type="number"
+                inputmode="decimal"
+                min="0.01"
+                step="0.01"
+                required
+              />
+              <span matSuffix>USD</span>
+              <mat-error *ngIf="showRequiredError(feesGroup, 'totalEntryFees')">
+                Total entry fees are required.
+              </mat-error>
+              <mat-error *ngIf="showMinFeeError()">Total entry fees must be greater than $0.00.</mat-error>
+            </mat-form-field>
           </div>
+          <div class="fees-summary" *ngIf="formattedTotal">
+            Total: {{ formattedTotal }}
+          </div>
+          <div class="fees-note">Payment details are not collected here.</div>
         </mat-card>
       </div>
     </section>
@@ -72,29 +100,29 @@ import { MatCardModule } from '@angular/material/card';
         margin-bottom: 4px;
       }
 
-      .placeholder-grid {
+      .field-grid {
         display: grid;
-        gap: 10px;
-        grid-template-columns: 1fr;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        align-items: start;
       }
 
-      .placeholder-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+      mat-form-field {
+        width: 100%;
       }
 
-      .placeholder-field {
-        height: 36px;
-        border-radius: 6px;
-        background: var(--mat-sys-surface-variant);
-        opacity: 0.7;
+      .fee-field {
+        max-width: 280px;
       }
 
-      .field-label {
+      .fees-summary {
+        margin-top: 4px;
+        font-weight: 600;
+      }
+
+      .fees-note {
+        margin-top: 6px;
         font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
         color: var(--mat-sys-on-surface-variant);
       }
     `
@@ -103,4 +131,36 @@ import { MatCardModule } from '@angular/material/card';
 export class EmergencyFeesSectionComponent {
   @Input() emergencyGroup!: FormGroup;
   @Input() feesGroup!: FormGroup;
+
+  get formattedTotal(): string | null {
+    const control = this.feesGroup?.get('totalEntryFees');
+    const value = control?.value;
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) {
+      return null;
+    }
+    return this.formatFee(numericValue);
+  }
+
+  formatFee(value: number): string {
+    return `${new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value)} USD`;
+  }
+
+  showRequiredError(group: FormGroup, controlName: string): boolean {
+    const control = group?.get(controlName);
+    return !!control && control.hasError('required') && (control.dirty || control.touched);
+  }
+
+  showMinFeeError(): boolean {
+    const control = this.feesGroup?.get('totalEntryFees');
+    return !!control && control.hasError('min') && (control.dirty || control.touched);
+  }
 }

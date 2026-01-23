@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-22 19:10  
-**Current Focus:** A05 — Contact Fields
+**Last Updated:** 2026-01-23 01:00  
+**Current Focus:** A06 — Emergency + Fees
 
 ---
 
@@ -34,7 +34,7 @@
 | A03 | Form Layout | ✅ Completed | A02 | Layout aligned to PDF; grids updated |
 | A04 | Dog Fields | ✅ Completed | A03 | |
 | A05 | Contact Fields | ✅ Completed | A04 | |
-| A06 | Emergency + Fees | ⬜ Not Started | A05 | |
+| A06 | Emergency + Fees | ✅ Completed | A05 | Unit + Playwright tests complete |
 | A07 | Grid Cells | ⬜ Not Started | A06 | |
 | A08 | Terms Modal | ⬜ Not Started | A07, B18* | *Can mock until B18 ready |
 | A09 | Validation Summary | ⬜ Not Started | A08 | |
@@ -102,6 +102,8 @@ _Append entries as work progresses._
 [2026-01-22 19:10] — A05 — Contact fields + validation + unit tests — ✅
 [2026-01-22 19:15] — A05 — Ran web unit tests — ✅
 [2026-01-22 19:45] — A05 — Ran Playwright E2E (contact fields) — ✅
+[2026-01-22 19:50] — A06 — Started emergency + fees section — 🔄
+[2026-01-23 01:00] — A06 — Emergency + fees UI + tests — ✅
 ```
 
 <!-- Example:

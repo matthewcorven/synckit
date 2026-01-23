@@ -19,7 +19,7 @@ const mockTrial: TrialSummaryDto = {
   organizerSlug: 'ORG',
   eventSlug: 'EVENT',
   trackingSlug: 'ORG-EVENT',
-  hostClub: 'Example Club',
+  hostClub: 'Old Fashioned KY ASCA Club',
   startDate: '2026-05-02',
   endDate: '2026-05-03',
   location: 'Bryan, TX',
@@ -65,8 +65,14 @@ describe('RegistrationLayoutComponent', () => {
           memberId: ['']
         })
       }),
-      emergencyContact: formBuilder.group({}),
-      fees: formBuilder.group({}),
+      emergencyContact: formBuilder.group({
+        name: [''],
+        phoneOrNumber: ['']
+      }),
+      fees: formBuilder.group({
+        totalEntryFees: [null],
+        currency: ['USD']
+      }),
       selections: formBuilder.group({
         upper: formBuilder.array([]),
         lower: formBuilder.array([])

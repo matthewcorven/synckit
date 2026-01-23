@@ -22,7 +22,7 @@ const mockTrial: TrialSummaryDto = {
   organizerSlug: 'ORG',
   eventSlug: 'EVENT',
   trackingSlug: 'ORG-EVENT',
-  hostClub: 'Example Club',
+  hostClub: 'Old Fashioned KY ASCA Club',
   startDate: '2026-05-02',
   endDate: '2026-05-03',
   location: 'Bryan, TX',
@@ -71,7 +71,11 @@ describe('RegistrationPageComponent', () => {
     expect(component.form.get('contact.junior.dob')).toBeTruthy();
     expect(component.form.get('contact.junior.memberId')).toBeTruthy();
     expect(component.form.get('emergencyContact')).toBeTruthy();
+    expect(component.form.get('emergencyContact.name')).toBeTruthy();
+    expect(component.form.get('emergencyContact.phoneOrNumber')).toBeTruthy();
     expect(component.form.get('fees')).toBeTruthy();
+    expect(component.form.get('fees.totalEntryFees')).toBeTruthy();
+    expect(component.form.get('fees.currency')).toBeTruthy();
     expect(component.form.get('selections')).toBeTruthy();
   });
 

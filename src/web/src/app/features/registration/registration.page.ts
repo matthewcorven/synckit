@@ -85,8 +85,17 @@ export class RegistrationPageComponent implements OnInit {
           memberId: ['']
         })
       }),
-      emergencyContact: this.formBuilder.group({}),
-      fees: this.formBuilder.group({}),
+      emergencyContact: this.formBuilder.group({
+        name: ['', Validators.required],
+        phoneOrNumber: ['', Validators.required]
+      }),
+      fees: this.formBuilder.group({
+        totalEntryFees: this.formBuilder.control<number | null>(null, [
+          Validators.required,
+          Validators.min(0.01)
+        ]),
+        currency: ['USD']
+      }),
       selections: this.formBuilder.group({
         upper: this.formBuilder.array([]),
         lower: this.formBuilder.array([])

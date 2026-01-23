@@ -1,0 +1,1 @@
+[2026-01-23 00:57] WI-A06 integration tests — not run (no suite configured).
