@@ -6,6 +6,8 @@ import { of } from 'rxjs';
 import { RegistrationPageComponent } from './registration.page';
 import { TrialService } from '../trials/trial.service';
 import { TrialSummaryDto } from '../trials/trial.types';
+import { RegistrationMetadataService } from './registration-metadata.service';
+import { TrialRegistrationMetadataDto } from './registration.types';
 
 const mockTrial: TrialSummaryDto = {
   trialId: 'trial-123',
@@ -30,6 +32,28 @@ const mockTrial: TrialSummaryDto = {
   isActive: true
 };
 
+const mockRegistrationMetadata: TrialRegistrationMetadataDto = {
+  trialId: mockTrial.trialId,
+  formTemplate: mockTrial.formTemplate,
+  formMetadata: {
+    formTemplate: mockTrial.formTemplate,
+    grids: [
+      {
+        grid: 'Upper',
+        rows: ['Sheep', 'Cattle', 'Ducks', 'Mixed'],
+        cols: ['STD', 'OPN', 'ADV', 'FTD_OPN', 'FTD_ADV', 'DATE1_TRIAL1', 'DATE1_TRIAL2'],
+        disabledCells: [
+          { row: 'Mixed', col: 'STD' },
+          { row: 'Mixed', col: 'OPN' },
+          { row: 'Mixed', col: 'ADV' },
+          { row: 'Mixed', col: 'FTD_OPN' },
+          { row: 'Mixed', col: 'FTD_ADV' }
+        ]
+      }
+    ]
+  }
+};
+
 describe('RegistrationPageComponent', () => {
   it('initializes the registration form group', async () => {
     await TestBed.configureTestingModule({
@@ -47,6 +71,12 @@ describe('RegistrationPageComponent', () => {
           provide: TrialService,
           useValue: {
             getTrial: () => of(mockTrial)
+          }
+        },
+        {
+          provide: RegistrationMetadataService,
+          useValue: {
+            getRegistrationMetadata: () => of(mockRegistrationMetadata)
           }
         }
       ]
@@ -96,6 +126,12 @@ describe('RegistrationPageComponent', () => {
         {
           provide: TrialService,
           useValue: { getTrial }
+        },
+        {
+          provide: RegistrationMetadataService,
+          useValue: {
+            getRegistrationMetadata: () => of(mockRegistrationMetadata)
+          }
         }
       ]
     }).compileComponents();
@@ -121,6 +157,12 @@ describe('RegistrationPageComponent', () => {
         {
           provide: TrialService,
           useValue: { getTrial: () => of(mockTrial) }
+        },
+        {
+          provide: RegistrationMetadataService,
+          useValue: {
+            getRegistrationMetadata: () => of(mockRegistrationMetadata)
+          }
         }
       ]
     }).compileComponents();

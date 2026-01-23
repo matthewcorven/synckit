@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { DatePipe, NgIf } from '@angular/common';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { TrialSummaryDto } from '../../trials/trial.types';
@@ -9,6 +9,7 @@ import { ContactSectionComponent } from '../sections/contact-section.component';
 import { EmergencyFeesSectionComponent } from '../sections/emergency-fees-section.component';
 import { UpperGridSectionComponent } from '../sections/upper-grid-section.component';
 import { LowerGridSectionComponent } from '../sections/lower-grid-section.component';
+import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.types';
 
 @Component({
   selector: 'app-registration-layout',
@@ -69,7 +70,11 @@ import { LowerGridSectionComponent } from '../sections/lower-grid-section.compon
         <app-contact-section [group]="contactGroup"></app-contact-section>
         <section class="section-block">
           <div class="section-title">Class Selections</div>
-          <app-upper-grid-section [trial]="trial"></app-upper-grid-section>
+          <app-upper-grid-section
+            [trial]="trial"
+            [gridMetadata]="upperGridMetadata"
+            [selectionsControl]="upperSelections"
+          ></app-upper-grid-section>
           <app-lower-grid-section [trial]="trial"></app-lower-grid-section>
         </section>
 
@@ -226,6 +231,7 @@ import { LowerGridSectionComponent } from '../sections/lower-grid-section.compon
 export class RegistrationLayoutComponent {
   @Input({ required: true }) form!: FormGroup;
   @Input({ required: true }) trial!: TrialSummaryDto;
+  @Input() registrationMetadata?: TrialRegistrationMetadataDto | null;
 
   get dogGroup(): FormGroup {
     return this.form.get('dog') as FormGroup;
@@ -250,5 +256,21 @@ export class RegistrationLayoutComponent {
 
   get feesGroup(): FormGroup {
     return this.form.get('fees') as FormGroup;
+  }
+
+  get upperSelections(): FormArray {
+    return this.form.get('selections.upper') as FormArray;
+  }
+
+  get upperGridMetadata(): GridMetadata | null {
+    if (!this.registrationMetadata) {
+      return null;
+    }
+
+    return (
+      this.registrationMetadata.formMetadata.grids.find(
+        (grid) => grid.grid === 'Upper'
+      ) ?? null
+    );
   }
 }

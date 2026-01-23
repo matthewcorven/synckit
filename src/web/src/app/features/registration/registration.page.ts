@@ -15,6 +15,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RegistrationLayoutComponent } from './registration-layout/registration-layout.component';
 import { TrialService } from '../trials/trial.service';
 import { TrialSummaryDto } from '../trials/trial.types';
+import { RegistrationMetadataService } from './registration-metadata.service';
+import { TrialRegistrationMetadataDto } from './registration.types';
 
 @Component({
   selector: 'app-registration-page',
@@ -44,6 +46,7 @@ import { TrialSummaryDto } from '../trials/trial.types';
         *ngIf="!isLoading && !errorMessage && trial"
         [trial]="trial"
         [form]="form"
+        [registrationMetadata]="registrationMetadata"
       ></app-registration-layout>
     </section>
   `
@@ -51,12 +54,14 @@ import { TrialSummaryDto } from '../trials/trial.types';
 export class RegistrationPageComponent implements OnInit {
   form: FormGroup;
   trial: TrialSummaryDto | null = null;
+  registrationMetadata: TrialRegistrationMetadataDto | null = null;
   isLoading = true;
   errorMessage = '';
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly trialService: TrialService,
+    private readonly metadataService: RegistrationMetadataService,
     private readonly formBuilder: FormBuilder
   ) {
     this.form = this.formBuilder.group({
@@ -115,7 +120,16 @@ export class RegistrationPageComponent implements OnInit {
     this.trialService.getTrial(trialId).subscribe({
       next: (trial) => {
         this.trial = trial;
-        this.isLoading = false;
+        this.metadataService.getRegistrationMetadata(trialId).subscribe({
+          next: (metadata) => {
+            this.registrationMetadata = metadata;
+            this.isLoading = false;
+          },
+          error: () => {
+            this.errorMessage = 'Unable to load registration metadata. Please try again.';
+            this.isLoading = false;
+          }
+        });
       },
       error: () => {
         this.errorMessage = 'Unable to load trial details. Please try again.';
