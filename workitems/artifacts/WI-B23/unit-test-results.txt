@@ -1,0 +1,9 @@
+WI-B23 Unit Test Results
+
+Command: dotnet test src/api/DogTrials.sln -v minimal
+Result: Passed
+Summary: total 87, failed 0, succeeded 87, skipped 0
+
+Command: DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' dotnet test src/api/DogTrials.sln -v minimal
+Result: Passed
+Summary: total 87, failed 0, succeeded 87, skipped 0

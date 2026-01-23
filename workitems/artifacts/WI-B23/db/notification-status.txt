@@ -1,0 +1,9 @@
+WI-B23 DB Verification
+
+SQL-backed tests executed with DOGTRIALS_TEST_SQL against local Docker SQL Server.
+
+Verified via BackgroundJobProcessorTests:
+- ProcessEmailJob_SetsSuccessAndSentAt: Status=Success, SentAtUtc populated, NextAttemptAtUtc cleared.
+- ProcessEmailJob_SetsFailureAndSchedulesRetry: Status=Failed, LastErrorCode set, NextAttemptAtUtc populated.
+
+Result: Passed (see dotnet test output in unit-test-results.txt).

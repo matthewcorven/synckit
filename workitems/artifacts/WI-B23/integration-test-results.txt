@@ -1,0 +1,7 @@
+WI-B23 Integration Test Results
+
+Command: EMAIL_CONNECTION_STRING=*** EMAIL_SENDER_ADDRESS=*** EMAIL_TEST_HANDLER=*** EMAIL_TEST_SECRETARY=*** dotnet test src/api/DogTrials.sln -v minimal
+Result: Passed
+Summary: total 87, failed 0, succeeded 87, skipped 0
+
+Notes: ACS env vars were provided for EmailJobHandlerIntegrationTests.

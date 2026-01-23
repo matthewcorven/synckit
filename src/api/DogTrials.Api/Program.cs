@@ -57,6 +57,10 @@ builder.Services.AddOptions<StorageOptions>()
     .Bind(builder.Configuration.GetSection(StorageOptions.SectionName))
     .PostConfigure(options => options.ApplyEnvironmentOverrides());
 
+builder.Services.AddOptions<EmailOptions>()
+    .Bind(builder.Configuration.GetSection(EmailOptions.SectionName))
+    .PostConfigure(options => options.ApplyEnvironmentOverrides());
+
 builder.Services.AddOptions<SubmitOptions>()
     .Bind(builder.Configuration.GetSection(SubmitOptions.SectionName))
     .PostConfigure(options => options.ApplyEnvironmentOverrides());
@@ -188,7 +192,7 @@ builder.Services.AddSingleton<IBackgroundJobQueue, ChannelBackgroundJobQueue>();
 builder.Services.AddScoped<IPdfTemplateProvider, PdfTemplateProvider>();
 builder.Services.AddScoped<IPdfStampingService, PdfStampingService>();
 builder.Services.AddScoped<IPdfJobHandler, PdfJobHandler>();
-builder.Services.AddScoped<IEmailJobHandler, NotImplementedEmailJobHandler>();
+builder.Services.AddScoped<IEmailJobHandler, AcsEmailJobHandler>();
 builder.Services.AddHostedService<BackgroundJobProcessor>();
 builder.Services.AddHostedService<BackgroundJobRecoveryService>();
 builder.Services.AddOptions<BackgroundJobOptions>();
