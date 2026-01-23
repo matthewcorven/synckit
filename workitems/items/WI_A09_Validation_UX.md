@@ -51,7 +51,7 @@ Implement comprehensive validation UX with inline errors and a validation summar
 - Server error mapping works
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A09/unit-test-results.txt`
+- [../artifacts/WI-A09/unit-test-results.txt](../artifacts/WI-A09/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -59,7 +59,7 @@ Implement comprehensive validation UX with inline errors and a validation summar
 - Server error response handling
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A09/integration-test-results.txt`
+- [../artifacts/WI-A09/integration-test-results.txt](../artifacts/WI-A09/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -69,8 +69,8 @@ Implement comprehensive validation UX with inline errors and a validation summar
 - Screenshot of validation state
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A09/playwright/validation-summary-trace.zip`
-- `../artifacts/WI-A09/playwright/validation-error-state.png`
+- [../artifacts/WI-A09/playwright/validation-summary-trace.zip](../artifacts/WI-A09/playwright/validation-summary-trace.zip)
+- [../artifacts/WI-A09/playwright/validation-error-state.png](../artifacts/WI-A09/playwright/validation-error-state.png)
 
 ### DB verification
 **Artifact requirements**

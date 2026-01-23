@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatRadioModule } from '@angular/material/radio';
+import { InlineErrorDirective } from '../../../shared/forms/inline-error.directive';
 
 @Component({
   selector: 'app-dog-section',
@@ -21,7 +22,8 @@ import { MatRadioModule } from '@angular/material/radio';
     MatDatepickerModule,
     MatNativeDateModule,
     MatIconModule,
-    MatRadioModule
+    MatRadioModule,
+    InlineErrorDirective
   ],
   template: `
     <section class="section">
@@ -35,37 +37,58 @@ import { MatRadioModule } from '@angular/material/radio';
 
           <mat-form-field appearance="outline">
             <mat-label>ASCA Registration #</mat-label>
-            <input matInput formControlName="ascaRegistrationNumber" />
+            <input matInput formControlName="ascaRegistrationNumber" data-control-path="dog.ascaRegistrationNumber" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Breed</mat-label>
-            <input matInput formControlName="breed" required />
-            <mat-error *ngIf="showRequiredError('breed')">Breed is required.</mat-error>
+            <input matInput formControlName="breed" required data-control-path="dog.breed" />
+            <mat-error *appInlineError="group.get('breed'); errorKey: 'required'">
+              Breed is required.
+            </mat-error>
+            <mat-error *appInlineError="group.get('breed'); errorKey: 'server'; let message">
+              {{ message }}
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field class="wide" appearance="outline">
             <mat-label>Registered Name</mat-label>
-            <input matInput formControlName="registeredName" />
+            <input matInput formControlName="registeredName" data-control-path="dog.registeredName" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Call Name</mat-label>
-            <input matInput formControlName="callName" required />
-            <mat-error *ngIf="showRequiredError('callName')">Call Name is required.</mat-error>
+            <input matInput formControlName="callName" required data-control-path="dog.callName" />
+            <mat-error *appInlineError="group.get('callName'); errorKey: 'required'">
+              Call Name is required.
+            </mat-error>
+            <mat-error *appInlineError="group.get('callName'); errorKey: 'server'; let message">
+              {{ message }}
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Date of Birth</mat-label>
-            <input matInput [matDatepicker]="dobPicker" formControlName="dob" required />
+            <input
+              matInput
+              [matDatepicker]="dobPicker"
+              formControlName="dob"
+              required
+              data-control-path="dog.dob"
+            />
             <mat-datepicker-toggle matIconSuffix [for]="dobPicker"></mat-datepicker-toggle>
             <mat-datepicker #dobPicker></mat-datepicker>
-            <mat-error *ngIf="showRequiredError('dob')">Date of Birth is required.</mat-error>
+            <mat-error *appInlineError="group.get('dob'); errorKey: 'required'">
+              Date of Birth is required.
+            </mat-error>
+            <mat-error *appInlineError="group.get('dob'); errorKey: 'server'; let message">
+              {{ message }}
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Color</mat-label>
-            <input matInput formControlName="color" />
+            <input matInput formControlName="color" data-control-path="dog.color" />
           </mat-form-field>
 
           <div class="sex-field">
@@ -75,26 +98,32 @@ import { MatRadioModule } from '@angular/material/radio';
               formControlName="sex"
               required
               aria-label="Dog sex"
+              data-control-path="dog.sex"
             >
               <mat-radio-button value="Male">Male</mat-radio-button>
               <mat-radio-button value="Female">Female</mat-radio-button>
             </mat-radio-group>
-            <div class="field-error" *ngIf="showRequiredError('sex')">Sex is required.</div>
+            <div class="field-error" *appInlineError="group.get('sex'); errorKey: 'required'">
+              Sex is required.
+            </div>
+            <div class="field-error" *appInlineError="group.get('sex'); errorKey: 'server'; let message">
+              {{ message }}
+            </div>
           </div>
 
           <mat-form-field appearance="outline">
             <mat-label>Sire</mat-label>
-            <input matInput formControlName="sire" />
+            <input matInput formControlName="sire" data-control-path="dog.sire" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Dam</mat-label>
-            <input matInput formControlName="dam" />
+            <input matInput formControlName="dam" data-control-path="dog.dam" />
           </mat-form-field>
 
           <mat-form-field class="wide" appearance="outline">
             <mat-label>Breeder(s)</mat-label>
-            <input matInput formControlName="breeders" />
+            <input matInput formControlName="breeders" data-control-path="dog.breeders" />
           </mat-form-field>
         </div>
       </mat-card>
@@ -174,9 +203,4 @@ import { MatRadioModule } from '@angular/material/radio';
 export class DogSectionComponent {
   @Input() group!: FormGroup;
   @Input() entryNumber?: string | null;
-
-  showRequiredError(controlName: string): boolean {
-    const control = this.group?.get(controlName);
-    return !!control && control.hasError('required') && (control.dirty || control.touched);
-  }
 }

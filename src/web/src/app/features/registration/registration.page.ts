@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import {
   AbstractControl,
   FormBuilder,
+  FormArray,
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
@@ -17,6 +18,7 @@ import { TrialService } from '../trials/trial.service';
 import { TrialSummaryDto } from '../trials/trial.types';
 import { RegistrationMetadataService } from './registration-metadata.service';
 import { TrialRegistrationMetadataDto } from './registration.types';
+import { applyServerErrorsToForm, clearServerErrors, ValidationErrorMap } from './validation.utils';
 
 @Component({
   selector: 'app-registration-page',
@@ -101,10 +103,13 @@ export class RegistrationPageComponent implements OnInit {
         ]),
         currency: ['USD']
       }),
-      selections: this.formBuilder.group({
-        upper: this.formBuilder.array([]),
-        lower: this.formBuilder.array([])
-      })
+      selections: this.formBuilder.group(
+        {
+          upper: this.formBuilder.array([]),
+          lower: this.formBuilder.array([])
+        },
+        { validators: [this.minSelectionsValidator()] }
+      )
     });
   }
 
@@ -188,5 +193,24 @@ export class RegistrationPageComponent implements OnInit {
 
       return isComplete ? null : { addressIncomplete: true };
     };
+  }
+
+  private minSelectionsValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const group = control as FormGroup;
+      const upper = group.get('upper');
+      const lower = group.get('lower');
+
+      const total =
+        (upper instanceof FormArray ? upper.length : 0) +
+        (lower instanceof FormArray ? lower.length : 0);
+
+      return total > 0 ? null : { minSelections: true };
+    };
+  }
+
+  applyServerValidationErrors(errors: ValidationErrorMap): void {
+    clearServerErrors(this.form);
+    applyServerErrorsToForm(this.form, errors);
   }
 }

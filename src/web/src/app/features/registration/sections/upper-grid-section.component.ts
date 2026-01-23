@@ -246,6 +246,9 @@ export class UpperGridSectionComponent implements OnChanges {
       return;
     }
 
+    this.selectionsControl.markAsTouched();
+    this.selectionsControl.parent?.markAsTouched();
+
     const index = this.selectionsControl.controls.findIndex((control) => {
       const value = control.value as GridSelectionItem;
       return value.row === row && value.col === col;

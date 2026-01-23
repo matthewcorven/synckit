@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RegistrationLayoutComponent } from './registration-layout.component';
 import { TrialSummaryDto } from '../../trials/trial.types';
+import { TrialRegistrationMetadataDto } from '../registration.types';
 
 const mockTrial: TrialSummaryDto = {
   trialId: 'trial-123',
@@ -25,6 +26,28 @@ const mockTrial: TrialSummaryDto = {
   location: 'Bryan, TX',
   secretaryEmail: 'secretary@example.com',
   isActive: true
+};
+
+const mockRegistrationMetadata: TrialRegistrationMetadataDto = {
+  trialId: mockTrial.trialId,
+  formTemplate: mockTrial.formTemplate,
+  formMetadata: {
+    formTemplate: mockTrial.formTemplate,
+    grids: [
+      {
+        grid: 'Upper',
+        rows: ['Sheep', 'Cattle', 'Ducks', 'Mixed'],
+        cols: ['STD', 'OPN', 'ADV', 'FTD_OPN', 'FTD_ADV', 'DATE1_TRIAL1', 'DATE1_TRIAL2'],
+        disabledCells: []
+      },
+      {
+        grid: 'Lower',
+        rows: ['Sheep', 'Cattle', 'Ducks'],
+        cols: ['NOV', 'WRK_JR_HNDLR', 'FEO', 'POST_ADV', 'RTD', 'DATE1_TRIAL1'],
+        disabledCells: []
+      }
+    ]
+  }
 };
 
 describe('RegistrationLayoutComponent', () => {
@@ -95,5 +118,72 @@ describe('RegistrationLayoutComponent', () => {
       'app-lower-grid-section',
       'app-emergency-fees-section'
     ]);
+  });
+
+  it('shows the validation summary after review click', async () => {
+    await TestBed.configureTestingModule({
+      imports: [RegistrationLayoutComponent, NoopAnimationsModule]
+    }).compileComponents();
+
+    const formBuilder = TestBed.inject(FormBuilder);
+    const form = formBuilder.group({
+      entryNumber: [{ value: '', disabled: true }],
+      dog: formBuilder.group({
+        ascaRegistrationNumber: [''],
+        breed: ['', Validators.required],
+        registeredName: [''],
+        callName: ['', Validators.required],
+        dob: [null, Validators.required],
+        color: [''],
+        sex: ['', Validators.required],
+        sire: [''],
+        dam: [''],
+        breeders: ['']
+      }),
+      contact: formBuilder.group({
+        owners: ['', Validators.required],
+        ownerAddress: formBuilder.group({
+          street: [''],
+          city: [''],
+          state: [''],
+          zip: ['']
+        }),
+        email: ['', Validators.required],
+        phone: ['', Validators.required],
+        handler: [''],
+        membershipNumber: [''],
+        junior: formBuilder.group({
+          dob: [null],
+          memberId: ['']
+        })
+      }),
+      emergencyContact: formBuilder.group({
+        name: ['', Validators.required],
+        phoneOrNumber: ['', Validators.required]
+      }),
+      fees: formBuilder.group({
+        totalEntryFees: [null, Validators.required],
+        currency: ['USD']
+      }),
+      selections: formBuilder.group({
+        upper: formBuilder.array([]),
+        lower: formBuilder.array([])
+      })
+    });
+
+    const fixture = TestBed.createComponent(RegistrationLayoutComponent);
+    fixture.componentInstance.form = form;
+    fixture.componentInstance.trial = mockTrial;
+    fixture.componentInstance.registrationMetadata = mockRegistrationMetadata;
+    fixture.detectChanges();
+
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const reviewButton = buttons.find((button) =>
+      button.textContent?.toLowerCase().includes('review for errors')
+    );
+    reviewButton?.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Validation summary');
   });
 });

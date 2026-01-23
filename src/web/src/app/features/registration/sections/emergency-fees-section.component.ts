@@ -4,11 +4,19 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { InlineErrorDirective } from '../../../shared/forms/inline-error.directive';
 
 @Component({
   selector: 'app-emergency-fees-section',
   standalone: true,
-  imports: [NgIf, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    NgIf,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    InlineErrorDirective
+  ],
   template: `
     <section class="section">
       <div class="section__header">Emergency Contact / Fees</div>
@@ -18,17 +26,28 @@ import { MatInputModule } from '@angular/material/input';
           <div class="field-grid">
             <mat-form-field appearance="outline">
               <mat-label>Name *</mat-label>
-              <input matInput formControlName="name" required />
-              <mat-error *ngIf="showRequiredError(emergencyGroup, 'name')">
+              <input matInput formControlName="name" required data-control-path="emergencyContact.name" />
+              <mat-error *appInlineError="emergencyGroup.get('name'); errorKey: 'required'">
                 Emergency contact name is required.
+              </mat-error>
+              <mat-error *appInlineError="emergencyGroup.get('name'); errorKey: 'server'; let message">
+                {{ message }}
               </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
               <mat-label>Phone/Number *</mat-label>
-              <input matInput formControlName="phoneOrNumber" required />
-              <mat-error *ngIf="showRequiredError(emergencyGroup, 'phoneOrNumber')">
+              <input
+                matInput
+                formControlName="phoneOrNumber"
+                required
+                data-control-path="emergencyContact.phoneOrNumber"
+              />
+              <mat-error *appInlineError="emergencyGroup.get('phoneOrNumber'); errorKey: 'required'">
                 Emergency contact number is required.
+              </mat-error>
+              <mat-error *appInlineError="emergencyGroup.get('phoneOrNumber'); errorKey: 'server'; let message">
+                {{ message }}
               </mat-error>
             </mat-form-field>
           </div>
@@ -47,12 +66,18 @@ import { MatInputModule } from '@angular/material/input';
                 min="0.01"
                 step="0.01"
                 required
+                data-control-path="fees.totalEntryFees"
               />
               <span matSuffix>USD</span>
-              <mat-error *ngIf="showRequiredError(feesGroup, 'totalEntryFees')">
+              <mat-error *appInlineError="feesGroup.get('totalEntryFees'); errorKey: 'required'">
                 Total entry fees are required.
               </mat-error>
-              <mat-error *ngIf="showMinFeeError()">Total entry fees must be greater than $0.00.</mat-error>
+              <mat-error *appInlineError="feesGroup.get('totalEntryFees'); errorKey: 'min'">
+                Total entry fees must be greater than $0.00.
+              </mat-error>
+              <mat-error *appInlineError="feesGroup.get('totalEntryFees'); errorKey: 'server'; let message">
+                {{ message }}
+              </mat-error>
             </mat-form-field>
           </div>
           <div class="fees-summary" *ngIf="formattedTotal">
@@ -154,13 +179,4 @@ export class EmergencyFeesSectionComponent {
     }).format(value)} USD`;
   }
 
-  showRequiredError(group: FormGroup, controlName: string): boolean {
-    const control = group?.get(controlName);
-    return !!control && control.hasError('required') && (control.dirty || control.touched);
-  }
-
-  showMinFeeError(): boolean {
-    const control = this.feesGroup?.get('totalEntryFees');
-    return !!control && control.hasError('min') && (control.dirty || control.touched);
-  }
 }

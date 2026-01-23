@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-23 01:46  
-**Current Focus:** A08 — Lower Grid
+**Last Updated:** 2026-01-23 02:05  
+**Current Focus:** A10 — Terms Modal
 
 ---
 
@@ -37,7 +37,7 @@
 | A06 | Emergency + Fees | ✅ Completed | A05 | Unit + Playwright tests complete |
 | A07 | Grid Cells | ✅ Completed | A06 | Metadata-driven upper grid + unit tests |
 | A08 | Lower Grid | ✅ Completed | A07 | Unit + Playwright tests complete |
-| A09 | Validation Summary | ⬜ Not Started | A08 | |
+| A09 | Validation Summary | ✅ Completed | A08 | Inline + summary validation UX with tests |
 | A10 | Submit + Confirmation | ⬜ Not Started | A09 | |
 | A11 | Secretary Layout | ⬜ Not Started | A03, B25* | *Can mock until B25 ready |
 | A12 | Entry List View | ⬜ Not Started | A11 | |
@@ -107,6 +107,7 @@ _Append entries as work progresses._
 [2026-01-23 01:12] — A07 — Upper grid component + tests — ✅
 [2026-01-23 01:40] — A08 — Started lower grid implementation — 🔄
 [2026-01-23 01:46] — A08 — Lower grid component + unit + Playwright tests — ✅
+[2026-01-23 02:05] — A09 — Validation UX + unit/integration/E2E tests — ✅
 ```
 
 <!-- Example:

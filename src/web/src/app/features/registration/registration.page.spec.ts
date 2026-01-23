@@ -188,4 +188,40 @@ describe('RegistrationPageComponent', () => {
 
     expect(addressGroup.errors).toBeNull();
   });
+
+  it('maps server validation errors onto matching controls', async () => {
+    await TestBed.configureTestingModule({
+      imports: [RegistrationPageComponent, NoopAnimationsModule],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: convertToParamMap({ trialId: mockTrial.trialId })
+            }
+          }
+        },
+        {
+          provide: TrialService,
+          useValue: { getTrial: () => of(mockTrial) }
+        },
+        {
+          provide: RegistrationMetadataService,
+          useValue: {
+            getRegistrationMetadata: () => of(mockRegistrationMetadata)
+          }
+        }
+      ]
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(RegistrationPageComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.applyServerValidationErrors({
+      'dog.callName': ['Call Name is required.']
+    });
+
+    const control = fixture.componentInstance.form.get('dog.callName');
+    expect(control?.hasError('server')).toBeTruthy();
+  });
 });

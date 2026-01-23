@@ -5,17 +5,18 @@ const trialId = '9d4a8d25-2c59-4f1f-8c79-6c63e74f5f49';
 test('contact fields accept input and retain values', async ({ page }) => {
   await page.goto(`/register/${trialId}`);
 
-  const owners = page.getByRole('textbox', { name: /Owner\(s\)/i });
-  const street = page.getByRole('textbox', { name: 'Street' });
-  const city = page.getByRole('textbox', { name: 'City' });
-  const state = page.getByRole('combobox', { name: 'State' });
-  const zip = page.getByRole('textbox', { name: 'ZIP' });
-  const email = page.getByRole('textbox', { name: /Email/i });
-  const phone = page.getByRole('textbox', { name: /Phone/i });
-  const handler = page.getByRole('textbox', { name: /Handler \(if different from owner\)/i });
-  const membership = page.getByRole('textbox', { name: 'Membership Number' });
-  const juniorDob = page.getByRole('textbox', { name: 'Junior DOB' });
-  const juniorMember = page.getByRole('textbox', { name: 'Junior Member ID' });
+  const section = page.locator('app-contact-section');
+  const owners = section.getByRole('textbox', { name: /Owner\(s\)/i });
+  const street = section.getByRole('textbox', { name: 'Street' });
+  const city = section.getByRole('textbox', { name: 'City' });
+  const state = section.getByRole('combobox', { name: 'State' });
+  const zip = section.getByRole('textbox', { name: 'ZIP' });
+  const email = section.getByRole('textbox', { name: /Email/i });
+  const phone = section.getByRole('textbox', { name: /^Phone \*/i });
+  const handler = section.getByRole('textbox', { name: /Handler \(if different from owner\)/i });
+  const membership = section.getByRole('textbox', { name: 'Membership Number' });
+  const juniorDob = section.getByRole('textbox', { name: 'Junior DOB' });
+  const juniorMember = section.getByRole('textbox', { name: 'Junior Member ID' });
 
   await owners.fill('Owner One; Owner Two');
   await street.fill('123 Main St');

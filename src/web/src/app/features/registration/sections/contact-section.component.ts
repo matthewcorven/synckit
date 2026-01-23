@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -8,13 +8,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
+import { InlineErrorDirective } from '../../../shared/forms/inline-error.directive';
 
 @Component({
   selector: 'app-contact-section',
   standalone: true,
   imports: [
     NgFor,
-    NgIf,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
@@ -22,7 +22,8 @@ import { MatSelectModule } from '@angular/material/select';
     MatDatepickerModule,
     MatNativeDateModule,
     MatIconModule,
-    MatSelectModule
+    MatSelectModule,
+    InlineErrorDirective
   ],
   template: `
     <section class="section">
@@ -31,8 +32,13 @@ import { MatSelectModule } from '@angular/material/select';
         <div class="contact-grid">
           <mat-form-field class="wide" appearance="outline">
             <mat-label>Owner(s) *</mat-label>
-            <input matInput formControlName="owners" required />
-            <mat-error *ngIf="showRequiredError('owners')">Owner(s) is required.</mat-error>
+            <input matInput formControlName="owners" required data-control-path="contact.owners" />
+            <mat-error *appInlineError="group.get('owners'); errorKey: 'required'">
+              Owner(s) is required.
+            </mat-error>
+            <mat-error *appInlineError="group.get('owners'); errorKey: 'server'; let message">
+              {{ message }}
+            </mat-error>
           </mat-form-field>
 
           <div class="address-block" formGroupName="ownerAddress">
@@ -40,64 +46,90 @@ import { MatSelectModule } from '@angular/material/select';
             <div class="address-grid">
               <mat-form-field class="wide" appearance="outline">
                 <mat-label>Street</mat-label>
-                <input matInput formControlName="street" />
-                <mat-error *ngIf="showAddressRequiredError('street')">
+                <input matInput formControlName="street" data-control-path="contact.ownerAddress.street" />
+                <mat-error *appInlineError="addressGroup?.get('street'); errorKey: 'required'">
                   Street is required when providing an address.
+                </mat-error>
+                <mat-error *appInlineError="addressGroup?.get('street'); errorKey: 'server'; let message">
+                  {{ message }}
                 </mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>City</mat-label>
-                <input matInput formControlName="city" />
-                <mat-error *ngIf="showAddressRequiredError('city')">
+                <input matInput formControlName="city" data-control-path="contact.ownerAddress.city" />
+                <mat-error *appInlineError="addressGroup?.get('city'); errorKey: 'required'">
                   City is required when providing an address.
+                </mat-error>
+                <mat-error *appInlineError="addressGroup?.get('city'); errorKey: 'server'; let message">
+                  {{ message }}
                 </mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>State</mat-label>
-                <mat-select formControlName="state">
+                <mat-select formControlName="state" data-control-path="contact.ownerAddress.state">
                   <mat-option *ngFor="let state of states" [value]="state.abbr">
                     {{ state.abbr }} — {{ state.name }}
                   </mat-option>
                 </mat-select>
-                <mat-error *ngIf="showAddressRequiredError('state')">
+                <mat-error *appInlineError="addressGroup?.get('state'); errorKey: 'required'">
                   State is required when providing an address.
+                </mat-error>
+                <mat-error *appInlineError="addressGroup?.get('state'); errorKey: 'server'; let message">
+                  {{ message }}
                 </mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>ZIP</mat-label>
-                <input matInput formControlName="zip" inputmode="numeric" />
-                <mat-error *ngIf="showAddressRequiredError('zip')">
+                <input matInput formControlName="zip" inputmode="numeric" data-control-path="contact.ownerAddress.zip" />
+                <mat-error *appInlineError="addressGroup?.get('zip'); errorKey: 'required'">
                   ZIP is required when providing an address.
                 </mat-error>
-                <mat-error *ngIf="showZipFormatError()">Enter a valid ZIP code.</mat-error>
+                <mat-error *appInlineError="addressGroup?.get('zip'); errorKey: 'pattern'">
+                  Enter a valid ZIP code.
+                </mat-error>
+                <mat-error *appInlineError="addressGroup?.get('zip'); errorKey: 'server'; let message">
+                  {{ message }}
+                </mat-error>
               </mat-form-field>
             </div>
           </div>
 
           <mat-form-field class="span-two" appearance="outline">
             <mat-label>Email *</mat-label>
-            <input matInput formControlName="email" type="email" required />
-            <mat-error *ngIf="showRequiredError('email')">Email is required.</mat-error>
-            <mat-error *ngIf="showEmailFormatError()">Enter a valid email.</mat-error>
+            <input matInput formControlName="email" type="email" required data-control-path="contact.email" />
+            <mat-error *appInlineError="group.get('email'); errorKey: 'required'">
+              Email is required.
+            </mat-error>
+            <mat-error *appInlineError="group.get('email'); errorKey: 'email'">
+              Enter a valid email.
+            </mat-error>
+            <mat-error *appInlineError="group.get('email'); errorKey: 'server'; let message">
+              {{ message }}
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field class="span-one" appearance="outline">
             <mat-label>Phone *</mat-label>
-            <input matInput formControlName="phone" type="tel" required />
-            <mat-error *ngIf="showRequiredError('phone')">Phone is required.</mat-error>
+            <input matInput formControlName="phone" type="tel" required data-control-path="contact.phone" />
+            <mat-error *appInlineError="group.get('phone'); errorKey: 'required'">
+              Phone is required.
+            </mat-error>
+            <mat-error *appInlineError="group.get('phone'); errorKey: 'server'; let message">
+              {{ message }}
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field class="wide" appearance="outline">
             <mat-label>Handler (if different from owner)</mat-label>
-            <input matInput formControlName="handler" />
+            <input matInput formControlName="handler" data-control-path="contact.handler" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Membership Number</mat-label>
-            <input matInput formControlName="membershipNumber" />
+            <input matInput formControlName="membershipNumber" data-control-path="contact.membershipNumber" />
           </mat-form-field>
 
           <div class="junior-block" formGroupName="junior">
@@ -105,14 +137,19 @@ import { MatSelectModule } from '@angular/material/select';
             <div class="junior-grid">
               <mat-form-field appearance="outline">
                 <mat-label>Junior DOB</mat-label>
-                <input matInput [matDatepicker]="juniorDobPicker" formControlName="dob" />
+                <input
+                  matInput
+                  [matDatepicker]="juniorDobPicker"
+                  formControlName="dob"
+                  data-control-path="contact.junior.dob"
+                />
                 <mat-datepicker-toggle matIconSuffix [for]="juniorDobPicker"></mat-datepicker-toggle>
                 <mat-datepicker #juniorDobPicker></mat-datepicker>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Junior Member ID</mat-label>
-                <input matInput formControlName="memberId" />
+                <input matInput formControlName="memberId" data-control-path="contact.junior.memberId" />
               </mat-form-field>
             </div>
           </div>
@@ -306,25 +343,7 @@ export class ContactSectionComponent {
     { abbr: 'WY', name: 'Wyoming' }
   ];
 
-  showRequiredError(controlName: string): boolean {
-    const control = this.group?.get(controlName);
-    return !!control && control.hasError('required') && (control.dirty || control.touched);
-  }
-
-  showEmailFormatError(): boolean {
-    const control = this.group?.get('email');
-    return !!control && control.hasError('email') && (control.dirty || control.touched);
-  }
-
-  showAddressRequiredError(controlName: string): boolean {
-    const addressGroup = this.group?.get('ownerAddress') as FormGroup | null;
-    const control = addressGroup?.get(controlName);
-    return !!control && control.hasError('required') && (control.dirty || control.touched);
-  }
-
-  showZipFormatError(): boolean {
-    const addressGroup = this.group?.get('ownerAddress') as FormGroup | null;
-    const control = addressGroup?.get('zip');
-    return !!control && control.hasError('pattern') && (control.dirty || control.touched);
+  get addressGroup(): FormGroup | null {
+    return this.group?.get('ownerAddress') as FormGroup | null;
   }
 }

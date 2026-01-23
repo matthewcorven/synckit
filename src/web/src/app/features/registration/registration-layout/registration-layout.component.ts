@@ -1,8 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { DatePipe, NgIf } from '@angular/common';
 import { FormArray, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatButtonModule } from '@angular/material/button';
 import { TrialSummaryDto } from '../../trials/trial.types';
 import { DogSectionComponent } from '../sections/dog-section.component';
 import { ContactSectionComponent } from '../sections/contact-section.component';
@@ -10,6 +11,7 @@ import { EmergencyFeesSectionComponent } from '../sections/emergency-fees-sectio
 import { UpperGridSectionComponent } from '../sections/upper-grid-section.component';
 import { LowerGridSectionComponent } from '../sections/lower-grid-section.component';
 import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.types';
+import { ValidationSummaryComponent } from '../validation-summary/validation-summary.component';
 
 @Component({
   selector: 'app-registration-layout',
@@ -20,11 +22,13 @@ import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.type
     ReactiveFormsModule,
     MatCardModule,
     MatDividerModule,
+    MatButtonModule,
     DogSectionComponent,
     ContactSectionComponent,
     EmergencyFeesSectionComponent,
     UpperGridSectionComponent,
-    LowerGridSectionComponent
+    LowerGridSectionComponent,
+    ValidationSummaryComponent
   ],
   template: `
     <mat-card class="registration-card">
@@ -65,10 +69,20 @@ import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.type
 
       <mat-divider></mat-divider>
 
+      <app-validation-summary
+        [form]="form"
+        [visible]="validationSummaryVisible"
+        (errorSelected)="scrollToControl($event)"
+      ></app-validation-summary>
+
       <form class="registration-form" [formGroup]="form">
         <app-dog-section [group]="dogGroup" [entryNumber]="entryNumber"></app-dog-section>
         <app-contact-section [group]="contactGroup"></app-contact-section>
-        <section class="section-block">
+        <section
+          class="section-block"
+          [class.section-block--error]="showSelectionsError"
+          data-control-path="selections"
+        >
           <div class="section-title">Class Selections</div>
           <app-upper-grid-section
             [trial]="trial"
@@ -80,12 +94,21 @@ import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.type
             [gridMetadata]="lowerGridMetadata"
             [selectionsControl]="lowerSelections"
           ></app-lower-grid-section>
+          <div class="field-error" *ngIf="showSelectionsError">
+            Select at least one class in either grid.
+          </div>
         </section>
 
         <app-emergency-fees-section
           [emergencyGroup]="emergencyGroup"
           [feesGroup]="feesGroup"
         ></app-emergency-fees-section>
+
+        <div class="validation-actions">
+          <button mat-flat-button color="primary" type="button" (click)="reviewForErrors()">
+            Review for errors
+          </button>
+        </div>
       </form>
     </mat-card>
   `,
@@ -211,6 +234,13 @@ import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.type
         gap: 16px;
       }
 
+      .section-block--error {
+        border: 1px solid rgba(211, 47, 47, 0.35);
+        border-radius: 8px;
+        padding: 12px;
+        background: rgba(211, 47, 47, 0.04);
+      }
+
       .section-title {
         font-size: 15px;
         font-weight: 700;
@@ -218,6 +248,18 @@ import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.type
         letter-spacing: 0.08em;
         padding-bottom: 6px;
         border-bottom: 2px solid var(--mat-sys-outline-variant);
+      }
+
+      .field-error {
+        font-size: 12px;
+        color: var(--mat-sys-error);
+        padding-left: 6px;
+      }
+
+      .validation-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 8px;
       }
 
       @media (max-width: 900px) {
@@ -236,6 +278,11 @@ export class RegistrationLayoutComponent {
   @Input({ required: true }) form!: FormGroup;
   @Input({ required: true }) trial!: TrialSummaryDto;
   @Input() registrationMetadata?: TrialRegistrationMetadataDto | null;
+  @ViewChild(ValidationSummaryComponent) summary?: ValidationSummaryComponent;
+
+  validationSummaryVisible = false;
+
+  constructor(private readonly host: ElementRef<HTMLElement>) {}
 
   get dogGroup(): FormGroup {
     return this.form.get('dog') as FormGroup;
@@ -270,6 +317,15 @@ export class RegistrationLayoutComponent {
     return this.form.get('selections.lower') as FormArray;
   }
 
+  get selectionsGroup(): FormGroup {
+    return this.form.get('selections') as FormGroup;
+  }
+
+  get showSelectionsError(): boolean {
+    const control = this.selectionsGroup;
+    return control.hasError('minSelections') && (control.touched || control.dirty);
+  }
+
   get upperGridMetadata(): GridMetadata | null {
     if (!this.registrationMetadata) {
       return null;
@@ -292,5 +348,33 @@ export class RegistrationLayoutComponent {
         (grid) => grid.grid === 'Lower'
       ) ?? null
     );
+  }
+
+  reviewForErrors(): void {
+    this.validationSummaryVisible = true;
+    this.form.markAllAsTouched();
+    this.form.updateValueAndValidity();
+
+    queueMicrotask(() => {
+      const first = this.summary?.errors[0];
+      if (first) {
+        this.scrollToControl(first.path);
+      }
+    });
+  }
+
+  scrollToControl(path: string): void {
+    const selector = `[data-control-path="${path}"]`;
+    const element = this.host.nativeElement.querySelector(selector) as HTMLElement | null;
+    if (!element) {
+      return;
+    }
+
+    if (typeof element.scrollIntoView === 'function') {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (typeof element.focus === 'function') {
+      element.focus({ preventScroll: true });
+    }
   }
 }
