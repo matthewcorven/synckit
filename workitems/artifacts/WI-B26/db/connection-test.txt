@@ -1,0 +1,9 @@
+WI-B26 DB connection test
+
+Status: SUCCESS
+Steps:
+- Granted current user Key Vault Secrets User role
+- Added SQL firewall rule for client IP 74.221.179.30
+- Ran EF migrations against Azure SQL:
+	dotnet ef database update --project src/api/DogTrials.Api/DogTrials.Api.csproj --startup-project src/api/DogTrials.Api/DogTrials.Api.csproj --connection <kv:sql-connection-string>
+Result: Database migrated successfully

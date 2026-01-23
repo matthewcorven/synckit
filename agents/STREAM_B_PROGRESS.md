@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-23 14:40
-**Current Focus:** B25 Secretary Endpoints — ✅ Completed
+**Last Updated:** 2026-01-23 16:28
+**Current Focus:** B26 Bicep Scaffold — ✅ Completed
 
 ---
 
@@ -55,7 +55,7 @@
 | B23 | Email Sender | ✅ Completed | B20, B06 | |
 | B24 | Processing Status | ✅ Completed | B22, B23 | Endpoint + tests + artifacts |
 | B25 | Secretary Endpoints | ✅ Completed | B15, B22 | Unblocks A11 |
-| B26 | Bicep Scaffold | ⬜ Not Started | B01 | |
+| B26 | Bicep Scaffold | ✅ Completed | B01 | Deployed + migrated; telemetry verified |
 | B27 | Entra External ID | ⬜ Not Started | B26 | |
 
 ---
@@ -79,7 +79,8 @@ _Record any blockers encountered during work._
 
 | Date | Item | Blocker | Resolution | Resolved |
 |------|------|---------|------------|----------|
-| | | | | |
+| 2026-01-23 | B26 | Azure CLI missing; cannot validate/deploy infra | Install Azure CLI + rerun validation/deploy | ✅ |
+| 2026-01-23 | B26 | App Insights screenshot not captured yet | Capture App Insights screenshot | ✅ |
 
 ---
 
@@ -140,6 +141,10 @@ _Append entries as work progresses._
 [2026-01-23 13:45] — B24 — Started processing status endpoint — 🔄 In Progress
 [2026-01-23 14:10] — B24 — Implemented processing status endpoint + tests + artifacts; ran SQL-backed tests — ✅
 [2026-01-23 14:40] — B25 — Implemented secretary endpoints + tests + artifacts; ran dotnet test — ✅
+[2026-01-23 16:10] — B26 — Added infra bicep scaffold + params + deploy script + artifacts; az CLI missing for validation/deploy — 🚧
+[2026-01-23 16:23] — B26 — Deployed infra, ran SQL migrations after KV + SQL firewall setup; App Insights verification pending — 🚧
+[2026-01-23 16:28] — B26 — Captured App Insights screenshot; WI-B26 complete — ✅
+[2026-01-23 16:35] — B26 — Re-deploy idempotency verified; KV MI role + storage container validated — ✅
 ```
 
 <!-- Example:

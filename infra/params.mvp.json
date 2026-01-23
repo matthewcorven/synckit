@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": { "value": "mvp" },
+    "location": { "value": "eastus" },
+    "prefix": { "value": "dgmvp" },
+    "resourceGroupName": { "value": "rg-dgmvp" },
+    "staticWebAppLocation": { "value": "eastus2" },
+    "sqlLocation": { "value": "eastus2" },
+    "sqlAdminLogin": { "value": "sqladmin" },
+    "acsDataLocation": { "value": "United States" },
+    "logAnalyticsRetentionDays": { "value": 30 }
+  }
+}

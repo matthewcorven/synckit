@@ -1,0 +1,6 @@
+WI-B26 App Insights verification
+
+Status: SUCCESS
+Evidence: workitems/artifacts/WI-B26/telemetry/appinsights-screenshot.png
+Notes:
+- Opened Application Insights overview for dgmvp-insights in Azure portal.
