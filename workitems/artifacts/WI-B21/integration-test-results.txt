@@ -1,0 +1,4 @@
+EXECUTED (in suite)
+Command: DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' dotnet test src/api/DogTrials.sln -v minimal
+Result: Build succeeded. Tests passed (77/77).
+Notes: PdfStampingServiceTests exercised template loading and PDF generation.

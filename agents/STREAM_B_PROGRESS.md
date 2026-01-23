@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 01:40
-**Current Focus:** B20 Background Channels — ✅ Completed
+**Last Updated:** 2026-01-22 09:40
+**Current Focus:** B21 PDF Stamping — ✅ Completed
 
 ---
 
@@ -50,7 +50,7 @@
 | B18 | Terms Endpoint | ✅ Completed | B01 | Unblocks A08 |
 | B19 | Submit Endpoint | ✅ Completed | B07, B16, B17 | |
 | B20 | Background Channels | ✅ Completed | B19 | |
-| B21 | PDF Stamping | ⬜ Not Started | B20 | |
+| B21 | PDF Stamping | ✅ Completed | B20 | |
 | B22 | Blob Storage | ⬜ Not Started | B21 | |
 | B23 | Email Sender | ⬜ Not Started | B20, B06 | |
 | B24 | Processing Status | ⬜ Not Started | B22, B23 | |
@@ -131,6 +131,7 @@ _Append entries as work progresses._
 [2026-01-22 00:10] — B20 — Started background channels implementation — 🔄 In Progress
 [2026-01-22 01:30] — B20 — Implemented background queue, processor, recovery, tests, artifacts — ✅
 [2026-01-22 01:40] — B20 — Added telemetry span validation test; re-ran suite — ✅
+[2026-01-22 09:40] — B21 — Implemented PDF stamping service, template loader, tests, artifacts; ran dotnet test — ✅
 ```
 
 <!-- Example:
