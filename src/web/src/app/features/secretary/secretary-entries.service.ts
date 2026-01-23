@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { PaginatedEntrySummaryResponse } from './secretary.types';
+import { EntryDetailDto, PaginatedEntrySummaryResponse, PdfDownloadResponse } from './secretary.types';
 import { SECRETARY_ENTRY_SUMMARY_MOCK_DATA } from './secretary.mock';
+import { findSecretaryEntryDetail } from './secretary-detail.mock';
 
 @Injectable({
   providedIn: 'root'
@@ -67,5 +68,40 @@ export class SecretaryEntriesService {
         items: response.items ?? []
       }))
     );
+  }
+
+  getEntryDetail(entryId: string): Observable<EntryDetailDto> {
+    if (environment.useMocks) {
+      const match = findSecretaryEntryDetail(entryId);
+      if (!match) {
+        throw new Error('Entry not found');
+      }
+      return of(match);
+    }
+
+    return this.http.get<EntryDetailDto>(`${this.baseUrl}/secretary/entries/${entryId}`);
+  }
+
+  getPdfDownloadUrl(entryId: string): Observable<PdfDownloadResponse> {
+    if (environment.useMocks) {
+      const detail = findSecretaryEntryDetail(entryId);
+      if (detail?.processing.generatedPdf?.downloadUrl) {
+        return of({ downloadUrl: detail.processing.generatedPdf.downloadUrl });
+      }
+
+      return of({ downloadUrl: 'data:application/pdf;base64,JVBERi0xLjQKJcTl8uXrp/Og0MTGCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nL1BhZ2VzIDIgMCBSPj4KZW5kb2JqCjIgMCBvYmoKPDwvVHlwZS9QYWdlcy9Db3VudCAxL0tpZHNbMyAwIFJdPj4KZW5kb2JqCjMgMCBvYmoKPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgMjAwIDIwMF0vQ29udGVudHMgNCAwIFI+PgplbmRvYmoKNCAwIG9iago8PC9MZW5ndGggNDQ+PnN0cmVhbQpCVCAvRjEgMTIgVGYgNzIgMTQ0IFRkIChQREYpIFRqIEVUCmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDUKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4gCjAwMDAwMDAwNTcgMDAwMDAgbiAKMDAwMDAwMDEwNCAwMDAwMCBuIAowMDAwMDAwMTkzIDAwMDAwIG4gCnRyYWlsZXIKPDwvUm9vdCAxIDAgUi9TaXplIDU+PgpzdGFydHhyZWYKMjUwCiUlRU9G' });
+    }
+
+    return this.http.get<PdfDownloadResponse>(
+      `${this.baseUrl}/secretary/entries/${entryId}/pdf`
+    );
+  }
+
+  retryPdf(entryId: string): Observable<void> {
+    if (environment.useMocks) {
+      return of(void 0);
+    }
+
+    return this.http.post<void>(`${this.baseUrl}/secretary/entries/${entryId}/pdf/retry`, {});
   }
 }

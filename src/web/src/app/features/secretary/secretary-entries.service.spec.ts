@@ -22,4 +22,29 @@ describe('SecretaryEntriesService', () => {
     expect(response.page).toBe(1);
     expect(response.pageSize).toBe(2);
   });
+
+  it('returns entry detail from mock data', async () => {
+    const service = TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule]
+    }).inject(SecretaryEntriesService);
+
+    const response = await firstValueFrom(
+      service.getEntryDetail('d7b99d91-2c6a-4fd0-9d4f-7c49d88c7b10')
+    );
+
+    expect(response.entryId).toBe('d7b99d91-2c6a-4fd0-9d4f-7c49d88c7b10');
+    expect(response.dog.callName).toBe('Ranger');
+  });
+
+  it('returns PDF download URL from mock data', async () => {
+    const service = TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule]
+    }).inject(SecretaryEntriesService);
+
+    const response = await firstValueFrom(
+      service.getPdfDownloadUrl('d7b99d91-2c6a-4fd0-9d4f-7c49d88c7b10')
+    );
+
+    expect(response.downloadUrl).toContain('data:application/pdf');
+  });
 });

@@ -1,0 +1,5 @@
+WI-A13 unit tests
+Date: 2026-01-23
+Command: npm --prefix src/web test -- --watch=false
+Result: PASS (42 tests)
+Notes: Includes SecretaryDetailComponent unit tests (render, download, processing status).

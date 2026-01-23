@@ -1,0 +1,5 @@
+WI-A13 integration tests
+Date: 2026-01-23
+Command: npm --prefix src/web test -- --watch=false
+Result: PASS
+Notes: SecretaryEntriesService detail and PDF download mock tests executed within web test suite.

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { secretaryRoleGuard } from '../../core/guards/secretary-role.guard';
-import { SecretaryEntryDetailPlaceholderPage } from './secretary-entry-detail-placeholder.page';
+import { SecretaryDetailComponent } from './secretary-detail/secretary-detail.component';
 import { SecretaryPageComponent } from './secretary.page';
 
 export const SECRETARY_ROUTES: Routes = [
@@ -11,7 +11,7 @@ export const SECRETARY_ROUTES: Routes = [
   },
   {
     path: 'entries/:entryId',
-    component: SecretaryEntryDetailPlaceholderPage,
+    component: SecretaryDetailComponent,
     canActivate: [secretaryRoleGuard]
   }
 ];

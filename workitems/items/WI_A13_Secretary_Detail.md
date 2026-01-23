@@ -36,16 +36,16 @@ Implement the secretary entry detail view with PDF download capability.
 - Consider: refresh status button for in-progress entries
 
 ## Acceptance criteria
-- [ ] Page displays at `/secretary/entries/{entryId}`
-- [ ] Route guarded for Secretary role
-- [ ] All entry fields displayed read-only
-- [ ] PDF download button works when PDF ready
-- [ ] PDF button disabled/hidden when PDF not ready
-- [ ] Processing status shown clearly
-- [ ] Email status shown for both recipients
-- [ ] Back navigation to list
-- [ ] **Retry PDF button shown when pdfStatus is Failed**
-- [ ] **Retry button calls POST /api/secretary/entries/{entryId}/pdf/retry**
+- [x] Page displays at `/secretary/entries/{entryId}`
+- [x] Route guarded for Secretary role
+- [x] All entry fields displayed read-only
+- [x] PDF download button works when PDF ready
+- [x] PDF button disabled/hidden when PDF not ready
+- [x] Processing status shown clearly
+- [x] Email status shown for both recipients
+- [x] Back navigation to list
+- [x] **Retry PDF button shown when pdfStatus is Failed**
+- [x] **Retry button calls POST /api/secretary/entries/{entryId}/pdf/retry**
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -55,7 +55,7 @@ Implement the secretary entry detail view with PDF download capability.
 - Processing status displays correctly
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A13/unit-test-results.txt`
+- [../artifacts/WI-A13/unit-test-results.txt](../artifacts/WI-A13/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -63,7 +63,7 @@ Implement the secretary entry detail view with PDF download capability.
 - PDF URL fetch works
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A13/integration-test-results.txt`
+- [../artifacts/WI-A13/integration-test-results.txt](../artifacts/WI-A13/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -72,8 +72,8 @@ Implement the secretary entry detail view with PDF download capability.
 - Screenshot of detail view
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A13/playwright/secretary-detail-trace.zip`
-- `../artifacts/WI-A13/playwright/secretary-detail-screenshot.png`
+- [../artifacts/WI-A13/playwright/secretary-detail-trace.zip](../artifacts/WI-A13/playwright/secretary-detail-trace.zip)
+- [../artifacts/WI-A13/playwright/secretary-detail-screenshot.png](../artifacts/WI-A13/playwright/secretary-detail-screenshot.png)
 
 ### DB verification
 **Artifact requirements**
