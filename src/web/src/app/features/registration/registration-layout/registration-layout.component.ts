@@ -75,7 +75,11 @@ import { GridMetadata, TrialRegistrationMetadataDto } from '../registration.type
             [gridMetadata]="upperGridMetadata"
             [selectionsControl]="upperSelections"
           ></app-upper-grid-section>
-          <app-lower-grid-section [trial]="trial"></app-lower-grid-section>
+          <app-lower-grid-section
+            [trial]="trial"
+            [gridMetadata]="lowerGridMetadata"
+            [selectionsControl]="lowerSelections"
+          ></app-lower-grid-section>
         </section>
 
         <app-emergency-fees-section
@@ -262,6 +266,10 @@ export class RegistrationLayoutComponent {
     return this.form.get('selections.upper') as FormArray;
   }
 
+  get lowerSelections(): FormArray {
+    return this.form.get('selections.lower') as FormArray;
+  }
+
   get upperGridMetadata(): GridMetadata | null {
     if (!this.registrationMetadata) {
       return null;
@@ -270,6 +278,18 @@ export class RegistrationLayoutComponent {
     return (
       this.registrationMetadata.formMetadata.grids.find(
         (grid) => grid.grid === 'Upper'
+      ) ?? null
+    );
+  }
+
+  get lowerGridMetadata(): GridMetadata | null {
+    if (!this.registrationMetadata) {
+      return null;
+    }
+
+    return (
+      this.registrationMetadata.formMetadata.grids.find(
+        (grid) => grid.grid === 'Lower'
       ) ?? null
     );
   }

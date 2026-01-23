@@ -1,0 +1,5 @@
+[2026-01-23 01:37] WI-A08 unit tests — npm test -- --watch=false
+Result: PASSED
+
+Notes:
+- LowerGridSectionComponent specs added (rows/cols, disabled cells, selection toggle, keyboard nav).

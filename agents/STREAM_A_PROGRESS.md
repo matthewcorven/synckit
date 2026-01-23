@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-23 01:13  
-**Current Focus:** A07 — Upper Grid
+**Last Updated:** 2026-01-23 01:46  
+**Current Focus:** A08 — Lower Grid
 
 ---
 
@@ -36,7 +36,7 @@
 | A05 | Contact Fields | ✅ Completed | A04 | |
 | A06 | Emergency + Fees | ✅ Completed | A05 | Unit + Playwright tests complete |
 | A07 | Grid Cells | ✅ Completed | A06 | Metadata-driven upper grid + unit tests |
-| A08 | Terms Modal | ⬜ Not Started | A07, B18* | *Can mock until B18 ready |
+| A08 | Lower Grid | ✅ Completed | A07 | Unit + Playwright tests complete |
 | A09 | Validation Summary | ⬜ Not Started | A08 | |
 | A10 | Submit + Confirmation | ⬜ Not Started | A09 | |
 | A11 | Secretary Layout | ⬜ Not Started | A03, B25* | *Can mock until B25 ready |
@@ -105,6 +105,8 @@ _Append entries as work progresses._
 [2026-01-22 19:50] — A06 — Started emergency + fees section — 🔄
 [2026-01-23 01:00] — A06 — Emergency + fees UI + tests — ✅
 [2026-01-23 01:12] — A07 — Upper grid component + tests — ✅
+[2026-01-23 01:40] — A08 — Started lower grid implementation — 🔄
+[2026-01-23 01:46] — A08 — Lower grid component + unit + Playwright tests — ✅
 ```
 
 <!-- Example:
