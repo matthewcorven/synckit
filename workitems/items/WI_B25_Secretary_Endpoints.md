@@ -86,6 +86,7 @@ Implement the secretary portal endpoints for entry management.
 ## Risks / Questions
 - Performance with large entry counts
 - ~~Should secretary see draft entries?~~ → **RESOLVED: Yes - Include drafts** - Secretary can see in-progress entries
+- E2E gap: Playwright secretary download flow depends on Stream A secretary UI wiring (A12/A13).
 
 ## Implementation
 ```csharp

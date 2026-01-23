@@ -94,6 +94,7 @@ Implement the secretary entry detail view with PDF download capability.
 ## Risks / Questions
 - SAS URL expiration handling (re-fetch if expired?)
 - ~~Should secretary be able to trigger PDF regeneration on failure?~~ → **RESOLVED: Yes** - Add retry button for secretary
+- E2E gap: Playwright PDF download/ retry flow depends on B25 endpoints and B24 processing-status polling.
 
 ## DTO Reference (from PRD_MVP_API_Contract.md)
 ```typescript

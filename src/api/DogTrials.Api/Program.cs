@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Security.Claims;
 using System.Text;
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using DogTrials.Api.Data;
 using DogTrials.Api.Endpoints;
 using DogTrials.Api.Middleware;
@@ -49,6 +51,10 @@ builder.Services.AddOptions<TrialSeedingOptions>()
 
 builder.Services.AddOptions<TermsOptions>()
     .Bind(builder.Configuration.GetSection(TermsOptions.SectionName))
+    .PostConfigure(options => options.ApplyEnvironmentOverrides());
+
+builder.Services.AddOptions<StorageOptions>()
+    .Bind(builder.Configuration.GetSection(StorageOptions.SectionName))
     .PostConfigure(options => options.ApplyEnvironmentOverrides());
 
 builder.Services.AddOptions<SubmitOptions>()
@@ -162,6 +168,22 @@ builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
 builder.Services.AddScoped<TrialSeedingService>();
 builder.Services.AddScoped<ITermsService, TermsService>();
 builder.Services.AddScoped<TrialCounterAllocator>();
+builder.Services.AddSingleton(sp =>
+{
+    var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StorageOptions>>().Value;
+    if (!string.IsNullOrWhiteSpace(options.ConnectionString))
+    {
+        return new BlobServiceClient(options.ConnectionString);
+    }
+
+    if (!string.IsNullOrWhiteSpace(options.BlobEndpoint))
+    {
+        return new BlobServiceClient(new Uri(options.BlobEndpoint), new DefaultAzureCredential());
+    }
+
+    throw new InvalidOperationException("Storage configuration is missing. Set Storage:ConnectionString or Storage:BlobEndpoint.");
+});
+builder.Services.AddScoped<IBlobStorageService, AzureBlobStorageService>();
 builder.Services.AddSingleton<IBackgroundJobQueue, ChannelBackgroundJobQueue>();
 builder.Services.AddScoped<IPdfTemplateProvider, PdfTemplateProvider>();
 builder.Services.AddScoped<IPdfStampingService, PdfStampingService>();

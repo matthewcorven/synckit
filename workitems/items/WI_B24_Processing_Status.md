@@ -81,6 +81,7 @@ Implement the processing status endpoint for polling async work completion.
 ## Risks / Questions
 - Rate limiting for polling
 - Public vs authenticated access
+- E2E gap: Playwright polling + PDF download validation is pending until secretary UI wiring (A12/A13) and B25 are live.
 
 ## DTO
 ```csharp
