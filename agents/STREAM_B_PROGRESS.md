@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-22 22:50
-**Current Focus:** B18 Terms Endpoint — ✅ Completed
+**Last Updated:** 2026-01-22 23:59
+**Current Focus:** B19 Submit Endpoint — ✅ Completed
 
 ---
 
@@ -48,7 +48,7 @@
 | B16 | Update Entry | ✅ Completed | B15 | Endpoint, ETag concurrency, tests |
 | B17 | Update Selections | ✅ Completed | B15 | Endpoint, validation, tests, artifacts |
 | B18 | Terms Endpoint | ✅ Completed | B01 | Unblocks A08 |
-| B19 | Submit Endpoint | ⬜ Not Started | B07, B16, B17 | |
+| B19 | Submit Endpoint | ✅ Completed | B07, B16, B17 | |
 | B20 | Background Channels | ⬜ Not Started | B19 | |
 | B21 | PDF Stamping | ⬜ Not Started | B20 | |
 | B22 | Blob Storage | ⬜ Not Started | B21 | |
@@ -125,6 +125,9 @@ _Append entries as work progresses._
 [2026-01-22 22:10] — B17 — Started update selections work — 🔄
 [2026-01-22 22:20] — B17 — Implemented update selections endpoint + tests + artifacts — ✅
 [2026-01-22 22:50] — B18 — Implemented terms endpoint + tests + artifacts — ✅
+[2026-01-22 23:05] — B19 — Started submit endpoint work — 🔄 In Progress
+[2026-01-22 23:55] — B19 — Implemented submit endpoint, tests, artifacts; ran dotnet test (DB env not set) — ✅
+[2026-01-22 23:59] — B19 — Regenerated FormTemplates migration, fixed DB tests, ran SQL-backed suite (65/65) — ✅
 ```
 
 <!-- Example:

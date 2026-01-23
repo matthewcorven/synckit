@@ -51,6 +51,10 @@ builder.Services.AddOptions<TermsOptions>()
     .Bind(builder.Configuration.GetSection(TermsOptions.SectionName))
     .PostConfigure(options => options.ApplyEnvironmentOverrides());
 
+builder.Services.AddOptions<SubmitOptions>()
+    .Bind(builder.Configuration.GetSection(SubmitOptions.SectionName))
+    .PostConfigure(options => options.ApplyEnvironmentOverrides());
+
 builder.Services.AddOptions<DogTrials.Api.Options.AuthenticationOptions>()
     .Bind(builder.Configuration.GetSection(DogTrials.Api.Options.AuthenticationOptions.SectionName));
 
@@ -157,6 +161,8 @@ builder.Services.AddSingleton<IClaimsTransformation, RoleClaimsTransformation>()
 builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
 builder.Services.AddScoped<TrialSeedingService>();
 builder.Services.AddScoped<ITermsService, TermsService>();
+builder.Services.AddScoped<TrialCounterAllocator>();
+builder.Services.AddSingleton<IBackgroundJobQueue, NoOpBackgroundJobQueue>();
 
 // Form metadata service
 builder.Services.AddScoped<IFormMetadataService, FormMetadataService>();

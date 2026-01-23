@@ -1,0 +1,3 @@
+EXECUTED (via DB-backed tests)
+Command: DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' dotnet test src/api/DogTrials.sln -v minimal
+Result: Tests passed (65/65). Submit test validates status=Submitted, SequenceNumber, RegistrationOrTrackingNumber, TermsAccepted fields, and Notifications count.

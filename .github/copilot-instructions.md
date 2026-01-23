@@ -93,6 +93,7 @@ When adding endpoints/DTOs, mirror the shapes and field names from the API contr
   - `DOGTRIALS_TEST_SQL='Server=localhost,1433;Database=DogTrialsTests;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;' dotnet test src/api/DogTrials.sln -v minimal`
 - If no endpoint exists to trigger the behavior, add a SQL-backed integration test that uses `TestDatabase.TryCreateSqlServerOptions()` and `Database.MigrateAsync()` to verify the DB state.
 - Record the exact command + pass/fail outcome in the work item DB verification artifact.
+ - **Eager verification:** if `DOGTRIALS_TEST_SQL` is not set, attempt to start the local SQL Server Docker container from [docs/setup/Local_Db_Setup.md](../docs/setup/Local_Db_Setup.md), set the env var, and run the DB-backed tests/verification in the same session. Only skip if Docker is unavailable; document the blocker in the artifact.
 
 ## Mandatory test execution
 - Always run relevant tests after completing any work item or refactoring, without waiting to be asked.

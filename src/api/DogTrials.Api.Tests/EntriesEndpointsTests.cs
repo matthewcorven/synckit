@@ -1045,6 +1045,291 @@ public sealed class EntriesEndpointsTests
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
+    [Fact]
+    public async Task SubmitEntry_Submits_WhenValid()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                TrackingSlug = "EXCLUB-SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            context.TrialCounters.Add(new TrialCounter
+            {
+                TrialId = trial.TrialId,
+                NextSequenceNumber = 1
+            });
+
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+        await ProvisionUserAsync(client, token);
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            var selectionsJson = JsonSerializer.Serialize(new EntrySelectionsDto(
+                new List<EntrySelectionCellDto> { new("Sheep", "STD", "X") },
+                new List<EntrySelectionCellDto>()));
+
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Draft,
+                DogBreed = "Australian Shepherd",
+                DogCallName = "Ranger",
+                DogDob = new DateOnly(2021, 4, 10),
+                DogSex = "Male",
+                ContactOwners = "Owner One",
+                ContactEmail = "handler@example.com",
+                ContactPhone = "555-555-5555",
+                EmergencyName = "Emergency Contact",
+                EmergencyPhone = "555-111-2222",
+                TotalEntryFees = 25m,
+                FeesCurrency = "USD",
+                SelectionsJson = selectionsJson,
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/entries/{entryId}/submit");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new { acceptTerms = true, termsVersion = "v1" }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        Assert.Equal("Submitted", doc.RootElement.GetProperty("status").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(doc.RootElement.GetProperty("supportId").GetString()));
+
+        await using var verify = CreateContext(connectionString);
+        var submitted = await verify.Entries
+            .Include(e => e.Notifications)
+            .SingleAsync(e => e.EntryId == entryId);
+        Assert.Equal(EntryStatus.Submitted, submitted.Status);
+        Assert.Equal(1, submitted.SequenceNumber);
+        Assert.Equal("EXCLUB-SPRING-2026-05-02-0001", submitted.RegistrationOrTrackingNumber);
+        Assert.NotNull(submitted.TermsAcceptedAtUtc);
+        Assert.NotNull(submitted.TermsAcceptedByUserId);
+        Assert.Equal(2, submitted.Notifications.Count);
+
+        var counter = await verify.TrialCounters.SingleAsync(c => c.TrialId == trialId);
+        Assert.Equal(2, counter.NextSequenceNumber);
+    }
+
+    [Fact]
+    public async Task SubmitEntry_ReturnsBadRequest_WhenMissingRequiredFields()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                TrackingSlug = "EXCLUB-SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            context.TrialCounters.Add(new TrialCounter
+            {
+                TrialId = trial.TrialId,
+                NextSequenceNumber = 1
+            });
+
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+        await ProvisionUserAsync(client, token);
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Draft,
+                ContactEmail = "handler@example.com",
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/entries/{entryId}/submit");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new { acceptTerms = false, termsVersion = "" }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        Assert.True(doc.RootElement.TryGetProperty("errors", out var errors));
+        Assert.True(errors.TryGetProperty("dog.breed", out _));
+        Assert.True(errors.TryGetProperty("contact.phone", out _));
+        Assert.True(errors.TryGetProperty("terms", out _));
+    }
+
+    [Fact]
+    public async Task SubmitEntry_ReturnsConflict_WhenAlreadySubmitted()
+    {
+        var connectionString = TestDatabase.TryCreateSqlServerConnectionString();
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        await EnsureDatabaseAsync(connectionString);
+
+        Guid trialId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var trial = new Trial
+            {
+                TrialId = Guid.NewGuid(),
+                Name = "Sample Trial",
+                OrganizationCode = "ASCA",
+                SportCode = "StockDog",
+                FormCode = "TrialEntry",
+                FormVersion = "2020-10-08",
+                OrganizerSlug = "EXCLUB",
+                EventSlug = "SPRING-2026-05-02",
+                TrackingSlug = "EXCLUB-SPRING-2026-05-02",
+                HostClub = "Example Club",
+                StartDate = new DateOnly(2026, 5, 2),
+                EndDate = new DateOnly(2026, 5, 3),
+                Location = "Bryan, TX",
+                SecretaryEmail = "secretary@example.com",
+                IsActive = true
+            };
+
+            context.Trials.Add(trial);
+            context.TrialCounters.Add(new TrialCounter
+            {
+                TrialId = trial.TrialId,
+                NextSequenceNumber = 1
+            });
+
+            await context.SaveChangesAsync();
+            trialId = trial.TrialId;
+        }
+
+        using var factory = CreateFactory(connectionString);
+        using var client = factory.CreateClient();
+
+        var token = await GetTokenAsync(client, "Handler");
+        await ProvisionUserAsync(client, token);
+
+        Guid entryId;
+        await using (var context = CreateContext(connectionString))
+        {
+            var user = await context.Users.SingleAsync();
+            entryId = Guid.NewGuid();
+
+            context.Entries.Add(new Entry
+            {
+                EntryId = entryId,
+                TrialId = trialId,
+                CreatedByUserId = user.UserId,
+                Status = EntryStatus.Submitted,
+                SequenceNumber = 1,
+                RegistrationOrTrackingNumber = "EXCLUB-SPRING-2026-05-02-0001",
+                PdfStatus = PdfStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/entries/{entryId}/submit");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new { acceptTerms = true, termsVersion = "v1" }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
 
     private static WebApplicationFactory<Program> CreateFactory(string connectionString)
     {
@@ -1103,6 +1388,18 @@ public sealed class EntriesEndpointsTests
         await context.SaveChangesAsync();
     }
 
+    private static async Task ProvisionUserAsync(HttpClient client, string token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/entries/{Guid.NewGuid()}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await client.SendAsync(request);
+        if (response.StatusCode != HttpStatusCode.NotFound && response.StatusCode != HttpStatusCode.Forbidden)
+        {
+            response.EnsureSuccessStatusCode();
+        }
+    }
+
     private static DogTrialsDbContext CreateContext(string connectionString)
     {
         return new DogTrialsDbContext(new DbContextOptionsBuilder<DogTrialsDbContext>()
@@ -1121,6 +1418,8 @@ public sealed class EntriesEndpointsTests
 
         var json = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(json);
-        return document.RootElement.GetProperty("accessToken").GetString()!;
+        var token = document.RootElement.GetProperty("accessToken").GetString()!;
+        await ProvisionUserAsync(client, token);
+        return token;
     }
 }

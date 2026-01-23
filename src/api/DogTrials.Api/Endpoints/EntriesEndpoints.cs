@@ -1,6 +1,7 @@
 using DogTrials.Api.Data;
 using DogTrials.Api.Dtos;
 using DogTrials.Api.Entities;
+using DogTrials.Api.Options;
 using DogTrials.Api.Security;
 using DogTrials.Api.Services;
 using Microsoft.EntityFrameworkCore;
@@ -503,6 +504,133 @@ public static class EntriesEndpoints
         })
         .WithName("Entries_UpdateSelections");
 
+        group.MapPost("/{entryId:guid}/submit", async (
+            Guid entryId,
+            SubmitEntryRequestDto request,
+            HttpContext context,
+            DogTrialsDbContext dbContext,
+            TrialCounterAllocator counterAllocator,
+            IBackgroundJobQueue jobQueue,
+            Microsoft.Extensions.Options.IOptions<SubmitOptions> submitOptions,
+            ILogger<Program> logger) =>
+        {
+            using var activitySource = new ActivitySource(HealthEndpoints.ActivitySourceName);
+            using var activity = activitySource.StartActivity("Entry.Submit");
+            activity?.SetTag("entry.id", entryId.ToString());
+
+            var userId = context.GetUserId();
+            var userRole = context.GetUserRole();
+            var userEmail = UserProvisioningService.ExtractEmail(context.User);
+
+            activity?.SetTag("user.role", userRole.ToString());
+            activity?.SetTag("entry.mode", "direct");
+
+            var entry = await dbContext.Entries
+                .Include(e => e.Trial)
+                .Include(e => e.Notifications)
+                .Where(e => e.EntryId == entryId)
+                .FirstOrDefaultAsync(context.RequestAborted);
+
+            if (entry is null)
+            {
+                return Results.Problem(
+                    title: "Entry not found",
+                    statusCode: StatusCodes.Status404NotFound,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errorCode"] = "ENTRY_NOT_FOUND"
+                    });
+            }
+
+            if (entry.CreatedByUserId != userId)
+            {
+                return Results.Problem(
+                    title: "Access denied",
+                    statusCode: StatusCodes.Status403Forbidden,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errorCode"] = "ENTRY_FORBIDDEN"
+                    });
+            }
+
+            if (entry.Status != EntryStatus.Draft)
+            {
+                return Results.Problem(
+                    title: "Entry already submitted",
+                    statusCode: StatusCodes.Status409Conflict,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errorCode"] = "ENTRY_ALREADY_SUBMITTED"
+                    });
+            }
+
+            activity?.SetTag("trial.id", entry.TrialId.ToString());
+
+            var errors = ValidateSubmit(entry, request, userEmail, submitOptions.Value);
+            if (errors.Count > 0)
+            {
+                return Results.Problem(
+                    title: "One or more validation errors occurred.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["errors"] = errors
+                    });
+            }
+
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(context.RequestAborted);
+
+            try
+            {
+                var sequenceNumber = await counterAllocator.AllocateSequenceNumberAsync(entry.TrialId, context.RequestAborted);
+                if (sequenceNumber <= 0)
+                {
+                    logger.LogError("Sequence allocation failed for trial {TrialId}", entry.TrialId);
+                    return Results.Problem(
+                        title: "Sequence allocation failed",
+                        statusCode: StatusCodes.Status500InternalServerError,
+                        extensions: new Dictionary<string, object?>
+                        {
+                            ["errorCode"] = "SEQUENCE_ALLOCATION_FAILED"
+                        });
+                }
+
+                var entryNumber = $"{entry.Trial.TrackingSlug}-{sequenceNumber:D4}";
+
+                entry.Status = EntryStatus.Submitted;
+                entry.SequenceNumber = sequenceNumber;
+                entry.RegistrationOrTrackingNumber = entryNumber;
+                entry.SubmittedAtUtc = DateTime.UtcNow;
+                entry.TermsVersion = request.TermsVersion;
+                entry.TermsAcceptedAtUtc = DateTime.UtcNow;
+                entry.TermsAcceptedByUserId = userId;
+                entry.UpdatedAtUtc = DateTime.UtcNow;
+
+                AddMissingNotifications(dbContext, entry, RecipientType.Handler, RecipientType.Secretary);
+
+                await dbContext.SaveChangesAsync(context.RequestAborted);
+                await transaction.CommitAsync(context.RequestAborted);
+
+                activity?.SetTag("entry.status", entry.Status.ToString());
+                activity?.SetTag("entry.number", entryNumber);
+
+                await jobQueue.EnqueueEntrySubmittedAsync(entry.EntryId, context.RequestAborted);
+
+                var supportId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
+
+                return Results.Ok(new SubmitEntryResponseDto(
+                    entry.EntryId,
+                    entry.Status.ToString(),
+                    supportId));
+            }
+            catch
+            {
+                await transaction.RollbackAsync(context.RequestAborted);
+                throw;
+            }
+        })
+        .WithName("Entries_Submit");
+
         return endpoints;
     }
 
@@ -705,6 +833,128 @@ public static class EntriesEndpoints
         catch (JsonException)
         {
             return new EntrySelectionsDto(new List<EntrySelectionCellDto>(), new List<EntrySelectionCellDto>());
+        }
+    }
+
+    private static Dictionary<string, string[]> ValidateSubmit(Entry entry, SubmitEntryRequestDto request, string? userEmail, SubmitOptions options)
+    {
+        var errors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+        void AddError(string field, string message)
+        {
+            if (!errors.TryGetValue(field, out var list))
+            {
+                list = new List<string>();
+                errors[field] = list;
+            }
+
+            list.Add(message);
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.DogBreed))
+        {
+            AddError("dog.breed", "Breed is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.DogCallName))
+        {
+            AddError("dog.callName", "Call Name is required.");
+        }
+
+        if (entry.DogDob is null)
+        {
+            AddError("dog.dob", "Date of Birth is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.DogSex))
+        {
+            AddError("dog.sex", "Sex is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.ContactOwners))
+        {
+            AddError("contact.owners", "Owners is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.ContactEmail))
+        {
+            AddError("contact.email", "Email is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.ContactPhone))
+        {
+            AddError("contact.phone", "Phone is required.");
+        }
+
+        if (!options.AllowDifferentEmail)
+        {
+            if (string.IsNullOrWhiteSpace(userEmail)
+                || !string.Equals(entry.ContactEmail, userEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                AddError("contact.email", "Email must match your login email.");
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.EmergencyName))
+        {
+            AddError("emergencyContact.name", "Emergency contact name is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.EmergencyPhone))
+        {
+            AddError("emergencyContact.phoneOrNumber", "Emergency contact phone is required.");
+        }
+
+        if (entry.TotalEntryFees is null || entry.TotalEntryFees <= 0)
+        {
+            AddError("fees.totalEntryFees", "Entry fees must be greater than zero.");
+        }
+
+        var selections = DeserializeSelections(entry.SelectionsJson);
+        var hasSelections = selections.Upper.Any(s => !string.IsNullOrWhiteSpace(s.Value))
+            || selections.Lower.Any(s => !string.IsNullOrWhiteSpace(s.Value));
+        if (!hasSelections)
+        {
+            AddError("selections", "At least one class selection is required.");
+        }
+
+        if (!request.AcceptTerms)
+        {
+            AddError("terms", "You must accept the terms.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.TermsVersion))
+        {
+            AddError("terms", "Terms version is required.");
+        }
+
+        return errors.ToDictionary(k => k.Key, v => v.Value.ToArray(), StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static void AddMissingNotifications(DogTrialsDbContext dbContext, Entry entry, params RecipientType[] recipientTypes)
+    {
+        var newNotifications = new List<Notification>();
+
+        foreach (var recipientType in recipientTypes)
+        {
+            if (entry.Notifications.Any(n => n.RecipientType == recipientType))
+            {
+                continue;
+            }
+
+            newNotifications.Add(new Notification
+            {
+                NotificationId = Guid.NewGuid(),
+                EntryId = entry.EntryId,
+                RecipientType = recipientType,
+                Status = NotificationStatus.Queued,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
+
+        if (newNotifications.Count > 0)
+        {
+            dbContext.Notifications.AddRange(newNotifications);
         }
     }
 }

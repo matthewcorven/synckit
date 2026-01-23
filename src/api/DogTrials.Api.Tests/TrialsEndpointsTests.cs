@@ -226,7 +226,7 @@ public sealed class TrialsEndpointsTests
 
         // assert the activity has http.route tag for the endpoint route template
         var routeTag = found!.Tags.FirstOrDefault(t => t.Key == "http.route").Value;
-        Assert.Equal("/api/trials/{trialId}/registration/metadata", routeTag);
+        Assert.Equal("/api/trials/{trialId:guid}/registration/metadata", routeTag);
 
         // assert trial.id tag present
         var trialTag = found.Tags.FirstOrDefault(t => t.Key == "trial.id").Value;

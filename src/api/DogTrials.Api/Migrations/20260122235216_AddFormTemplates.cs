@@ -1,11 +1,13 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace DogTrials.Api.Migrations
 {
+    /// <inheritdoc />
     public partial class AddFormTemplates : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -32,9 +34,11 @@ namespace DogTrials.Api.Migrations
                 unique: true);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(name: "FormTemplates");
+            migrationBuilder.DropTable(
+                name: "FormTemplates");
         }
     }
 }
