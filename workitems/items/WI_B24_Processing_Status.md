@@ -60,7 +60,7 @@ Implement the processing status endpoint for polling async work completion.
 - Download PDF via URL
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-B24/playwright/status-polling-trace.zip`
+- `../artifacts/WI-B24/playwright/status-polling-trace.zip` (pending; secretary UI wiring not yet implemented)
 
 ### DB verification
 **Artifact requirements**

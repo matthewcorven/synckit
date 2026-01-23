@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-23 03:12
-**Current Focus:** B23 Email Sender — ✅ Completed
+**Last Updated:** 2026-01-23 14:10
+**Current Focus:** B24 Processing Status — ✅ Completed
 
 ---
 
@@ -53,7 +53,7 @@
 | B21 | PDF Stamping | ✅ Completed | B20 | |
 | B22 | Blob Storage | ✅ Completed | B21 | |
 | B23 | Email Sender | ✅ Completed | B20, B06 | |
-| B24 | Processing Status | ⬜ Not Started | B22, B23 | |
+| B24 | Processing Status | ✅ Completed | B22, B23 | Endpoint + tests + artifacts |
 | B25 | Secretary Endpoints | ⬜ Not Started | B15, B22 | Unblocks A11 |
 | B26 | Bicep Scaffold | ⬜ Not Started | B01 | |
 | B27 | Entra External ID | ⬜ Not Started | B26 | |
@@ -68,7 +68,7 @@
 | M1 | ⬜ Not Started | B05-B10 | Auth + DB |
 | M2 | ⬜ Not Started | B11-B17 | Entry CRUD |
 | M3 | ⬜ Not Started | B18-B19 | Submit |
-| M4 | ⬜ Not Started | B20-B24 | PDF + Email |
+| M4 | ✅ Completed | B20-B24 | PDF + Email |
 | M5 | ⬜ Not Started | B25-B27 | Secretary + Infra |
 
 ---
@@ -137,6 +137,8 @@ _Append entries as work progresses._
 [2026-01-22 15:10] — B22 — Ran Azurite-backed blob integration test + SQL-backed tests — ✅
 [2026-01-23 02:40] — B23 — Started email sender implementation — 🔄 In Progress
 [2026-01-23 03:12] — B23 — Implemented ACS email sender + templates + tests + artifacts; ran SQL-backed tests — ✅
+[2026-01-23 13:45] — B24 — Started processing status endpoint — 🔄 In Progress
+[2026-01-23 14:10] — B24 — Implemented processing status endpoint + tests + artifacts; ran SQL-backed tests — ✅
 ```
 
 <!-- Example:
