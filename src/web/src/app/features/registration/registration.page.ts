@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { NgIf } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   AbstractControl,
   FormBuilder,
@@ -13,14 +13,23 @@ import {
 } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { RegistrationLayoutComponent } from './registration-layout/registration-layout.component';
 import { TrialService } from '../trials/trial.service';
 import { TrialSummaryDto } from '../trials/trial.types';
 import { RegistrationMetadataService } from './registration-metadata.service';
-import { TermsDto, TrialRegistrationMetadataDto } from './registration.types';
+import {
+  ProblemDetails,
+  SubmitEntryRequestDto,
+  TermsDto,
+  TrialRegistrationMetadataDto
+} from './registration.types';
 import { applyServerErrorsToForm, clearServerErrors, ValidationErrorMap } from './validation.utils';
 import { TermsService } from './terms.service';
+import { RegistrationSubmitService } from './registration-submit.service';
+import { RegistrationSubmissionStore } from './registration-submission.store';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-registration-page',
@@ -52,6 +61,10 @@ import { TermsService } from './terms.service';
         [form]="form"
         [registrationMetadata]="registrationMetadata"
         [terms]="terms"
+        [isSubmitting]="isSubmitting"
+        [submitErrorMessage]="submitErrorMessage"
+        [submitSupportId]="submitSupportId"
+        (submitEntry)="submitEntry()"
       ></app-registration-layout>
     </section>
   `
@@ -63,12 +76,18 @@ export class RegistrationPageComponent implements OnInit {
   terms: TermsDto | null = null;
   isLoading = true;
   errorMessage = '';
+  isSubmitting = false;
+  submitErrorMessage = '';
+  submitSupportId = '';
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly trialService: TrialService,
     private readonly metadataService: RegistrationMetadataService,
     private readonly termsService: TermsService,
+    private readonly submitService: RegistrationSubmitService,
+    private readonly submissionStore: RegistrationSubmissionStore,
+    private readonly router: Router,
     private readonly formBuilder: FormBuilder
   ) {
     this.form = this.formBuilder.group({
@@ -227,5 +246,99 @@ export class RegistrationPageComponent implements OnInit {
   applyServerValidationErrors(errors: ValidationErrorMap): void {
     clearServerErrors(this.form);
     applyServerErrorsToForm(this.form, errors);
+  }
+
+  submitEntry(): void {
+    if (this.isSubmitting || !this.trial) {
+      return;
+    }
+
+    clearServerErrors(this.form);
+    this.submitErrorMessage = '';
+    this.submitSupportId = '';
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.form.updateValueAndValidity();
+      return;
+    }
+
+    const entryId = this.getOrCreateEntryId(this.trial.trialId);
+    if (!entryId) {
+      this.submitErrorMessage = 'Unable to locate a draft entry to submit.';
+      return;
+    }
+
+    const termsVersion =
+      (this.form.get('terms.version')?.value as string | null) ||
+      this.terms?.version ||
+      '';
+
+    const payload: SubmitEntryRequestDto = {
+      acceptTerms: true,
+      termsVersion
+    };
+
+    this.isSubmitting = true;
+    this.submitService.submitEntry(entryId, payload).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        this.submissionStore.save(this.trial!.trialId, {
+          entryId: response.entryId,
+          trialId: this.trial!.trialId,
+          supportId: response.supportId,
+          submittedAtUtc: new Date().toISOString()
+        });
+        this.router.navigate(['/register', this.trial!.trialId, 'confirmation']);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isSubmitting = false;
+        this.handleSubmitError(error);
+      }
+    });
+  }
+
+  private handleSubmitError(error: HttpErrorResponse): void {
+    const supportId =
+      error.headers?.get('x-support-id') ||
+      (error.error as ProblemDetails | undefined)?.traceId ||
+      '';
+    this.submitSupportId = supportId;
+
+    const problem = error.error as ProblemDetails | null;
+    if (problem?.errors) {
+      this.applyServerValidationErrors(problem.errors);
+    }
+
+    this.submitErrorMessage =
+      problem?.title || 'Unable to submit entry. Please try again.';
+  }
+
+  private getOrCreateEntryId(trialId: string): string | null {
+    const key = `draft-entry:${trialId}`;
+    const existing = sessionStorage.getItem(key);
+    if (existing) {
+      return existing;
+    }
+
+    if (!environment.useMocks) {
+      return null;
+    }
+
+    const created = this.createUuid();
+    sessionStorage.setItem(key, created);
+    return created;
+  }
+
+  private createUuid(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+      const rand = (Math.random() * 16) | 0;
+      const value = char === 'x' ? rand : (rand & 0x3) | 0x8;
+      return value.toString(16);
+    });
   }
 }

@@ -298,4 +298,83 @@ describe('RegistrationLayoutComponent', () => {
     fixture.detectChanges();
     expect(submitButton?.disabled).toBeFalsy();
   });
+
+  it('emits submit when form is valid and terms accepted', async () => {
+    await TestBed.configureTestingModule({
+      imports: [RegistrationLayoutComponent, NoopAnimationsModule]
+    }).compileComponents();
+
+    const formBuilder = TestBed.inject(FormBuilder);
+    const form = formBuilder.group({
+      entryNumber: [{ value: '', disabled: true }],
+      dog: formBuilder.group({
+        ascaRegistrationNumber: [''],
+        breed: ['Australian Shepherd', Validators.required],
+        registeredName: [''],
+        callName: ['Ranger', Validators.required],
+        dob: [new Date('2021-04-10'), Validators.required],
+        color: [''],
+        sex: ['Male', Validators.required],
+        sire: [''],
+        dam: [''],
+        breeders: ['']
+      }),
+      contact: formBuilder.group({
+        owners: ['Jane Handler', Validators.required],
+        ownerAddress: formBuilder.group({
+          street: [''],
+          city: [''],
+          state: [''],
+          zip: ['']
+        }),
+        email: ['handler@example.com', Validators.required],
+        phone: ['555-555-5555', Validators.required],
+        handler: [''],
+        membershipNumber: [''],
+        junior: formBuilder.group({
+          dob: [null],
+          memberId: ['']
+        })
+      }),
+      emergencyContact: formBuilder.group({
+        name: ['Emergency Contact', Validators.required],
+        phoneOrNumber: ['555-111-2222', Validators.required]
+      }),
+      fees: formBuilder.group({
+        totalEntryFees: [25, Validators.required],
+        currency: ['USD']
+      }),
+      selections: formBuilder.group({
+        upper: formBuilder.array([formBuilder.group({ row: 'Sheep', col: 'STD', value: 'X' })]),
+        lower: formBuilder.array([])
+      }),
+      terms: formBuilder.group({
+        version: ['v1'],
+        accepted: formBuilder.control({ value: true, disabled: false }, [
+          Validators.requiredTrue
+        ])
+      })
+    });
+
+    const fixture = TestBed.createComponent(RegistrationLayoutComponent);
+    const component = fixture.componentInstance;
+    component.form = form;
+    component.trial = mockTrial;
+    component.terms = mockTerms;
+    fixture.detectChanges();
+
+    const spy = vi.fn();
+    component.submitEntry.subscribe(spy);
+
+    const submitButton = (
+      Array.from(
+        fixture.nativeElement.querySelectorAll('button')
+      ) as HTMLButtonElement[]
+    ).find((button) => button.textContent?.includes('Submit Entry'));
+
+    submitButton?.click();
+    fixture.detectChanges();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
 });

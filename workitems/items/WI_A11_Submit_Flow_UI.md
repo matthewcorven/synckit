@@ -1,7 +1,7 @@
 # WI-A11: Submit Flow UI
 
 **Owner:** Agent A (UI-First)  
-**Status:** Proposed  
+**Status:** Completed  
 **Milestone:** M3  
 **Dependencies:** A10  
 **Artifacts folder (recommended):** `../artifacts/WI-A11/`
@@ -55,7 +55,7 @@ Implement the submit flow with confirmation, Support ID display, and error handl
 - Success/error states handled
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A11/unit-test-results.txt`
+- [../artifacts/WI-A11/unit-test-results.txt](../artifacts/WI-A11/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -63,7 +63,7 @@ Implement the submit flow with confirmation, Support ID display, and error handl
 - Error response handling
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A11/integration-test-results.txt`
+- [../artifacts/WI-A11/integration-test-results.txt](../artifacts/WI-A11/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -73,9 +73,9 @@ Implement the submit flow with confirmation, Support ID display, and error handl
 - Screenshot of confirmation screen
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A11/playwright/submit-success-trace.zip`
-- `../artifacts/WI-A11/playwright/submit-confirmation.png`
-- `../artifacts/WI-A11/playwright/submit-error.png`
+- [../artifacts/WI-A11/playwright/submit-success-trace.zip](../artifacts/WI-A11/playwright/submit-success-trace.zip)
+- [../artifacts/WI-A11/playwright/submit-confirmation.png](../artifacts/WI-A11/playwright/submit-confirmation.png)
+- [../artifacts/WI-A11/playwright/submit-error.png](../artifacts/WI-A11/playwright/submit-error.png)
 
 ### DB verification
 **Artifact requirements**
@@ -92,7 +92,7 @@ Implement the submit flow with confirmation, Support ID display, and error handl
 - Screenshot showing Support ID match
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A11/telemetry/support-id-verification.png`
+- [../artifacts/WI-A11/telemetry/support-id-verification.png](../artifacts/WI-A11/telemetry/support-id-verification.png)
 
 ## Risks / Questions
 - ~~Confirmation screen vs modal decision~~ → **RESOLVED: Separate confirmation page** - Navigate to dedicated route

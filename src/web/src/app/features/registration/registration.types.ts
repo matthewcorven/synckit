@@ -43,3 +43,36 @@ export interface GridSelectionItem {
   col: string;
   value: string;
 }
+
+export interface SubmitEntryRequestDto {
+  acceptTerms: boolean;
+  termsVersion: string;
+}
+
+export interface SubmitEntryResponseDto {
+  entryId: string;
+  status: 'Submitted';
+  supportId: string;
+}
+
+export interface SubmitEntryResult {
+  entryId: string;
+  status: 'Submitted';
+  supportId: string;
+}
+
+export interface ProblemDetails {
+  type?: string;
+  title?: string;
+  status?: number;
+  traceId?: string;
+  errors?: Record<string, string[]>;
+  errorCode?: string;
+}
+
+export interface SubmissionReceipt {
+  entryId: string;
+  trialId: string;
+  supportId: string;
+  submittedAtUtc: string;
+}

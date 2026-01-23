@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { DatePipe, NgIf } from '@angular/common';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -6,6 +6,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TrialSummaryDto } from '../../trials/trial.types';
 import { DogSectionComponent } from '../sections/dog-section.component';
 import { ContactSectionComponent } from '../sections/contact-section.component';
@@ -28,6 +29,7 @@ import { TermsModalComponent } from '../terms-modal/terms-modal.component';
     MatButtonModule,
     MatCheckboxModule,
     MatDialogModule,
+    MatProgressSpinnerModule,
     DogSectionComponent,
     ContactSectionComponent,
     EmergencyFeesSectionComponent,
@@ -146,10 +148,28 @@ import { TermsModalComponent } from '../terms-modal/terms-modal.component';
               mat-flat-button
               color="primary"
               type="button"
-              [disabled]="!termsAccepted"
+              [disabled]="!termsAccepted || isSubmitting"
+              (click)="handleSubmit()"
             >
-              Submit
+              Submit Entry
             </button>
+          </div>
+          <div class="submit-status" *ngIf="isSubmitting">
+            <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+            <span>Submitting entry…</span>
+          </div>
+          <div class="submit-status submit-status--error" *ngIf="submitErrorMessage">
+            <div class="submit-status__title">Submission failed</div>
+            <div class="submit-status__message">{{ submitErrorMessage }}</div>
+            <div class="submit-status__support" *ngIf="submitSupportId">
+              <span>Support ID</span>
+              <span class="support-id" data-testid="submit-support-id">
+                {{ submitSupportId }}
+              </span>
+              <button mat-stroked-button type="button" (click)="copySupportId()">
+                Copy
+              </button>
+            </div>
           </div>
         </section>
 
@@ -340,6 +360,43 @@ import { TermsModalComponent } from '../terms-modal/terms-modal.component';
         justify-content: flex-end;
       }
 
+      .submit-status {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+
+      .submit-status--error {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(211, 47, 47, 0.3);
+        background: rgba(211, 47, 47, 0.05);
+        color: var(--mat-sys-on-surface);
+      }
+
+      .submit-status__title {
+        font-weight: 600;
+        color: var(--mat-sys-error);
+      }
+
+      .submit-status__support {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .support-id {
+        font-family: 'SF Mono', 'Roboto Mono', monospace;
+        font-weight: 600;
+      }
+
       @media (max-width: 900px) {
         .registration-header__badge {
           text-align: left;
@@ -357,6 +414,10 @@ export class RegistrationLayoutComponent {
   @Input({ required: true }) trial!: TrialSummaryDto;
   @Input() registrationMetadata?: TrialRegistrationMetadataDto | null;
   @Input() terms?: TermsDto | null;
+  @Input() isSubmitting = false;
+  @Input() submitErrorMessage = '';
+  @Input() submitSupportId = '';
+  @Output() submitEntry = new EventEmitter<void>();
   @ViewChild(ValidationSummaryComponent) summary?: ValidationSummaryComponent;
 
   validationSummaryVisible = false;
@@ -506,5 +567,32 @@ export class RegistrationLayoutComponent {
       this.termsGroup.markAsDirty();
       this.termsGroup.updateValueAndValidity();
     });
+  }
+
+  handleSubmit(): void {
+    if (this.isSubmitting) {
+      return;
+    }
+
+    if (!this.termsAccepted) {
+      this.termsAcceptedControl.markAsTouched();
+      this.termsAcceptedControl.updateValueAndValidity();
+      return;
+    }
+
+    if (this.form.invalid) {
+      this.reviewForErrors();
+      return;
+    }
+
+    this.submitEntry.emit();
+  }
+
+  copySupportId(): void {
+    if (!this.submitSupportId) {
+      return;
+    }
+
+    void navigator.clipboard?.writeText(this.submitSupportId);
   }
 }

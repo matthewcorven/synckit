@@ -1,0 +1,5 @@
+Integration tests
+
+Result: PASS
+- Submit success/error handling validated via component integration tests in registration.page.spec.ts
+- Date: 2026-01-23
