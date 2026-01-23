@@ -92,10 +92,10 @@ Maximize early iteration on the on-screen registration form while the platform f
 | B20 | Background Channels | M4 | B19 |
 | B21 | PDF Stamping | M4 | B20 |
 | B22 | Blob Storage | M4 | B21 |
-| B23 | Email Sender | M4 | B20, B06 |
+| B23 | Email Sender | M4 | B20, B06, B26 |
 | B24 | Processing Status | M4 | B22, B23 |
 | B25 | Secretary Endpoints | M5 | B15, B22 |
-| B26 | Bicep Scaffold | M5 | B01 |
+| B26 | Bicep Scaffold + App Config | M4 | B01 |
 | B27 | Entra External ID | M5 | B26 |
 
 ### Milestones (6 gates)
@@ -105,7 +105,7 @@ Maximize early iteration on the on-screen registration form while the platform f
 | M1 | Auth + Database | A03 | B05-B10 |
 | M2 | Form + Draft Save | A04-A07 | B11-B17 |
 | M3 | Submit + Validation | A08-A10 | B18-B19 |
-| M4 | PDF + Email | — | B20-B24 |
+| M4 | PDF + Email | — | B20-B24, B26 |
 | M5 | Secretary Portal | A11-A14 | B25-B27 |
 
 ### Mocks (1 item)
@@ -168,6 +168,7 @@ flowchart TD
         B19 --> B20[B20: Background Channels]
         B20 --> B21[B21: PDF Stamping]
         B21 --> B22[B22: Blob Storage]
+        B26 --> B23
         B20 --> B23[B23: Email Sender]
         B06 --> B23
         B22 --> B24[B24: Processing Status]
