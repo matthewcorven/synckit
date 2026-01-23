@@ -182,7 +182,7 @@ public static TrialSummaryDto ToSummaryDto(this Trial t) => new(
     },
     "organizerSlug": "EXCLUB",
     "eventSlug": "SPRING-2026-05-02",
-    "trackingSlug": "EXCLUB-SPRING-2026-05-02",
+    "trackingSlug": "OLDKYASCASPRING-2026-05-02",
     "hostClub": "Example Stockdog Club",
     "startDate": "2026-05-02",
     "endDate": "2026-05-03",

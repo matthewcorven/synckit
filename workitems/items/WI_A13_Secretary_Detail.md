@@ -148,7 +148,7 @@ interface PdfDownloadResponse {
 │ │ DOG INFORMATION                                         │ │
 │ │ Breed: Australian Shepherd                              │ │
 │ │ Call Name: Ranger                                       │ │
-│ │ Reg #: EXCLUB-SPRING-2026-05-02-0001                   │ │
+│ │ Reg #: OLDKYASCASPRING-2026-05-02-0001                   │ │
 │ │ ...                                                     │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │ ┌─────────────────────────────────────────────────────────┐ │

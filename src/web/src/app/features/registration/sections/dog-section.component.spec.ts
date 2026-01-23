@@ -61,13 +61,13 @@ describe('DogSectionComponent', () => {
 
     const fixture = TestBed.createComponent(DogSectionComponent);
     fixture.componentInstance.group = form;
-    fixture.componentInstance.entryNumber = 'EXCLUB-SPRING-2026-05-02-0001';
+    fixture.componentInstance.entryNumber = 'OLDKYASCASPRING-2026-05-02-0001';
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
     const entryField = element.querySelector('input[readonly]') as HTMLInputElement | null;
 
     expect(entryField).toBeTruthy();
-    expect(entryField?.value).toContain('EXCLUB-SPRING-2026-05-02-0001');
+    expect(entryField?.value).toContain('OLDKYASCASPRING-2026-05-02-0001');
   });
 });

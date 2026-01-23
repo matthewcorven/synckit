@@ -60,7 +60,7 @@ Required columns:
 - `TrialId` uniqueidentifier NOT NULL FK → `Trials(TrialId)`
 - `Status` nvarchar(16) NOT NULL  (Draft/Submitted)
 - `SequenceNumber` int NULL  (set on submit)
-- `EntryNumber` nvarchar(128) NULL  (set on submit; derived from TrackingSlug + sequence, e.g., "EXCLUB-SPRING-2026-05-02-0001")
+- `EntryNumber` nvarchar(128) NULL  (set on submit; derived from TrackingSlug + sequence, e.g., "OLDKYASCASPRING-2026-05-02-0001")
 - `SubmittedAtUtc` datetime2 NULL
 - `CreatedByUserId` uniqueidentifier NOT NULL
 - `RowVersion` rowversion NOT NULL  — For optimistic concurrency (ETag)

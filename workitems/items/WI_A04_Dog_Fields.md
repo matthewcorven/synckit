@@ -102,7 +102,7 @@ Implement the Dog Information section of the registration form with all required
 ## DTO Reference (from PRD_MVP_API_Contract.md)
 ```typescript
 // Entry-level field (read-only, server-generated on submit)
-entryNumber?: string;  // e.g., "EXCLUB-SPRING-2026-05-02-0001"
+entryNumber?: string;  // e.g., "OLDKYASCASPRING-2026-05-02-0001"
 
 interface DogDto {
   ascaRegistrationNumber?: string;        // User-entered ASCA dog registration

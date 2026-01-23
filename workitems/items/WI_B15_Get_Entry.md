@@ -178,8 +178,8 @@ public static EntryDetailDto ToDetailDto(this Entry e) => new(
     "name": "Spring Stockdog Trial",
     "organizerSlug": "EXCLUB",
     "eventSlug": "SPRING-2026-05-02",
-    "trackingSlug": "EXCLUB-SPRING-2026-05-02",
-    "hostClub": "Example Club",
+    "trackingSlug": "OLDKYASCASPRING-2026-05-02",
+    "hostClub": "Old Fashioned KY ASCA Club",
     "startDate": "2026-05-02",
     "endDate": "2026-05-03",
     "secretaryEmail": "secretary@example.com"

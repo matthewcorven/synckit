@@ -295,7 +295,7 @@ export const mockTrials: TrialSummaryDto[] = [
     },
     organizerSlug: 'EXCLUB',
     eventSlug: 'SPRING-2026-05-02',
-    trackingSlug: 'EXCLUB-SPRING-2026-05-02',
+    trackingSlug: 'OLDKYASCASPRING-2026-05-02',
     hostClub: 'Example Stockdog Club',
     startDate: '2026-05-02',
     endDate: '2026-05-03',
@@ -425,7 +425,7 @@ export function createSubmittedEntry(overrides: Partial<EntryDetailDto> = {}): E
     status: 'Submitted',
     dog: {
       ...createMockEntry().dog!,
-      registrationOrTrackingNumber: `EXCLUB-SPRING-2026-05-02-${String(entryCounter).padStart(4, '0')}`
+      registrationOrTrackingNumber: `OLDKYASCASPRING-2026-05-02-${String(entryCounter).padStart(4, '0')}`
     },
     terms: {
       version: 'v1',
