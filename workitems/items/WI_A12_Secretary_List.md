@@ -42,14 +42,14 @@ Implement the secretary portal entry list page for viewing submitted entries.
 - Sort by submission date (newest first default)
 
 ## Acceptance criteria
-- [ ] Page displays at `/secretary`
-- [ ] Route guarded for Secretary role
-- [ ] Trial filter works
-- [ ] Entry table shows correct columns
-- [ ] Pagination works
-- [ ] Click View navigates to detail
-- [ ] Loading state shown during fetch
-- [ ] Empty state when no entries
+- [x] Page displays at `/secretary`
+- [x] Route guarded for Secretary role
+- [x] Trial filter works
+- [x] Entry table shows correct columns
+- [x] Pagination works
+- [x] Click View navigates to detail
+- [x] Loading state shown during fetch
+- [x] Empty state when no entries
 
 ## Test Plan
 ### Unit tests (TDD)
@@ -59,7 +59,7 @@ Implement the secretary portal entry list page for viewing submitted entries.
 - Trial filter updates query
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A12/unit-test-results.txt`
+- [../artifacts/WI-A12/unit-test-results.txt](../artifacts/WI-A12/unit-test-results.txt)
 
 ### Integration tests (BDD)
 **Artifact requirements**
@@ -67,7 +67,7 @@ Implement the secretary portal entry list page for viewing submitted entries.
 - Role guard prevents unauthorized access
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A12/integration-test-results.txt`
+- [../artifacts/WI-A12/integration-test-results.txt](../artifacts/WI-A12/integration-test-results.txt)
 
 ### E2E (BDD, Playwright)
 **Artifact requirements**
@@ -77,8 +77,8 @@ Implement the secretary portal entry list page for viewing submitted entries.
 - Screenshot of list view
 
 **Artifacts (add as relative links during work)**
-- `../artifacts/WI-A12/playwright/secretary-list-trace.zip`
-- `../artifacts/WI-A12/playwright/secretary-list-screenshot.png`
+- [../artifacts/WI-A12/playwright/secretary-list-trace.zip](../artifacts/WI-A12/playwright/secretary-list-trace.zip)
+- [../artifacts/WI-A12/playwright/secretary-list-screenshot.png](../artifacts/WI-A12/playwright/secretary-list-screenshot.png)
 
 ### DB verification
 **Artifact requirements**

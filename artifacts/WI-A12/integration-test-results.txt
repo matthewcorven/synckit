@@ -1,0 +1,5 @@
+WI-A12 integration tests
+Date: 2026-01-23
+Command: npm --prefix src/web test -- --watch=false
+Result: PASS
+Notes: SecretaryEntriesService mock pagination and secretaryRoleGuard authorization tests executed within web test suite.

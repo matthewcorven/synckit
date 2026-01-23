@@ -1,17 +1,10 @@
 import { Component } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
+import { SecretaryListComponent } from './secretary-list/secretary-list.component';
 
 @Component({
   selector: 'app-secretary-page',
   standalone: true,
-  imports: [MatCardModule],
-  template: `
-    <mat-card>
-      <mat-card-title>Secretary Portal</mat-card-title>
-      <mat-card-content>
-        Secretary views will appear here.
-      </mat-card-content>
-    </mat-card>
-  `
+  imports: [SecretaryListComponent],
+  template: ` <app-secretary-list></app-secretary-list> `
 })
 export class SecretaryPageComponent {}

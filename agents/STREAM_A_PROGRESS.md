@@ -2,8 +2,8 @@
 
 **Workstream:** UI-first (Agent A)  
 **Branch:** `feature/stream-a`  
-**Last Updated:** 2026-01-23 03:20  
-**Current Focus:** A12 — Secretary List
+**Last Updated:** 2026-01-23 09:10  
+**Current Focus:** A13 — Secretary Detail
 
 ---
 
@@ -40,7 +40,7 @@
 | A09 | Validation Summary | ✅ Completed | A08 | Inline + summary validation UX with tests |
 | A10 | Terms Modal | ✅ Completed | A09 | Unit + integration + Playwright tests complete |
 | A11 | Submit Flow UI | ✅ Completed | A10 | Submit confirmation route, support ID, tests + artifacts |
-| A12 | Secretary List | ⬜ Not Started | A11 | |
+| A12 | Secretary List | ✅ Completed | A11 | UI, tests, and artifacts complete |
 | A13 | Secretary Detail | ⬜ Not Started | A12 | |
 | A14 | Playwright Baseline | ✅ Completed | A01 | Unauthenticated smoke tests set up |
 | A15 | Mocks Folder | ⬜ Not Started | A01 | Optional |
@@ -110,6 +110,8 @@ _Append entries as work progresses._
 [2026-01-23 02:05] — A09 — Validation UX + unit/integration/E2E tests — ✅
 [2026-01-22 22:30] — A10 — Terms modal + acceptance gating + tests — ✅
 [2026-01-23 03:20] — A11 — Submit flow UI + confirmation + tests — ✅
+[2026-01-23 03:40] — A12 — Started secretary list implementation — 🔄
+[2026-01-23 09:10] — A12 — Secretary list UI + tests + artifacts — ✅
 ```
 
 <!-- Example:
