@@ -1,0 +1,21 @@
+WI-B27 Entra External ID auth flow verification
+
+Status: NOT EXECUTED (requires External ID tenant + social provider credentials)
+Date: 2026-01-23
+
+Planned verification steps:
+1) Launch SPA and initiate sign-in with External ID user flow.
+2) Complete sign-up/sign-in via configured provider (Microsoft or Google).
+3) Capture access token and verify claims:
+   - sub
+   - preferred_username (or email)
+   - roles (Handler/Secretary)
+4) Call a role-protected API endpoint with token and verify 200 response.
+
+Expected configuration values:
+- Authority: https://<tenant>.b2clogin.com/<tenant>.onmicrosoft.com/B2C_1_SignUpSignIn
+- Audience: api://dgmvp
+- Scope: api://dgmvp/access_as_user
+
+Blocker:
+- External ID tenant + provider credentials not available in this workspace.

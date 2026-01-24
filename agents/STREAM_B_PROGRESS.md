@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-23 16:28
-**Current Focus:** B26 Bicep Scaffold — ✅ Completed
+**Last Updated:** 2026-01-23 17:05
+**Current Focus:** B27 Entra External ID — 🚧 Blocked (awaiting tenant + provider credentials)
 
 ---
 
@@ -56,7 +56,7 @@
 | B24 | Processing Status | ✅ Completed | B22, B23 | Endpoint + tests + artifacts |
 | B25 | Secretary Endpoints | ✅ Completed | B15, B22 | Unblocks A11 |
 | B26 | Bicep Scaffold | ✅ Completed | B01 | Deployed + migrated; telemetry verified |
-| B27 | Entra External ID | ⬜ Not Started | B26 | |
+| B27 | Entra External ID | 🚧 Blocked | B26 | Docs + script + artifacts done; needs tenant/provider to validate |
 
 ---
 
@@ -81,6 +81,7 @@ _Record any blockers encountered during work._
 |------|------|---------|------------|----------|
 | 2026-01-23 | B26 | Azure CLI missing; cannot validate/deploy infra | Install Azure CLI + rerun validation/deploy | ✅ |
 | 2026-01-23 | B26 | App Insights screenshot not captured yet | Capture App Insights screenshot | ✅ |
+| 2026-01-23 | B27 | External ID tenant + social provider credentials unavailable | Provide tenant + provider credentials to validate auth flow | ⬜ |
 
 ---
 
@@ -145,6 +146,8 @@ _Append entries as work progresses._
 [2026-01-23 16:23] — B26 — Deployed infra, ran SQL migrations after KV + SQL firewall setup; App Insights verification pending — 🚧
 [2026-01-23 16:28] — B26 — Captured App Insights screenshot; WI-B26 complete — ✅
 [2026-01-23 16:35] — B26 — Re-deploy idempotency verified; KV MI role + storage container validated — ✅
+[2026-01-23 16:55] — B27 — Started Entra External ID docs + script — 🔄 In Progress
+[2026-01-23 17:05] — B27 — Added setup script, portal guide, auth flow artifact; validation blocked pending tenant/provider — 🚧
 ```
 
 <!-- Example:
