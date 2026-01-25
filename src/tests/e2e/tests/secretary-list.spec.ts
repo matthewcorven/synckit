@@ -18,20 +18,27 @@ test.describe('secretary list', () => {
   test('secretary views entries list and navigates to detail', async ({ page }) => {
     await page.goto('/secretary');
 
+    // Wait for entries table to be visible
     await expect(page.getByRole('table')).toBeVisible();
     await expect(page.getByText('jane@email.com')).toBeVisible();
 
-    await page.getByLabel('Trial').click();
-    await page.getByRole('option', { name: 'Summer Invitational' }).click();
-
-    await expect(page.getByText('Echo Summerset')).toBeVisible();
-
+    // Click View on first entry (Ranger - has mock detail data)
     await page.getByRole('link', { name: 'View' }).first().click();
     await expect(page).toHaveURL(/\/secretary\/entries\//);
-    await expect(page.locator('mat-card-title', { hasText: 'Entry Detail' })).toBeVisible();
 
+    // Wait for detail page to load and check for Entry Detail heading
+    await expect(page.locator('mat-card-title').filter({ hasText: 'Entry Detail' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Ranger Blue Sky')).toBeVisible();
+
+    // Navigate back to secretary list
     await page.goto('/secretary');
     await expect(page.getByRole('table')).toBeVisible();
+
+    // Test trial dropdown filter
+    await page.getByLabel('Trial').click();
+    await page.getByRole('option', { name: 'Fall Championship 2026' }).click();
+    await expect(page.getByText('Echo Summerset')).toBeVisible();
+
     await page.screenshot({ path: screenshotPath, fullPage: true });
   });
 });

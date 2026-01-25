@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -221,7 +221,8 @@ export class SecretaryListComponent implements OnInit {
 
   constructor(
     private readonly trialService: TrialService,
-    private readonly entriesService: SecretaryEntriesService
+    private readonly entriesService: SecretaryEntriesService,
+    private readonly changeDetectorRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -231,12 +232,14 @@ export class SecretaryListComponent implements OnInit {
         if (!this.selectedTrialId && trials.length > 0) {
           this.selectedTrialId = trials[0].trialId;
         }
+        this.changeDetectorRef.detectChanges();
         this.loadEntries();
       },
       error: () => {
         this.trials = [];
         this.entries = [];
         this.total = 0;
+        this.changeDetectorRef.detectChanges();
       }
     });
   }
@@ -301,6 +304,7 @@ export class SecretaryListComponent implements OnInit {
     }
 
     this.isLoading = true;
+    this.changeDetectorRef.detectChanges();
     this.entriesService
       .getEntries({
         trialId: this.selectedTrialId,
@@ -313,11 +317,13 @@ export class SecretaryListComponent implements OnInit {
           this.entries = response.items;
           this.total = response.total;
           this.isLoading = false;
+          this.changeDetectorRef.detectChanges();
         },
         error: () => {
           this.entries = [];
           this.total = 0;
           this.isLoading = false;
+          this.changeDetectorRef.detectChanges();
         }
       });
   }

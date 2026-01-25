@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -88,7 +88,8 @@ export class RegistrationPageComponent implements OnInit {
     private readonly submitService: RegistrationSubmitService,
     private readonly submissionStore: RegistrationSubmissionStore,
     private readonly router: Router,
-    private readonly formBuilder: FormBuilder
+    private readonly formBuilder: FormBuilder,
+    private readonly changeDetectorRef: ChangeDetectorRef
   ) {
     this.form = this.formBuilder.group({
       entryNumber: [{ value: '', disabled: true }],
@@ -163,16 +164,19 @@ export class RegistrationPageComponent implements OnInit {
             this.registrationMetadata = metadata;
             this.terms = terms;
             this.isLoading = false;
+            this.changeDetectorRef.detectChanges();
           },
           error: () => {
             this.errorMessage = 'Unable to load registration metadata. Please try again.';
             this.isLoading = false;
+            this.changeDetectorRef.detectChanges();
           }
         });
       },
       error: () => {
         this.errorMessage = 'Unable to load trial details. Please try again.';
         this.isLoading = false;
+        this.changeDetectorRef.detectChanges();
       }
     });
   }

@@ -33,7 +33,7 @@ export const SECRETARY_ENTRY_SUMMARY_MOCK_DATA: EntrySummaryDto[] = [
   },
   {
     entryId: '971c7bdb-2b3d-4cdf-9f1e-9b1f2c0b9a8f',
-    trialId: 'ae3a7fb2-7b63-4b9f-bb55-2fc6ff0a3d5c',
+    trialId: 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
     status: 'Submitted',
     submittedAtUtc: '2026-01-18T09:12:00Z',
     handlerEmail: 'kai@email.com',

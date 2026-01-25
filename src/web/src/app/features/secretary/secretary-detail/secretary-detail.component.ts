@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -459,7 +459,8 @@ export class SecretaryDetailComponent implements OnInit {
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly entriesService: SecretaryEntriesService
+    private readonly entriesService: SecretaryEntriesService,
+    private readonly changeDetectorRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -473,10 +474,12 @@ export class SecretaryDetailComponent implements OnInit {
       next: (detail) => {
         this.entry = detail;
         this.isLoading = false;
+        this.changeDetectorRef.detectChanges();
       },
       error: () => {
         this.entry = null;
         this.isLoading = false;
+        this.changeDetectorRef.detectChanges();
       }
     });
   }
