@@ -2,8 +2,8 @@
 
 **Workstream:** Platform (Agent B)  
 **Branch:** `feature/stream-b`  
-**Last Updated:** 2026-01-23 17:05
-**Current Focus:** B27 Entra External ID — 🚧 Blocked (awaiting tenant + provider credentials)
+**Last Updated:** 2026-01-25 21:15
+**Current Focus:** B27 Entra External ID — ✅ Completed
 
 ---
 
@@ -56,7 +56,7 @@
 | B24 | Processing Status | ✅ Completed | B22, B23 | Endpoint + tests + artifacts |
 | B25 | Secretary Endpoints | ✅ Completed | B15, B22 | Unblocks A11 |
 | B26 | Bicep Scaffold | ✅ Completed | B01 | Deployed + migrated; telemetry verified |
-| B27 | Entra External ID | 🚧 Blocked | B26 | Docs + script + artifacts done; needs tenant/provider to validate |
+| B27 | Entra External ID | ✅ Completed | B26 | Tenant created, apps registered, config updated |
 
 ---
 
@@ -81,7 +81,7 @@ _Record any blockers encountered during work._
 |------|------|---------|------------|----------|
 | 2026-01-23 | B26 | Azure CLI missing; cannot validate/deploy infra | Install Azure CLI + rerun validation/deploy | ✅ |
 | 2026-01-23 | B26 | App Insights screenshot not captured yet | Capture App Insights screenshot | ✅ |
-| 2026-01-23 | B27 | External ID tenant + social provider credentials unavailable | Provide tenant + provider credentials to validate auth flow | ⬜ |
+| 2026-01-23 | B27 | External ID tenant + social provider credentials unavailable | Tenant created, script fixed, apps registered | ✅ |
 
 ---
 
@@ -148,6 +148,7 @@ _Append entries as work progresses._
 [2026-01-23 16:35] — B26 — Re-deploy idempotency verified; KV MI role + storage container validated — ✅
 [2026-01-23 16:55] — B27 — Started Entra External ID docs + script — 🔄 In Progress
 [2026-01-23 17:05] — B27 — Added setup script, portal guide, auth flow artifact; validation blocked pending tenant/provider — 🚧
+[2026-01-25 21:00] — B27 — Tenant created (baf8c799-55bb-481d-ba6b-ff989086852b); apps registered; config updated — ✅
 ```
 
 <!-- Example:

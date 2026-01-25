@@ -1,7 +1,16 @@
 WI-B27 Entra External ID auth flow verification
 
-Status: NOT EXECUTED (requires External ID tenant + social provider credentials)
-Date: 2026-01-23
+Status: CONFIGURATION COMPLETE (tenant + apps registered; Portal config needed for live validation)
+Date: 2026-01-25
+
+Environment:
+- Tenant ID: baf8c799-55bb-481d-ba6b-ff989086852b
+- Tenant Domain: dgmvp.onmicrosoft.com
+- API Client ID: 0c865a69-f8d0-416a-b3b7-7214a797a3dc
+- SPA Client ID: 79e059f9-a911-45d6-91c3-10c5cba11015
+- Authority: https://dgmvp.b2clogin.com/dgmvp.onmicrosoft.com/B2C_1_SignUpSignIn
+- Audience: api://dgmvp
+- Scope: api://dgmvp/access_as_user
 
 Planned verification steps:
 1) Launch SPA and initiate sign-in with External ID user flow.
@@ -12,10 +21,10 @@ Planned verification steps:
    - roles (Handler/Secretary)
 4) Call a role-protected API endpoint with token and verify 200 response.
 
-Expected configuration values:
-- Authority: https://<tenant>.b2clogin.com/<tenant>.onmicrosoft.com/B2C_1_SignUpSignIn
-- Audience: api://dgmvp
-- Scope: api://dgmvp/access_as_user
-
-Blocker:
-- External ID tenant + provider credentials not available in this workspace.
+Remaining Portal configuration (manual):
+- User Flow: B2C_1_SignUpSignIn (step 5 in Auth_Entra_ExternalId.md)
+- Identity Providers: Microsoft + Google (step 6)
+- API scope exposure: api://dgmvp/access_as_user (step 3.5)
+- SPA redirect URIs: http://localhost:4201/, https://localhost:4201/ (step 4.3)
+- Grant API permissions and consent (step 4.5-4.6)
+- Assign test users to Handler/Secretary roles (step 7)

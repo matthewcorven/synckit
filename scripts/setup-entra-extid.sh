@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euo pipefail # Exit on error, unset var, or pipe failure
 
 # Starter script for Entra External ID app registrations.
 # Some steps must be completed in the Portal (user flows, identity providers, SPA redirect URIs).
@@ -16,7 +16,7 @@ if [[ -z "$TENANT_ID" ]]; then
 fi
 
 echo "Logging into tenant $TENANT_ID..."
-az account show --tenant "$TENANT_ID" >/dev/null 2>&1 || az login --tenant "$TENANT_ID"
+az login --tenant "$TENANT_ID" --allow-no-subscriptions
 
 echo "Creating API app registration: $API_APP_NAME"
 API_APP_ID=$(az ad app create \
