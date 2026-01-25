@@ -14,6 +14,17 @@ public static class AdminEndpoints
 
     public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder endpoints)
     {
+        // Add reseed endpoint for fixing staging data issues
+        endpoints.MapPost("/api/admin/reseed", async (
+            TrialSeedingService seedingService,
+            CancellationToken ct) =>
+        {
+            await seedingService.SeedTrialsAsync(ct);
+            return Results.Ok(new { message = "Re-seeding triggered" });
+        })
+        .RequireAuthorization(AuthPolicies.Secretary)
+        .WithName("Admin_Reseed");
+
         var group = endpoints.MapGroup("/api/admin/entries")
             .RequireAuthorization(AuthPolicies.Secretary);
 

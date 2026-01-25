@@ -14,7 +14,7 @@
 | **Tenant Domain** | `dgmvp.onmicrosoft.com` |
 | **API App ID** | `0c865a69-f8d0-416a-b3b7-7214a797a3dc` |
 | **SPA App ID** | `79e059f9-a911-45d6-91c3-10c5cba11015` |
-| **Authority** | `https://dgmvp.b2clogin.com/dgmvp.onmicrosoft.com/B2C_1_SignUpSignIn` |
+| **Authority** | `https://dgmvp.ciamlogin.com/dgmvp.onmicrosoft.com` |
 | **Audience** | `api://dgmvp` |
 | **API Scope** | `api://dgmvp/access_as_user` |
 
@@ -312,14 +312,16 @@
 
 ### Step 8: Test Authority URL
 
-**Test URL:** https://dgmvp.b2clogin.com/dgmvp.onmicrosoft.com/B2C_1_SignUpSignIn/v2.0/.well-known/openid-configuration
+**Test URL:** https://dgmvp.ciamlogin.com/dgmvp.onmicrosoft.com/v2.0/.well-known/openid-configuration
 
 **Expected Result:** JSON document with OIDC metadata including:
-- `"issuer": "https://dgmvp.b2clogin.com/baf8c799-55bb-481d-ba6b-ff989086852b/v2.0/"`
-- `"authorization_endpoint": "https://dgmvp.b2clogin.com/dgmvp.onmicrosoft.com/B2C_1_SignUpSignIn/oauth2/v2.0/authorize"`
-- `"token_endpoint": "https://dgmvp.b2clogin.com/dgmvp.onmicrosoft.com/B2C_1_SignUpSignIn/oauth2/v2.0/token"`
+- `"issuer": "https://baf8c799-55bb-481d-ba6b-ff989086852b.ciamlogin.com/baf8c799-55bb-481d-ba6b-ff989086852b/v2.0/"`
+- `"authorization_endpoint": "https://dgmvp.ciamlogin.com/baf8c799-55bb-481d-ba6b-ff989086852b/oauth2/v2.0/authorize"`
+- `"token_endpoint": "https://dgmvp.ciamlogin.com/baf8c799-55bb-481d-ba6b-ff989086852b/oauth2/v2.0/token"`
 
 **Validation:** If this URL returns JSON, your External ID configuration is working
+
+**Note:** This tenant uses **CIAM** (Customer Identity Access Management), not traditional B2C. Use `ciamlogin.com` endpoints, not `b2clogin.com`.
 
 ---
 
@@ -329,10 +331,10 @@
 ```json
 {
   "Authentication": {
-    "Authority": "https://dgmvp.b2clogin.com/dgmvp.onmicrosoft.com/B2C_1_SignUpSignIn",
+    "Authority": "https://dgmvp.ciamlogin.com/dgmvp.onmicrosoft.com",
     "Audience": "api://dgmvp",
     "ValidIssuers": [
-      "https://dgmvp.b2clogin.com/baf8c799-55bb-481d-ba6b-ff989086852b/v2.0/"
+      "https://baf8c799-55bb-481d-ba6b-ff989086852b.ciamlogin.com/baf8c799-55bb-481d-ba6b-ff989086852b/v2.0/"
     ],
     "ValidAudiences": [
       "api://dgmvp",
@@ -352,10 +354,10 @@ export const environment = {
   useMocks: true,
   auth: {
     clientId: '79e059f9-a911-45d6-91c3-10c5cba11015',
-    authority: 'https://dgmvp.b2clogin.com/dgmvp.onmicrosoft.com/B2C_1_SignUpSignIn',
+    authority: 'https://dgmvp.ciamlogin.com/dgmvp.onmicrosoft.com',
     redirectUri: 'http://localhost:4201/',
     scopes: ['api://dgmvp/access_as_user'],
-    knownAuthorities: ['dgmvp.b2clogin.com']
+    knownAuthorities: ['dgmvp.ciamlogin.com']
   }
 };
 ```

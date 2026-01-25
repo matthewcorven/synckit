@@ -95,16 +95,27 @@ public sealed class TrialSeedingService(
                 {
                     foreach (var f in formSeeds)
                     {
-                        var exists = await _context.FormTemplates.AnyAsync(ft =>
+                        var existing = await _context.FormTemplates.FirstOrDefaultAsync(ft =>
                             ft.OrganizationCode == f.OrganizationCode &&
                             ft.SportCode == f.SportCode &&
                             ft.FormCode == f.FormCode &&
                             ft.Version == f.Version,
                             ct);
 
-                        if (exists)
+                        var gridJson = JsonSerializer.Serialize(f.GridConfig);
+
+                        if (existing is not null)
                         {
-                            _logger.LogDebug("Form template already exists for {Org}-{Sport}-{Form}-{Ver}.", f.OrganizationCode, f.SportCode, f.FormCode, f.Version);
+                            // Update if GridConfigJson is null or empty (fix for incomplete seeds)
+                            if (string.IsNullOrEmpty(existing.GridConfigJson))
+                            {
+                                existing.GridConfigJson = gridJson;
+                                _logger.LogInformation("Updated form template GridConfigJson for {Org}-{Sport}-{Form}-{Ver}.", f.OrganizationCode, f.SportCode, f.FormCode, f.Version);
+                            }
+                            else
+                            {
+                                _logger.LogDebug("Form template already exists for {Org}-{Sport}-{Form}-{Ver}.", f.OrganizationCode, f.SportCode, f.FormCode, f.Version);
+                            }
                             continue;
                         }
 
@@ -114,7 +125,7 @@ public sealed class TrialSeedingService(
                             SportCode = f.SportCode,
                             FormCode = f.FormCode,
                             Version = f.Version,
-                            GridConfigJson = JsonSerializer.Serialize(f.GridConfig)
+                            GridConfigJson = gridJson
                         };
 
                         _context.FormTemplates.Add(ftEntity);

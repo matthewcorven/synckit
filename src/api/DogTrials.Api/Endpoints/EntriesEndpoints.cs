@@ -139,6 +139,9 @@ public static class EntriesEndpoints
 
             Activity.Current?.SetTag("entry.id", entry.EntryId.ToString());
 
+            // Set ETag header for optimistic concurrency
+            context.Response.Headers.ETag = GetEtag(entry.RowVersion);
+
             return Results.Ok(entry.ToDetailDto());
         })
         .WithName("Entries_GetById");
