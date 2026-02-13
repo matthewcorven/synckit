@@ -476,6 +476,11 @@ Client                          Server
 - Resume from last checkpoint
 - Pending operations buffered in offline queue
 
+**IPv4/IPv6 Dialing (Happy Eyeballs):**
+- .NET 11 preview adds `ConnectAlgorithm.Parallel` to `Socket.ConnectAsync`, enabling Happy Eyeballs (RFC 8305) for WebSocket/TCP dials ([release notes](https://github.com/dotnet/core/blob/main/release-notes/11.0/preview/preview1/libraries.md#happy-eyeballs-support-in-socketconnectasync)).
+- SyncKit does not ship a .NET/WebSocket client today, so there is no immediate code change.
+- If a C# client is added later, target .NET 11+ and opt into `ConnectAlgorithm.Parallel` (or equivalent) to avoid IPv6-only stall/regression risks when connecting to the WebSocket server.
+
 ---
 
 ## Conflict Resolution
