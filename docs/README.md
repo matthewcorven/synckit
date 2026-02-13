@@ -95,6 +95,10 @@ Understand how SyncKit works:
 - **[Storage Schema](architecture/ARCHITECTURE.md#storage-schema)** - IndexedDB structure
 - **[Security Model](architecture/ARCHITECTURE.md#security-model)** - Authentication, permissions
 
+### Research & Future Features
+
+- **[.NET 11 Happy Eyeballs Research](research/DOTNET_11_HAPPY_EYEBALLS_RESEARCH.md)** - Investigation of .NET 11 WebSocket improvements for future .NET SDK
+
 ---
 
 ## 💡 Examples
